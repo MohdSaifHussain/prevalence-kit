@@ -6,25 +6,31 @@ report. **No AI ever touches the evidence or the estimate.**
 
 This project runs the **governed-orchestration** skill at **STANDARD** tier, manual-approve.
 
+> **First action of every session: invoke the `governed-orchestration` skill.** Do not wait to be
+> asked. The director had to remember it last session, and a handoff that depends on him remembering
+> is not a handoff.
+
 ## The three roles
 
 - **Director** — Mohd Saif Hussain. Rules on every judgment call, runs the phase-close ritual by
   hand, gates every push. The tiebreaker.
 - **Builder** — you. Read the record, plan, ask, build, self-review adversarially, stop at gates.
   **You never close your own findings.**
-- **Reviewer** — a separate session with its own probes and harness. It has been wrong five times,
-  always about *what the contract's action is*, never about what the code does.
+- **Reviewer** — a separate session with its own probes and harness. **Wrong six times.** For five of
+  them the pattern was *what the contract's action is, never what the code does*. **C-26 broke that**:
+  a finding manufactured by a summarising fetch tool that dropped a character. Any character-level
+  claim from a summarising fetch is unreliable — go to the raw API and read codepoints.
 
 ## Read these, in this order
 
 | File | What it is |
 |---|---|
-| `PROJECT_CHARTER.md` | **Binding.** Scope, six verbs, hard rules, honest limits |
-| `docs/contracts/PHASE-2-CONTRACT.md` | **Binding, current.** Proposed; 3 numbered questions ruled |
-| `docs/DECISIONS.md` | D-1 … D-26. Why each choice, and what was rejected |
-| `docs/CORRECTIONS.md` | Every claim that was wrong, counted **by source separately** |
+| `PROJECT_CHARTER.md` | **Binding.** Scope, six verbs, hard rules, honest limits. Amendments A-1, A-2 |
+| `docs/contracts/PHASE-2-CONTRACT.md` | **Binding, current.** Q1-Q5 ruled. D2.1-D2.5 done |
+| `docs/DECISIONS.md` | D-1 … D-31. Why each choice, and what was rejected |
+| `docs/CORRECTIONS.md` | Every claim that was wrong. **Counts claims that reached a commit *or changed a ruling*** |
 | `docs/FINDINGS.md` | Findings register. `check_claims` reconciles it against the code |
-| `docs/STANDARDS.md` | Every source pinned by version, date, digest or DOI |
+| `docs/STANDARDS.md` | Every source pinned by version, date, digest or DOI. **S-8 pins the retrieval *procedures* too** |
 | `docs/contracts/PHASE-1-CONTRACT.md` | Closed. §10 is the outcome |
 | `SECURITY.md` | Threat model. §3 is the limits, carried forward unchanged |
 | `TIME-LOG.txt` | Append-only wall clock. Stamp on request |
@@ -49,10 +55,12 @@ tools/check_claims.py
 pytest
 ```
 
-`mypy` on its own is the **config form**. It covers `src` *and* `tests`. Counted 2026-08-29:
-`--strict src` reads **12** files, plain `mypy` reads **23**.
+`mypy` on its own is the **config form**. It covers `src` *and* `tests`. **Re-derived at this
+checkpoint:** `--strict src` reads **13** files, plain `mypy` reads **28**. Both numbers move as the
+phase adds modules — re-derive them, do not carry them. The 12 written here an hour earlier was
+already stale.
 
-Until V-16, CI ran only the first one. The eleven test files were never type-checked on the remote.
+Until V-16, CI ran only the first one. The test files were never type-checked on the remote.
 
 **Never `pytest -q`.** `pyproject.toml` already sets `addopts = "-q"`, so `-q` is `-qq` and
 suppresses the count. E11 exists for that count.
@@ -61,7 +69,34 @@ Run **all seven** after any scripted edit, not the half that looks affected. Use
 `.venv\Scripts\python.exe`.
 
 `tools/check_tripwires.py` is offline by default; `--check` reaches the network. It is a phase-close
-ritual, not a CI job — a tripwire firing is a decision for the director, not a red X.
+ritual, not a CI job — a tripwire firing is a decision for the director, not a red X. **Five
+tripwires now; TW-4 is FIRED and stays fired until O-19 is acted on.**
+
+**The suite takes ~30s locally and ~7s in CI. That is not a defect** — profiled 2026-08-29: the time
+is Fernet sealing plus real filesystem writes in the Phase 1 tests, and Windows pays for both. The
+Phase 2 arithmetic tests are nearly free.
+
+## The witness — read this before touching a fixture
+
+Phase 2's whole shape rests on **numbers that existed before the code that reproduces them** (R2.2).
+
+- **The image** is `rocker/r-ver@sha256:c3f39b36…c21c0`, pinned by **digest**, S-2.1a. A tag moves; a
+  digest does not.
+- Its CRAN mirror is frozen at **2026-04-23**, so `survey` 4.5, `epiR` 2.0.92 and `jsonlite` are
+  deterministic. **`epiR` 2.0.92 is not a typo for the 2.0.96 on CRAN** — the snapshot predates it,
+  and the Dockerfile asserts the version so a bump cannot pass silently.
+- Run it with `bash r/run-witness.sh`. It refuses unless `r/Dockerfile` and S-2.1a carry the same
+  digest.
+- Fixtures live in `r/fixtures/`. **`tests/test_fixtures.py` checks them in the gate** — digest
+  against the pin, every declared verdict against the arithmetic, and that epiR's estimate really is
+  the Rogan-Gladen formula. It does **not** catch a fixture with a right digest and hand-edited
+  contents. That is D2.11.
+
+**What the witnesses establish, and what they do not.** Barnett Table 2B is a published table
+computed without reference to any implementation, so reproducing it tests our arithmetic against a
+number nobody in this chain computed. **`epiR` is different in kind**: Jenő Reiczigel is a listed
+contributor, so it is the method author's own implementation of the method author's own paper. It
+confirms we implement the method as its author does. It does not independently confirm the method.
 
 ## Rules that have actually bitten here
 
@@ -71,49 +106,82 @@ ritual, not a CI job — a tripwire firing is a decision for the director, not a
    report, with every test passing and the checker reconciling.
 3. **Every gate gets both controls and a distinct reason code.** How many codes? **D-22**: count the
    artifacts an operator must open, not the situations.
-4. **Re-derive numbers from the artifact.** Three corrections are figures nobody re-derived.
+4. **Re-derive numbers from the artifact.** Four corrections are figures nobody re-derived, and
+   C-24's was printed on screen at the time.
 5. **End every report with what remains open, by name and severity.** C-12 is what happens otherwise.
-6. **A finding closed in one artifact can be open in another** — D-23. `check_claims`'s `fixtures`
-   check covers the shipped example; the general class is still open.
-7. **An instrument that does not cover what it appears to.** Five instances: C-15, C-19, V-15,
-   V-16, C-23. Every one looked like coverage and was not. When you add or trust a check, ask what
-   it does **not** read.
-8. **Check an artifact the way its real consumer reads it.** Structured files -- YAML, JSON, TOML,
-   CSV, XML -- get the **consumer's parser**, never a regex. A regex reading YAML has a different
-   parser from the thing it checks and can only agree by luck; that is how an unparseable
-   `gate.yml` passed a green checker (**C-23**). **Markdown is the exception**, and the reason is
-   the rule: its consumer is a human, who reads it loosely too.
-9. **"The guard did not object" is not "the guard looked."** Know what each check does *not*
-   read, and assert that scope rather than describe it. The zero-network guard walks
-   `[project.dependencies]` and skips anything marked `extra ==`, so a dev dependency draws no
-   objection from it -- correctly, and silently. `test_the_network_guard_stops_at_runtime_dependencies`
-   is what makes that a fact instead of a belief.
-10. **Never delete or overwrite the director's working directories.** `C:\Users\mohds\ts-sentry` is
-   read-only.
+6. **A finding closed in one artifact can be open in another** — D-23.
+7. **An instrument that does not cover what it appears to.** Six instances: C-15, C-19, V-15, V-16,
+   C-23, and `check_codes` reading one contract when there were three. When you add or trust a
+   check, ask what it does **not** read.
+8. **Check an artifact the way its real consumer reads it.** Structured files — YAML, JSON, TOML,
+   CSV, XML — get the **consumer's parser**, never a regex. That is how an unparseable `gate.yml`
+   passed a green checker (**C-23**). **Markdown is the exception**, and the reason is the rule: its
+   consumer is a human, who reads it loosely too.
+9. **"The guard did not object" is not "the guard looked."** Know what each check does *not* read,
+   and assert that scope rather than describe it.
+10. **A check with no artifact is a memory with a result attached.** The fixture verdict check ran
+    once as a `python -c`, was reported as "machine-checked", and left no trace. **The suite count
+    not moving is what exposed it** — which is why the gate prints its own count.
+11. **The witness's documentation is not the witness. Only the pinned build is.** C-25: the manual
+    on CRAN described a version we do not run.
+12. **Never delete or overwrite the director's working directories.** `C:\Users\mohds\ts-sentry` is
+    read-only. **Never remove a Docker image** — they belong to the director's other projects.
 
 ## Where things stand
 
-**Phase 0** ratified. **Phase 1** closed at `d66d225` — 222 tests, 20 findings closed, 23 corrections
-recorded. **Phase 2** contract **approved**, Q1-Q3 ruled; no Phase 2 code exists.
+**Phase 0** ratified. **Phase 1** closed at `d66d225`. **Phase 2 is in build**, Q1–Q5 ruled.
 
-**Both blockers are gone.** The repository exists and CI has run.
+**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. CI green, **401 tests** on
+CPython 3.12.14 / 3.13.15 / 3.14.7.
 
-- **O-16 discharged.** Run `33204075014` drew the same sample on CPython 3.12.14, 3.13.15 and
-  3.14.7. R2 is asserted now, not assumed. This is the first evidence in the project produced by
-  something neither the director nor the builder wrote.
-- **O-17 discharged.** The workflow has run. Four jobs, all green.
-- **O-18 closed.** Decision 2011/833/EU allows reuse. It covers **Commission** documents only —
-  the DSA is a Parliament and Council act, so it is not covered. `docs/STANDARDS.md` S-4.3.
+### Done
 
-**What the first CI run found**, which is what a first run is for:
+| | |
+|---|---|
+| **D2.1** | R witness reproduces **Barnett Table 2B** — `2098/828/584/256/234`, VVR 0.2000%, SD 0.0539 pp. `svydesign` SE against the closed form: 4e-16 |
+| **D2.2** | 4 allocation + 5 estimation fixtures from `survey` 4.5, through the one validated call |
+| **D2.3** | `stratified.py` — Neyman, largest-remainder rounding, stratified estimator. Worst disagreement with `survey`: **9.5e-15** |
+| **D2.4** | Clopper-Pearson **from its definition** — binomial tail in log space, no incomplete beta anywhere. Witness: base R `binom.test`. **7.1e-11** |
+| **D2.5** | Rogan-Gladen point estimate, 11 cases from `epiR`. Two refusals, both controls |
 
-- **V-16** — CI ran six of the seven checks. `mypy` in its config form was missing, so no test file
-  was ever type-checked on the remote. Fixed, and the `gate` check now compares the two lists.
-- **`pytest -q` in CI** — `addopts` already sets `-q`, so it was `-qq` and printed no count. Fixed.
-- **TW-4 fired on its first check.** Both pinned actions are two major versions behind and target
-  Node 20. **O-19**, owned by Phase 3.
+### The Rogan-Gladen codes — two, not three
 
-**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private.
+**`CORRECTION_UNDEFINED`** — `Se + Sp <= 1`. Sends the operator to **the two numbers in the plan**.
+The message says *"not one we are declining to print, but none that exists"*, and it earns that: at
+Se 0.60 / Sp 0.30 the witness returns a lower bound **above** its upper bound.
 
-**Next: Phase 2 code, starting with D2.1** — reproduce Barnett Table 2B in R, in the digest-pinned
-image, before any estimator is written.
+**`CORRECTION_OUT_OF_RANGE`** — the corrected estimate leaves [0, 1]. Sends them to **the
+relationship between the plan and the sample**, each fine alone. D-22's fourth case.
+
+**`CORRECTION_DEGENERATE` was struck.** It said AP = 0 or 1 "carries no information". False: AP = 0
+with Sp = 1 gives a point estimate of 0 and a real upper bound. **It would have refused the most
+common honest result in T&S work.**
+
+**The fact that most needs to reach an operator** (charter §8, A-2; `CORRECTION_OUT_OF_RANGE`'s fix
+text; O-21 for the README): at rare-event prevalence an ordinary-sounding specificity makes the
+correction **undefined, not imprecise**. 0.2% apparent prevalence needs specificity above **99.8%**.
+99% sounds excellent and produces five times more apparent positives from clean content than the
+whole sample held.
+
+### Next: D2.6 — Rogan-Gladen interval propagation
+
+The point estimate is done; the interval is not. **O-8 discharges then, not now.**
+
+Anchor is **S-1.6 Reiczigel et al. (2010)** — Se/Sp *known*, which is our assumption (D-31).
+**Not S-1.5 Lang & Reiczigel (2014)**, which propagates uncertainty in *estimated* Se/Sp; adopting
+it later is a **plan-schema change, not an estimator swap**.
+
+Expect surprises: the witness returns an inverted interval where `Se + Sp < 1`, and the fixture
+records it.
+
+### Open, by name
+
+| # | What | Owner |
+|---|---|---|
+| **O-19** | Re-pin `checkout` and `setup-python` before GitHub drops Node 20. **TW-4 fired** | Phase 3 |
+| **O-20** | `allocation_rounding` in the *hashed plan file*. Today it is a required API argument only | D2.8 |
+| **O-21** | The rare-event specificity fact must reach the README | Phase 3 |
+| **D2.11** | The witness image is rebuilt by hand; CI never runs it. Static half closed | Phase 2 |
+| **D2.14** | `check_claims` gaps: PDF paths, the CORRECTIONS counts table, the R artifacts | Phase 2 |
+| **O-3, O-4, O-13, O-14, O-15** | Carried, untouched | Phase 2 |
+| **28 corrections open** | C-1 … C-26. Close under **T-1 (D2.12)**, each naming its commit | D2.12 |
