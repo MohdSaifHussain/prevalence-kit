@@ -1,0 +1,73 @@
+[build-system]
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "prevalence-kit"
+version = "0.1.0.dev0"
+description = "Audit-grade prevalence measurement for Trust & Safety. Sealed evidence, tamper-evident record, refusals with named reasons."
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+authors = [{ name = "Mohd Saif Hussain" }]
+keywords = ["trust-and-safety", "prevalence", "sampling", "audit", "measurement"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+
+# Runtime dependencies are deliberately few, and NONE of them is network-capable.
+# Hard Rule 1: zero network calls at runtime, proven by tests/test_zero_network.py.
+# This is why `svy` is not here -- it requires httpx. See docs/DECISIONS.md D-2.
+dependencies = [
+    "cryptography==50.0.1", # sealing (Fernet). docs/STANDARDS.md S-5.1, D-9
+    "PyYAML==6.0.3",        # plan files
+    "click==8.5.0",         # CLI. D-16
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==9.1.1",
+    "hypothesis==6.165.10",
+    "ruff==0.16.5",
+    "mypy==2.3.1",
+    "types-PyYAML",
+]
+
+[project.scripts]
+prevalence-kit = "prevalence_kit.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/prevalence_kit"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "SIM", "RUF", "S"]
+ignore = ["S101"] # assert is fine in tests
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S", "N806"]
+# N818 wants exceptions to end in "Error". `Refusal` is the domain word -- it is what
+# the operator sees ("REFUSED [SEAL_TAMPERED]"), and it deliberately is not an error:
+# the tool worked correctly and declined. Renaming it would read worse in the one
+# place anyone actually looks.
+"src/prevalence_kit/errors.py" = ["N818"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unreachable = true
+disallow_any_explicit = false
+files = ["src", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"

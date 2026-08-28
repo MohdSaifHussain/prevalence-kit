@@ -1,0 +1,229 @@
+"""The measurement run: the six steps, and the workspace they write into.
+
+Layout of a run directory::
+
+    ledger.jsonl      the chain -- the record everything else is checked against
+    seal.key          the sealing key (never committed; see SECURITY.md 3.1)
+    plan.sealed/      a sealed copy of the plan, so verify works without the file
+    frame.json        the sampling frame ids, so a draw can be re-derived
+    sample.json       the drawn ids
+    labels.json       item id -> raw label value. No content.
+    estimate.json     the number and its interval
+    sealed/           the content, chunked and encrypted
+
+Content lives only under `sealed/`. `labels.json` holds label values and never
+text, which is what lets `verify` and `emit-report` run without unsealing
+anything.
+"""
+
+from __future__ import annotations
+
+import csv
+import json
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+from .canonical import JSONValue, digest, digest_bytes
+from .errors import Reason, Refusal
+from .estimators import Interval, wilson
+from .ledger import Ledger
+from .plan import Plan
+from .sampling import draw_srs, sample_record
+from .seal import Manifest, SealedStore
+
+PLAN_ITEM = "__plan__"
+
+
+@dataclass(frozen=True, slots=True)
+class Workspace:
+    root: Path
+
+    @property
+    def ledger(self) -> Ledger:
+        return Ledger(self.root / "ledger.jsonl")
+
+    @property
+    def key_path(self) -> Path:
+        return self.root / "seal.key"
+
+    def store(self, *, need_key: bool = True) -> SealedStore:
+        key = self.key_path.read_bytes() if self.key_path.exists() else None
+        if key is None and need_key:
+            raise Refusal(
+                Reason.SEAL_TAMPERED,
+                f"No sealing key at {self.key_path}.",
+                "Without the key nothing can be unsealed. Restore it from wherever you kept it.",
+            )
+        return SealedStore(self.root / "sealed", key)
+
+    def read_json(self, name: str) -> Any:
+        path = self.root / name
+        if not path.exists():
+            raise Refusal(
+                Reason.LEDGER_BROKEN,
+                f"The run is missing {name}.",
+                "A step has not been run yet, or the run directory was edited.",
+            )
+        return json.loads(path.read_text(encoding="utf-8"))
+
+    def write_json(self, name: str, value: JSONValue) -> str:
+        path = self.root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":")),
+            encoding="utf-8",
+            newline="\n",
+        )
+        return digest(value)
+
+
+# --------------------------------------------------------------------- steps
+
+
+def do_plan(ws: Workspace, plan: Plan) -> str:
+    """Hash the plan and open the chain. No data file is touched here.
+
+    The hash is computed from the plan alone (R1). We also seal a copy of the
+    plan, so `verify` still has something to check against after the working file
+    is moved or deleted (D-15).
+    """
+    ws.root.mkdir(parents=True, exist_ok=True)
+    if not ws.key_path.exists():
+        ws.key_path.write_bytes(SealedStore.new_key())
+
+    plan_hash = plan.plan_hash
+    sealed = SealedStore(ws.root / "plan.sealed", ws.key_path.read_bytes())
+    manifest = sealed.seal(PLAN_ITEM, json.dumps(plan.as_record(), sort_keys=True).encode("utf-8"))
+
+    ws.ledger.append(
+        "plan",
+        {
+            "plan_hash": plan_hash,
+            "plan_seal": manifest.as_record(),
+            "estimand": plan.estimand.description,
+        },
+    )
+    return plan_hash
+
+
+def do_sample(ws: Workspace, plan: Plan, frame_path: Path) -> tuple[str, ...]:
+    """Draw the sample. Records the frame too, so the draw stays re-derivable."""
+    ids = _read_frame(frame_path)
+    drawn = draw_srs(ids, seed=plan.seed, n=plan.sample_size)
+
+    frame_digest = ws.write_json("frame.json", sorted(set(ids)))
+    record = sample_record(plan.plan_hash, plan.seed, len(set(ids)), drawn)
+    sample_digest = ws.write_json("sample.json", record)
+
+    ws.ledger.append(
+        "sample",
+        {"frame_digest": frame_digest, "sample_digest": sample_digest, "n": len(drawn)},
+    )
+    return drawn
+
+
+def do_ingest(ws: Workspace, plan: Plan, labels_path: Path) -> dict[str, str]:
+    """Seal the content, record the labels.
+
+    Refuses unless the labels line up one-to-one with the drawn sample. A label
+    set that is merely *mostly* right is how a measurement quietly becomes a
+    different measurement.
+    """
+    drawn: list[str] = list(ws.read_json("sample.json")["item_ids"])
+    rows = _read_labels(labels_path, plan.estimand.label_field)
+
+    missing = sorted(set(drawn) - rows.keys())
+    extra = sorted(rows.keys() - set(drawn))
+    if missing or extra:
+        raise Refusal(
+            Reason.LABELS_UNMATCHED,
+            f"{len(missing)} sampled items have no label; "
+            f"{len(extra)} labels are for items not sampled.",
+            "Label exactly the drawn sample -- no more, no less.",
+        )
+
+    store = ws.store()
+    manifests = [store.seal(item_id, rows[item_id][1].encode("utf-8")) for item_id in drawn]
+    labels = {item_id: rows[item_id][0] for item_id in drawn}
+
+    labels_digest = ws.write_json("labels.json", labels)
+    ws.ledger.append(
+        "ingest-labels",
+        {
+            "labels_digest": labels_digest,
+            "seals": [m.as_record() for m in manifests],
+            "sealed_items": len(manifests),
+        },
+    )
+    return labels
+
+
+def do_estimate(ws: Workspace, plan: Plan) -> Interval:
+    labels: dict[str, str] = ws.read_json("labels.json")
+    interval = _estimate_from(plan, labels)
+    estimate_digest = ws.write_json("estimate.json", interval.as_record())
+    ws.ledger.append("estimate", {"estimate_digest": estimate_digest, "method": interval.method})
+    return interval
+
+
+def _estimate_from(plan: Plan, labels: dict[str, str]) -> Interval:
+    positives = sum(1 for raw in labels.values() if plan.estimand.is_positive(raw))
+    return wilson(positives, len(labels))
+
+
+# ----------------------------------------------------------------- input I/O
+
+
+def _read_frame(path: Path) -> list[str]:
+    if not path.exists():
+        raise Refusal(
+            Reason.EMPTY_SAMPLE,
+            f"No population frame at {path}.",
+            "Point the plan's `population` at a file with one item id per line, "
+            "or a CSV with item_id.",
+        )
+    if path.suffix.lower() == ".csv":
+        with path.open(newline="", encoding="utf-8") as fh:
+            return [r["item_id"] for r in csv.DictReader(fh)]
+    return [line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def _read_labels(path: Path, label_field: str) -> dict[str, tuple[str, str]]:
+    """item_id -> (label value, content). Content is sealed immediately after."""
+    if not path.exists():
+        raise Refusal(
+            Reason.LABELS_UNMATCHED,
+            f"No labels file at {path}.",
+            "Point the plan's `labels` at a CSV or JSONL with item_id and your label column.",
+        )
+    rows: dict[str, tuple[str, str]] = {}
+    if path.suffix.lower() == ".jsonl":
+        records = [
+            json.loads(line)
+            for line in path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+    else:
+        with path.open(newline="", encoding="utf-8") as fh:
+            records = list(csv.DictReader(fh))
+
+    for r in records:
+        if "item_id" not in r or label_field not in r:
+            raise Refusal(
+                Reason.LABELS_UNMATCHED,
+                f"A label row is missing 'item_id' or '{label_field}'.",
+                f"Every row needs an item_id and a {label_field} column.",
+            )
+        rows[str(r["item_id"])] = (str(r[label_field]), str(r.get("content", "")))
+    return rows
+
+
+def content_digest_of(text: str) -> str:
+    return digest_bytes(text.encode("utf-8"))
+
+
+def manifests_from(entry_body: dict[str, JSONValue]) -> list[Manifest]:
+    seals = entry_body["seals"]
+    assert isinstance(seals, list)
+    return [Manifest.from_record(s) for s in seals]
