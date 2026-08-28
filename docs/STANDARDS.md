@@ -82,6 +82,7 @@ it for a claim about a source.
 |---|---|---|---|---|
 | S-2.1 | Numerical cross-check for every estimator | R **`survey`** (Lumley) | **4.5**, published **2026-02-24**; re-verified live **2026-08-29**; source `https://cran.r-project.org/src/contrib/survey_4.5.tar.gz` (HTTP 200); GPL-2 \| GPL-3 | **2026-11-28** |
 | S-2.1a | The R environment the witness runs in | `rocker/r-ver`, **pinned by digest, not by tag** | **`rocker/r-ver@sha256:c3f39b365d1077fe24f8e9ab2742e352b6d3950897f51af1624a5bb5550c21c0`** (tag `4.5.3`, pushed 2026-06-24). Docker 29.7.2 on this machine. | **2026-11-29** |
+| S-2.1b | The witness **as actually executed**, 2026-08-29 (O-3) | `r/Dockerfile` builds on S-2.1a | **R 4.5.3 (2026-03-11)**, **`survey` 4.5**, `jsonlite` 2.0.0. CRAN frozen at the base image's snapshot `https://p3m.dev/cran/__linux__/noble/2026-04-23`, so the install is deterministic and serves the version S-2.1 pins. **The exact call:** `svydesign(ids = ~1, strata = ~stratum, weights = ~w, data = sample_rows)` — no `fpc`, which is what makes it the with-replacement form S-2.3 specifies | **2026-11-29** |
 | S-2.2 | Second independent cross-check where coverage overlaps | Python **`svy`** (Samplics LLC) | **0.25.0**, uploaded **2026-08-26**; MIT | **2026-09-28** — fast-moving, 48 releases |
 | S-2.3 | Stratified/Neyman allocation reproduction | Barnett, A., *YouTube's Violative View Rate Methodology: A Statistical Assessment*, MIT | **September 2021**, Tables 2A / 2B | never — fixed publication |
 

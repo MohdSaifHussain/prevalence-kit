@@ -1,0 +1,46 @@
+{
+  "what": "Barnett Table 2B reproduction, and the svydesign() call it validates",
+  "deliverable": "D2.1",
+  "produced_by": "r/barnett_table_2b.R",
+  "environment": {
+    "image_digest": "sha256:c3f39b365d1077fe24f8e9ab2742e352b6d3950897f51af1624a5bb5550c21c0",
+    "image_tag_at_pin": "rocker/r-ver:4.5.3",
+    "r_version": "R version 4.5.3 (2026-03-11)",
+    "survey_version": "4.5",
+    "cran_snapshot": "https://p3m.dev/cran/__linux__/noble/2026-04-23"
+  },
+  "exact_call": "svydesign(ids = ~1, strata = ~stratum, weights = ~w, data = sample_rows)",
+  "source": {
+    "citation": "Barnett, A. YouTube's Violative View Rate Methodology: A Statistical Assessment. MIT, September 2021.",
+    "register": "S-2.3",
+    "provenance_caveat": "Commissioned and funded by Google. Expert review, not peer review."
+  },
+  "table_2a_input": {
+    "stratum": ["Lowest Risk", "Low Risk", "Middle Risk", "High Risk", "No score available"],
+    "W_h": [0.8, 0.1, 0.05, 0.01, 0.04],
+    "p_h": [0.0005, 0.005, 0.01, 0.05, 0.0025],
+    "n_total": 4000
+  },
+  "table_2b_published": {
+    "allocation": [2098, 828, 584, 256, 234],
+    "vvr_pct": 0.2,
+    "expected_sd_pp": 0.054
+  },
+  "table_2b_reproduced": {
+    "allocation_raw": [2098.4952375109679, 827.63365408896232, 583.75310173251557, 255.73396040354118, 234.38404626401342],
+    "allocation": [2098, 828, 584, 256, 234],
+    "vvr_pct": 0.2,
+    "expected_sd_pp": 0.05389996288829364,
+    "rounding_note": "Ordinary rounding; no tie-break is involved. Stratum 1's raw value is 2098.4952, just under the midpoint, so it rounds to 2098 under any tie rule. It sits 0.005 from the midpoint, so a different arithmetic path could tip it to 2099 and the total to 4001."
+  },
+  "survey_call_check": {
+    "positives": [1, 4, 6, 13, 1],
+    "p_hat": [0.0004766444232602478, 0.004830917874396135, 0.01027397260273973, 0.05078125, 0.004273504273504274],
+    "survey_mean": 0.00205685862712497,
+    "survey_se": 0.0005433798399276388,
+    "closed_form_se": 0.000543379839927639,
+    "relative_difference": 3.990586668176301e-16,
+    "variance_form": "with replacement, no finite-population correction"
+  },
+  "all_checks_passed": true
+}
