@@ -59,9 +59,14 @@ it for a claim about a source.
 
 | ID | Target | Source | Pin | Re-check |
 |---|---|---|---|---|
-| S-2.1 | Numerical cross-check for every estimator | R **`survey`** (Lumley) | **4.5**, published **2026-02-24**; first release 0.9-1, 2003-01-23; GPL-2 \| GPL-3 | **2026-11-28** |
+| S-2.1 | Numerical cross-check for every estimator | R **`survey`** (Lumley) | **4.5**, published **2026-02-24**; re-verified live **2026-08-29**; source `https://cran.r-project.org/src/contrib/survey_4.5.tar.gz` (HTTP 200); GPL-2 \| GPL-3 | **2026-11-28** |
+| S-2.1a | The R environment the witness runs in | `rocker/r-ver`, **pinned by digest, not by tag** | **`rocker/r-ver@sha256:c3f39b365d1077fe24f8e9ab2742e352b6d3950897f51af1624a5bb5550c21c0`** (tag `4.5.3`, pushed 2026-06-24). Docker 29.7.2 on this machine. | **2026-11-29** |
 | S-2.2 | Second independent cross-check where coverage overlaps | Python **`svy`** (Samplics LLC) | **0.25.0**, uploaded **2026-08-26**; MIT | **2026-09-28** — fast-moving, 48 releases |
 | S-2.3 | Stratified/Neyman allocation reproduction | Barnett, A., *YouTube's Violative View Rate Methodology: A Statistical Assessment*, MIT | **September 2021**, Tables 2A / 2B | never — fixed publication |
+
+**Why by digest and not by tag.** `rocker/r-ver:4.5` and `:4.5.3` resolve to the same image today.
+`4.5` is a moving pointer and will not. A witness that is meant to be reproducible by a stranger
+cannot be pinned to something that moves. Phase 2 contract R2.6.
 
 **S-2.3 specification, pinned by reproduction not by intention.** Independently recomputed on
 2026-08-28 (`docs/PHASE-0-VERIFICATION.md` §C6). The estimator that reproduces Barnett's Table 2B is:
