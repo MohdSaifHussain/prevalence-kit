@@ -485,6 +485,69 @@ them."* This is the same lesson pointing at input rather than at records.
 
 ---
 
+---
+
+## D-20 — `equals` is exact string identity, and a numeric threshold under it is refused
+
+**Date:** 2026-08-28 · **Made in:** V-8, ruled open by the director · **Decided by:** builder,
+recorded for the director's confirmation
+
+`positive_when: equals` compares the label to the threshold as **text**, after stripping surrounding
+whitespace. It exists for categorical labels — `violating` / `not_violating`. `positive_when:
+at_least` compares numerically.
+
+**A numeric threshold under `equals` is refused at plan load** with `PLAN_THRESHOLD_INVALID`, and
+the operator is directed to `at_least`.
+
+**Reason.** The director's instruction was to decide deliberately: document exact-string semantics,
+or compare numerically. Documenting is not enough, because the trap survives the documentation. With
+`threshold: 1` and a label of `1.0`, the item counts as **negative**, the tool prints a wrong number,
+and nothing refuses. A caveat in a schema does not protect an operator who never reads it at the
+moment they need it.
+
+Refusing removes the trap instead of describing it. A genuinely categorical threshold is not a
+number, so nothing legitimate is lost; and `at_least` with threshold `1` expresses the numeric
+intent exactly.
+
+**Alternative not taken.** Comparing numerically whenever both sides parse as numbers — rejected:
+the behaviour would then depend on the *data*, so the same plan could mean different things against
+different label files. An estimand that changes meaning with its input is not a commitment.
+
+**Edge case accepted.** A categorical label whose text happens to be `"1"` cannot be expressed under
+`equals`. Recorded rather than hidden. Use `at_least` with threshold `1`.
+
+---
+
+## D-21 — A frame is de-duplicated, and both counts are recorded
+
+**Date:** 2026-08-28 · **Made in:** V-7, ruled open by the director · **Decided by:** builder,
+recorded for the director's confirmation
+
+`do_sample` records **`frame_rows_read`** and **`frame_unique_ids`** in the ledger entry. Both
+readers strip surrounding whitespace.
+
+**Reason.** The director offered two options: refuse duplicates, or record both counts explicitly.
+Recording is the right one, because **de-duplicating is correct** — a sampling frame is a set of
+units, and the same unit listed twice is one unit. Refusing would reject a legitimate frame produced
+by any export that repeats a row.
+
+**Silence was the defect, not the de-duplication.** For a prevalence tool the frame is the
+denominator. Reading 300 rows, sampling from 200, and recording only "200" changed the denominator
+with nothing in the record saying the input differed from what was used.
+
+**The whitespace half.** The `.txt` reader stripped and the CSV reader did not, so `" item-1"` was
+two distinct population members from a CSV and one from a text file. Both strip now. Two readers of
+the same frame disagreeing about how many units exist is the same class of defect as the silence.
+
+**This is the builder's proposal implemented, and it is the director's ruling.** Marked so it is not
+mistaken for a closed decision.
+
+**Limit unchanged.** `SECURITY.md` §3.3 still holds: the tool cannot tell whether the frame is the
+right frame. It can now only promise that the frame it used is the frame it recorded, and that any
+difference from the input is visible.
+
+---
+
 ## Carried obligations opened by these decisions
 
 | # | Obligation | Owner | Opened by |
@@ -495,3 +558,4 @@ them."* This is the same lesson pointing at input rather than at records.
 | O-11 | Chunk-digest manifest bound into the ledger; `verify` discriminates tamper / truncate / reorder / substitute by distinct reason code. | Phase 1 | **D-14** |
 | O-12 | `verify` states in words when the on-disk plan check was skipped because the file is absent. | Phase 1 | **D-15** |
 | O-13 | Measure how far `svy`'s design-based Wilson diverges from the textbook binomial interval at small *n*. D-18 records that they differ in construction; the magnitude is unmeasured. | Phase 2 | **D-18** |
+| O-14 | Build the keyless structural audit mode `verify_structure`'s docstring described but `verify_run` never offered. Genuinely valuable: an auditor without the key could still check sequence integrity. | Phase 2 | **V-10** |

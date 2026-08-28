@@ -40,3 +40,4 @@ LOG
 2026-08-28T14:15:37Z | 2026-08-28 19:45:37 +0530 | PHASE-1 | GATE | REVIEW STOP. Core built, gate clean (ruff x2, mypy strict, 88 tests). 7 self-found defects + 2 questions. Awaiting director rulings.
 2026-08-28T14:38:38Z | 2026-08-28 20:08:38 +0530 | PHASE-1 | GATE | Review stop CLOSED by director: 7 accepted w/ mods + 10 reviewer findings (V-1 critical) + 4 record defects. V-1 reproduced independently. Mechanism proposed, NOT implemented. Awaiting ruling.
 2026-08-28T16:27:47Z | 2026-08-28 21:57:47 +0530 | PHASE-1 | NOTE | V-1 mechanism landed (4 layers) + V-2/V-5/V-6/V-9 + F-2/F-4/F-7 + D-19 (CSV limit). Records: D-16..D-19, O-13, C-7..C-11, contract E5b/E8d/E9c, tier discharged at STANDARD.
+2026-08-28T16:53:44Z | 2026-08-28 22:23:44 +0530 | PHASE-1 | NOTE | Plan-load family + V-11/V-7/F-6/V-10 closed. D-20/D-21, O-14, C-12/C-13 recorded. 158 tests, 17s. All 19 accepted findings now closed pending director verification.

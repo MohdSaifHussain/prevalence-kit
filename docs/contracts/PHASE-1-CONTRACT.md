@@ -121,6 +121,13 @@ Each gets a distinct reason code, a negative control, and a positive control.
 | `SEAL_ALREADY_WRITTEN` ▸ **AMENDED** | A second seal into the write-once `plan.sealed` store |
 | `SEAL_ID_COLLISION` ▸ **AMENDED** | A sealed directory already belongs to a different item id |
 | `KEY_MISSING` ▸ **AMENDED** | The sealing key is absent (was reported as `SEAL_TAMPERED`, and on the `verify` path as a raw `FileNotFoundError`) |
+| `PLAN_THRESHOLD_INVALID` ▸ **AMENDED** | The threshold does not fit the comparison: non-numeric under `at_least`, or numeric under `equals` |
+| `LABEL_NOT_NUMERIC` ▸ **AMENDED** | A label value is not a number and the estimand compares numerically |
+| `FRAME_EMPTY` ▸ **AMENDED** | The sampling frame has no rows |
+| `FRAME_TOO_SMALL` ▸ **AMENDED** | The frame holds fewer items than the plan asks for |
+| `CONTENT_TOO_LARGE` ▸ **AMENDED** | A CSV field exceeds the reader's ceiling |
+
+**22 reason codes at this commit.** `EMPTY_SAMPLE` used to carry four of these situations at once, which told an operator nothing about which of four different things to fix.
 | `PLAN_MISSING` ▸ **AMENDED** | The sealed plan copy is absent, so check (a) of D-15 cannot run. *(A missing **working** plan file is not a failure — see R10.)* |
 
 ## 4b. The linearity rule ▸ **AMENDED**
@@ -216,6 +223,20 @@ gates that demonstrably refuse, for named and **distinct** reasons. E9, E9b and 
 **three different reason codes** — if any two collapse into one, the gate has not been built.
 
 ---
+
+## 7a. The reviewer harness is not the exit checklist ▸ **AMENDED**
+
+**E1–E15 stay as written, as CLI invocations, and the director runs them for real at phase close
+when D1.8 exists.** The reviewer harness — a director-run script driving the core Python API and
+printing reason codes for the director to read by eye — is an **additional instrument for the review
+stop, not a replacement for the ritual, and it does not discharge any exit check.**
+
+Why not `pytest` instead: doctrine rule 4 says green tests prove self-consistency, not meaning. The
+suite is the builder's, written from one understanding and wrong in both places when that
+understanding is wrong. The director running `pytest` is the director running the builder's
+instrument and reading the builder's assertions — the exact substitution the stop exists to prevent.
+The exit-check-to-test mapping is retained as **supporting evidence that each check has a test
+behind it**, never as the check itself.
 
 ## 7b. E2 complement — are post-ingest plan edits covered by E8?
 
