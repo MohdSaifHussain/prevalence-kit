@@ -1,0 +1,36 @@
+prevalence-kit — TIME LOG
+=========================
+Append-only wall-clock record of this project. One line per stamped event.
+Machine timezone: Asia/Kolkata (IST, +0530). UTC given alongside.
+
+HOW THIS IS PRODUCED (honest limit, read this before trusting a number)
+----------------------------------------------------------------------
+Every timestamp below is read from the machine clock (`date`) at the moment
+the line is written. Claude cannot observe elapsed time on its own and has no
+timer. It only knows what the clock said when it last ran `date`.
+
+So:
+  - A stamp is a VERIFIED fact: the clock said this, at this point in the work.
+  - A GAP between two consecutive stamps is an INFERENCE about elapsed wall
+    clock. It is real elapsed time, but it does not distinguish "director was
+    away" from "usage limit" from "machine asleep".
+  - Nothing here is written while the session is idle. If work stops for five
+    hours, no line appears during those five hours; the gap shows up only on
+    the next line written after work resumes.
+
+Therefore: when you hit a usage limit or take a break, the reliable record
+comes from stamping on both sides. Say "stamp: pausing" before you go and
+"stamp: resuming" when you come back, and the pause is measured, not guessed.
+Ask for a stamp at any time and it gets appended here.
+
+FORMAT
+------
+<UTC ISO8601> | <local IST> | <PHASE> | <KIND> | <note>
+KIND is one of: START, STAMP, PAUSE, RESUME, GATE, CLOSE, NOTE
+
+LOG
+---
+2026-08-28T13:03:04Z | 2026-08-28 18:33:04 +0530 | PHASE-0 | START | Phase 0 session opened. Tier STANDARD, manual-approve. Vision read (225 lines). Source verification underway.
+2026-08-28T13:03:04Z | 2026-08-28 18:33:04 +0530 | PHASE-0 | NOTE | This log created at director's request mid-session. Clock reading above is a single `date` call; both stamps share it because both were written in the same command.
+2026-08-28T13:18:30Z | 2026-08-28 18:48:31 +0530 | PHASE-0 | STAMP | Source verification complete: 24 claims checked. Drafting deliverables.
+2026-08-28T13:29:15Z | 2026-08-28 18:59:15 +0530 | PHASE-0 | GATE | Deliverables drafted (charter, verification, tripwires, prior-art, standards, security, rulings queue). STOPPED for director rulings. No code, no git init.
