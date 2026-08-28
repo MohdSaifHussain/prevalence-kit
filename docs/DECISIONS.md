@@ -548,6 +548,57 @@ difference from the input is visible.
 
 ---
 
+---
+
+## D-22 — One code for the threshold, four for the empty sample. The rule that separates them.
+
+**Date:** 2026-08-28 · **Made in:** the director's close of the review stop · **Ruled by:** director
+(one code accepted; the reasoning required to be recorded)
+
+`PLAN_THRESHOLD_INVALID` covers two situations — a non-numeric threshold under `at_least`, and a
+numeric one under `equals`. `EMPTY_SAMPLE` was split into four. Both happened in the same commit and
+the reason was not stated, which is the defect being corrected here.
+
+**The rule, in one line: a reason code names the artifact the operator has to go and open. Count the
+artifacts, not the situations.**
+
+Applied to the split:
+
+| Situation | Artifact to open | Remedy |
+|---|---|---|
+| `sample_size` key absent | the plan's **structure** | add a key |
+| `sample_size: 0` | the plan's **value** | change a number |
+| frame has no rows | the **population file** | supply a different file |
+| frame smaller than `n` | the **relationship** between two good files | change either |
+
+Four different places to look, four different fixes, so four codes. An operator told
+`EMPTY_SAMPLE` learned nothing about which of those four to go and read.
+
+Applied to the threshold:
+
+| Situation | Artifact to open | Remedy |
+|---|---|---|
+| non-numeric threshold under `at_least` | the estimand's **two lines** | make them agree |
+| numeric threshold under `equals` | the estimand's **two lines** | make them agree |
+
+One place, one pair of fields, one invariant: **the threshold and the comparison must agree**. Both
+remedies are the same act — edit `threshold` or edit `positive_when`, in the same block of the same
+file. The direction (which way they disagree) and the specific remedy are carried in the detail and
+fix text, which is what that text is for. A second code would route the operator to the same two
+lines twice.
+
+**Honestly recorded: this invariant is defensible and it was not articulated at the time.** The
+codes were split one way and merged the other in a single commit with no stated reason, and the
+director caught the inconsistency rather than the outcome. The rule above is written now, and it is
+written as a rule for future splits rather than as a justification for this one — the test of it is
+whether it decides the *next* case before the code is written.
+
+**Consequence for later phases.** Phase 2 adds stratified designs, Rogan–Gladen, and their refusals.
+Each new code answers: *how many artifacts must the operator open?* If the answer is one, it is one
+code with directional detail text.
+
+---
+
 ## Carried obligations opened by these decisions
 
 | # | Obligation | Owner | Opened by |

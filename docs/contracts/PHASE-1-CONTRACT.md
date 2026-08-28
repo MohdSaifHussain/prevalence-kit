@@ -238,6 +238,24 @@ instrument and reading the builder's assertions — the exact substitution the s
 The exit-check-to-test mapping is retained as **supporting evidence that each check has a test
 behind it**, never as the check itself.
 
+### What the harness does not reach ▸ **AMENDED**
+
+Recorded before anyone later reads "the harness passed" as more than it was.
+
+* **It observes reason codes, not exit codes.** It calls the Python API directly. Nothing about
+  process exit status is exercised, and E1, E3, E5, E6, E8c and E11–E15 all state expected exit
+  codes that remain untested.
+* **No report exists, so E4 and R7 are untested.** The Honest Limits block, and reading a report by
+  eye, are the parts of the exit checklist that most need a human, and neither has happened.
+* **A second instrument is not an independent truth.** The harness was written by the reviewer, from
+  the reviewer's reading of this contract, so it carries the reviewer's blind spots the way the
+  builder's suite carries the builder's. What it removes is the *shared* blind spot between the code
+  and the tests, which is the specific thing it was for — not blind spots in general.
+
+**What it did establish, at that width:** 24 damage cases each produced the reason code this
+contract names; E9, E9b and E9c produced three distinct codes on a real multi-chunk item; and R4 was
+clean across 91 written files.
+
 ## 7b. E2 complement — are post-ingest plan edits covered by E8?
 
 **Asked by the director at approval. Answer: yes, and here is why — plus one thing that was not
