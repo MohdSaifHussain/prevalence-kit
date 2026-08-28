@@ -145,6 +145,20 @@ def largest_remainder(raw: tuple[float, ...], n: int) -> tuple[int, ...]:
        abstract: "Neyman allocation with rounded integers does not always lead
        to the optimal allocation." His exact-optimal algorithms do better and
        are recorded as the alternative not taken in D-30.
+
+       HOW MUCH IS IT COSTING YOU? Measured, so the limit carries its own bound
+       rather than leaving a reader to imagine one. Enumerating every integer
+       allocation within two units per stratum that sums to n and keeps the
+       floor above:
+
+           on all three shipped fixtures     gap exactly 0
+           over 37,910 random designs        suboptimal in 5.21% of them
+           worst gap found                   0.7316% of variance,
+                                             0.3651% of the standard error
+
+       Best in a bounded window, not a proof of global optimality. The zero is
+       readable only because the same search finds real gaps elsewhere, which
+       `test_the_optimality_search_can_find_a_gap` pins.
     2. It is not monotone in n. Raising the total sample size can lower a
        stratum's allocation -- 303 such n in 10..6000 on Barnett's own frame.
        For a single pre-registered n this never bites, because the plan fixes n

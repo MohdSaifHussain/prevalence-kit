@@ -17,11 +17,11 @@ neither the director nor the AI can quietly absorb the other's.
 | Chat reviewer (draft author) | 3 | 0 | **3** |
 | Research report (passed through unverified) | 2 | 0 | **2** |
 | Stale-at-draft-time, queued but built on anyway | 1 | 0 | **1** |
-| **Builder (Claude Code)** | **18** | **0** | **18** |
+| **Builder (Claude Code)** | **19** | **0** | **19** |
 | Reviewer instrument | **1** | 0 | **2** (1 noted) |
 | Director | 0 | 0 | 0 |
 | Tool artifact (noted, not a defect) | - | - | **1** |
-| **Total** | **25** | **0** | **26** |
+| **Total** | **26** | **0** | **27** |
 
 C-1 … C-6 are Phase 0: defects in the chat-drafted vision, all caught before any code, none reaching
 an artifact. **C-7 … C-13 are Phase 1, and all seven are mine.** Five were caught by the director's
@@ -601,6 +601,37 @@ regex. It now uses `xml.etree.ElementTree`. Everything else already used the rig
 
 ---
 
+## C-24 - A ratio taken from a working step instead of from the artifact
+
+| | |
+|---|---|
+| **Claimed** | Report and commit message for `104abe3`, explaining why Clopper-Pearson is narrower than Wilson at k = 0, n = 4000: *"Ratio 0.9603."* |
+| **Actually** | **0.9608.** The interval widths are `0.000921794749` and `0.000959443290`, and their ratio is **0.960760**. 0.960281 is a different quantity -- the ratio of the two *linear approximations*, `-ln(0.025) / z^2 = 3.6889 / 3.8415`, which is the limit the sequence reaches as n grows. Re-derived: n = 4,000 gives 0.960760; 40,000 gives 0.960329; 4,000,000 gives 0.960281. |
+| **Direction** | Against the artifact. Both numbers are real; the wrong one was attached to the case being discussed. |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | The director, re-deriving the ratio from the exact values rather than accepting the correction |
+| **Severity** | Low in effect -- the finding it decorated is correct, and the shipped code returns the right numbers to twelve decimals. Notable in kind, and in where it happened. |
+| **Replaced by** | The two figures stated as what they are: **0.9608 at n = 4000**, and **0.9603 as the asymptotic limit**, with the convergence shown. |
+| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+
+**This is C-7's family: a figure taken from a working step rather than re-derived from the artifact.**
+The working step was the algebra that explains *why* the interval is narrower. That algebra is right,
+and the ratio it produces is not the ratio of the two intervals.
+
+**Where it happened is the uncomfortable part.** It landed in the paragraph where I was correcting
+myself for asserting a believed mechanism. The correction was right; the number attached to it was
+not re-derived.
+
+**And the artifact had already printed the right answer.** The table I generated to check the
+property has a `CP/Wilson` column, and it reads `0.960760`. I had it on screen and quoted the
+algebra instead.
+
+**The test docstring was already correct** -- it distinguishes "tends to 0.9603" from "at n = 4000
+it is 0.96076". So the defect was in the prose I wrote *about* the code, not in the code or its
+tests, which is its own small lesson about where to look.
+
+---
+
 ## Classes, tracked separately from the count
 
 A correction gets a C-number when it reached a commit. A **class** keeps its own tally, because a
@@ -629,6 +660,19 @@ by thinking harder about it.
 **The fix is the part worth keeping.** The raw allocation print went from two decimals to four, so
 the display that caused the misreading no longer exists. That is rule 14: not a resolution to read
 more carefully, but a changed artifact where the mistake is no longer available.
+
+### A figure taken from a working step rather than re-derived from the artifact
+
+| # | Where | Reached a commit? |
+|---|---|---|
+| 1 | C-7 -- ruff's summary integer quoted as a file count | yes |
+| 2 | C-14 -- the docs/src ratio, counting files the label did not name | yes |
+| 3 | The CRAN/p3m file count, 2026-08-29 -- "353 of 355" counted tar entries including 14 directories. **TW-5 reported 339 of 341 on its first run and was right** | **no -- the instrument corrected it first** |
+| 4 | **C-24** -- the CP/Wilson ratio quoted from the linear approximations, not the widths | yes |
+
+**Three of the four were caught by something mechanical**, not by rereading: ruff itself, the
+director re-deriving all six rows of a table, and TW-5 contradicting its own author on its first
+run.
 
 ### An instrument that does not cover what it appears to
 

@@ -187,7 +187,13 @@ def test_clopper_pearson_is_wider_than_wilson_except_at_zero(case: dict[str, Any
         Clopper-Pearson upper = 1 - (alpha/2)^(1/n)  ->  -ln(0.025)/n = 3.6889/n
         Wilson upper          = z^2 / (n + z^2)      ->        z^2/n  = 3.8415/n
 
-    The ratio tends to 3.6889 / 3.8415 = 0.9603, and at n = 4000 it is 0.96076.
+    TWO RATIOS, and they are not the same number. Confusing them is C-24.
+
+        at n = 4000, the actual widths     0.960760   <- the case here
+        as n grows, the approximations     0.960281   <- the limit
+
+    Re-derived: n = 4,000 -> 0.960760; 40,000 -> 0.960329; 4,000,000 -> 0.960281.
+    Quote the first when talking about n = 4000. The second is where it is going.
     Measured across the 23 fixture cases: wider in 22, narrower in exactly one,
     which is k = 0 at n = 4000.
 
