@@ -39,6 +39,18 @@ class Reason(StrEnum):
     LABELS_UNMATCHED = "LABELS_UNMATCHED"
     EMPTY_SAMPLE = "EMPTY_SAMPLE"
 
+    # Phase 2, stratified designs. Contract section 6.
+    # D-22 decides how many codes: count the artifacts an operator must open,
+    # not the situations. STRATUM_UNSAMPLED and STRATUM_EMPTY are separate
+    # because they send the operator to different files -- the sample, and the
+    # frame.
+    STRATA_UNDEFINED = "STRATA_UNDEFINED"
+    STRATUM_EMPTY = "STRATUM_EMPTY"
+    STRATUM_UNSAMPLED = "STRATUM_UNSAMPLED"
+    ALLOCATION_IMPOSSIBLE = "ALLOCATION_IMPOSSIBLE"
+    ALLOCATION_TOO_THIN = "ALLOCATION_TOO_THIN"
+    ALLOCATION_ROUNDING_UNDECLARED = "ALLOCATION_ROUNDING_UNDECLARED"
+
 
 class Refusal(Exception):
     """The tool declined to produce a number it could not defend.

@@ -1,7 +1,8 @@
 # Phase 2 contract — the honest-statistics layer
 
-**Status: APPROVED — 29 August 2026. Q1, Q2 and Q3 ruled.**
-Code begins after the push and the CI report. See O-16 and O-17 in §10.
+**Status: APPROVED and UNBLOCKED — 29 August 2026. Q1-Q4 ruled.**
+O-16, O-17 and O-18 discharged; the push and CI have happened. D2.1 and D2.2 are done.
+**Q4 was found by D2.2 and ruled the same day — D-30.** See §10.
 
 | | |
 |---|---|
@@ -90,7 +91,7 @@ Each names the top standard it must follow.
 | D2.5 | Rogan–Gladen correction | **S-1.4** Rogan & Gladen (1978) |
 | D2.6 | Rogan–Gladen CI propagation + Lang & Reiczigel fixtures | **S-1.5** Lang & Reiczigel (2014) · O-8 |
 | D2.7 | **Refusals**: `Se + Sp <= 1`, degenerate zero apparent prevalence, unsampled stratum, and any further undefined case found | Charter §6.4 · doctrine rule 5 |
-| D2.8 | Plan schema extension: `design: stratified`, strata definition, allocation method, optional `sensitivity`/`specificity` | Charter §4 `plan` · D-22 |
+| D2.8 | Plan schema extension: `design: stratified`, strata definition, allocation method, **`allocation_rounding` (required under `stratified`, Q4 / D-30)**, optional `sensitivity`/`specificity` | Charter §4 `plan` · D-22 · **D-30** |
 | D2.9 | `svy` cross-check **where its estimator is the same estimator**, in a separate optional environment | **O-4 as narrowed by D-18** |
 | D2.10 | Measure how far `svy`'s design-based Wilson diverges from the textbook interval at small *n* | **O-13** |
 | D2.11 | CI wiring: fixtures in the gate, R image pinned by digest | S-6 toolchain |
@@ -154,16 +155,21 @@ Each gets a distinct code, both controls, and a message that says what to do.
 
 | Code | Fires when |
 |---|---|
-| `CORRECTION_UNDEFINED` | `Se + Sp <= 1` — the Rogan–Gladen denominator vanishes or inverts |
-| `CORRECTION_DEGENERATE` | Apparent prevalence is zero or one, so the corrected estimate carries no information |
+| `CORRECTION_UNDEFINED` | `Se + Sp <= 1` — the Rogan–Gladen denominator vanishes or inverts. **PENDING D2.5** |
+| `CORRECTION_DEGENERATE` | Apparent prevalence is zero or one, so the corrected estimate carries no information. **PENDING D2.5** |
 | `STRATUM_UNSAMPLED` | A stratum in the plan received no sampled units |
 | `STRATUM_EMPTY` | A stratum is defined but contains no frame units |
 | `ALLOCATION_IMPOSSIBLE` | Neyman allocation cannot be satisfied — e.g. a stratum's allocation exceeds its size |
 | `STRATA_UNDEFINED` | `design: stratified` with no strata definition |
-| `ALLOCATION_TOO_THIN` | Neyman allocated fewer than 2 units to a stratum — zero within-stratum degrees of freedom, so its variance contribution is undefined. Q2 |
+| `ALLOCATION_TOO_THIN` | Neyman allocated fewer than 2 units to a stratum — zero within-stratum degrees of freedom, so its variance contribution is undefined. Q2. **Checked after rounding, not before** — D-30 condition 4 |
+| `ALLOCATION_ROUNDING_UNDECLARED` | `design: stratified` with no `allocation_rounding` field. The rounding rule is a commitment the operator makes, so it cannot be defaulted. **Q4 / D-30 condition 1** |
 
 *Under D-22, `STRATUM_UNSAMPLED` and `STRATUM_EMPTY` are separate because they send the operator to
 different artifacts: the sample, versus the frame.*
+
+**29 reason codes in total**, across Phase 1's 23 and this phase's 6. Counted from `Reason` by
+`tools/check_claims.py`, not maintained by hand -- the figure moved from the Phase 1 contract to here
+when Phase 2 added codes and the checker went on reading the closed phase's number.
 
 ## 7. Review stop
 
@@ -338,11 +344,42 @@ bug is ever fixed in one path and not the other, that is the day to revisit.**
 
 ---
 
+### Q4 — Rounded Neyman allocation does not always sum to n
+
+Found by **D2.2**, not by reasoning: `rare_event_neyman_5000` asks for 5000, and raw
+`3845.4104 / 884.2526 / 270.3371` floors to `3845 / 884 / 270` = **4999**. Barnett's case sums
+exactly, so D2.1's anchor never met this.
+
+| | Option | Consequence |
+|---|---|---|
+| A | Hand the remainder to a stratum, ad hoc | Rewrites a pre-registered design after the operator wrote it. V-1's class |
+| B | Refuse | Fails **R8** — the tool cannot say what to do, since the only lever is `sample_size` and n+1 may not sum either |
+| C | Deliver the real size | Plan says 5000, record says 4999, nothing reconciles them |
+| **D** | **Largest remainder, named in the plan and hashed** | The allocation is *derived*, not rewritten. Nobody chooses anything after seeing data |
+
+**RULED: D.** The director's grounds: option A's objection *"only holds if the choice is made ad
+hoc. If the rounding rule is named in the plan, hashed before any data is touched, and fully
+determined by the frame, then the allocation is not being rewritten — it is being derived, exactly
+as the Neyman allocation itself already is."*
+
+Six binding conditions in **D-30**. Sources pinned live before any code: **S-1.7** (U.S. Census
+Bureau, which calls it *controlled rounding*), **S-1.8**, **S-1.9**.
+
+**Two limits disclosed, and the second was found by obeying condition 5** — pin the source rather
+than cite it from memory. Controlled rounding of Neyman is **not always the variance-minimal integer
+allocation** (Wright's own counterexample), and largest remainder is **not monotone in n**. Both in
+`docs/STANDARDS.md` under S-1.7. Neither is a reason to reject the ruling; both would have been
+found later by someone else.
+
+---
+
 ## Approval
 
 - [x] Director approves this contract — **29 August 2026**
 - [x] Q1, Q2 and Q3 ruled
-- [ ] **Blocking: the push and the CI report.** O-16 and O-17 are unmet with a named blocker, and
-      R2's cross-version determinism is currently *assumed*. Phase 2 code begins after CI has run.
+- [x] **Unblocked 2026-08-29.** O-16 and O-17 discharged. R2's cross-version determinism is
+      *asserted*: run `33206373461` drew an identical sample on CPython 3.12.14, 3.13.15 and 3.14.7.
+- [x] **Q4 ruled — 29 August 2026.** Largest-remainder rounding, named in the plan. **D-30**, six
+      binding conditions. Found by D2.2, which is what generating fixtures before estimators is for.
 
-**Approved. Code begins after the push, in the next session.**
+**Approved and unblocked. D2.1 and D2.2 are done; D2.3 begins.**

@@ -868,6 +868,83 @@ all, found within the hour. The rule earned its keep immediately.
 
 ---
 
+## D-30 - Rounded Neyman allocation uses largest remainder, named in the plan
+
+**Date:** 2026-08-29 - **Made in:** the director's Q4 ruling - **Ruled by:** director
+
+A Neyman allocation rounded to whole units does not always sum to n. When it does not, the shortfall
+goes to the strata with the **largest fractional parts**, and the rule is **named in the plan and
+hashed before any data is touched**.
+
+**The problem, found by D2.2 rather than reasoned about.** `rare_event_neyman_5000` asks for 5000.
+Raw `3845.4104 / 884.2526 / 270.3371` floors to `3845 / 884 / 270`, which sums to **4999**. Barnett's
+case happens to sum exactly, so D2.1's anchor never met it.
+
+**The builder offered three options and all three were worse than a fourth.** The builder rejected
+"hand the remainder to a stratum" on the grounds that it rewrites a pre-registered design after the
+operator wrote it -- V-1's class.
+
+**The director's answer, and it dissolves that objection:** *the objection only holds if the choice
+is made ad hoc.* If the rounding rule is named in the plan, hashed before any data is touched, and
+fully determined by the frame, then the allocation is **derived, not rewritten** -- exactly as the
+Neyman allocation itself already is. Nobody chooses anything after seeing results.
+
+On the failing case:
+
+    raw        3845.4104   884.2526   270.3371
+    floor      3845        884        270        = 4999, short by 1
+    fraction   0.4104      0.2526     0.3371
+    result     3846        884        270        = 5000
+
+Stratum 1 takes the unit because its fractional part is largest. No judgement, no data seen, and
+reimplementable by an outsider in a few lines -- the same bar D-16's keyed sort was chosen to meet.
+
+**Why the other three lose, as ruled.**
+
+- **Refuse** fails **R8**, and that is decisive. R8 requires every refusal to say what to do about
+  it, and here the tool cannot: the operator's only lever is `sample_size`, and 5001 might not sum
+  either. A refusal that hands the operator an arbitrary puzzle is worse than no refusal. *The
+  director's words: this is the one place the builder's instinct for refusing should not carry.*
+- **Deliver the real size** leaves the plan saying 5000 and the record saying 4999 with nothing
+  reconciling them. Pre-registration means the plan is a commitment, and a commitment the tool
+  routinely misses by one is not one.
+- **Ad hoc assignment** is the option the builder was right to reject, and naming the rule in the
+  plan is what removes it.
+
+**Six binding conditions, as ruled.**
+
+1. **The plan names the rule.** `allocation_rounding: largest_remainder`, an explicit field in the
+   hashed plan record -- not a default and not a constant in the source. A plan that omits it is
+   refused at load, in the F-1 / V-3 family.
+2. **The tie-break is stated and deterministic.** Equal fractional parts resolve the same way on
+   every machine and in every language, and it is pinned with a recorded-value test the way
+   `draw_srs` is.
+3. **Both allocations reach the ledger** -- raw and final -- so an outsider can re-derive the
+   rounding without running our code. `verify` re-derives it, so a changed rule breaks the chain.
+4. **Order of operations: allocate, round, then apply Q2's floor.** Largest remainder can still
+   leave a stratum at 0 or 1, and `ALLOCATION_TOO_THIN` must fire after rounding, not before.
+5. **The source is pinned live**, not cited from memory. S-1.7, S-1.8, S-1.9.
+6. **The known property is disclosed** before anyone finds it.
+
+**Alternative not taken, and it is a better method on the thing it optimises.** **Wright's exact
+optimal allocation** (S-1.7) solves the integer allocation directly and is not merely a rounding of
+Neyman. Its own abstract says *"Neyman allocation with rounded integers does not always lead to the
+optimal allocation"*, with a worked counterexample. So the ruled method is **defensible and
+reproducible, and it is not variance-minimal.**
+
+Rejected for v1.0 on three grounds, recorded rather than implied: it is a different estimator
+needing its own validation; **neither R `survey` nor `svy` implements it**, so R2.3 would have
+nothing to check it against, which is Q1's argument exactly; and the charter's scope cap sends a
+feature that wants more phases to NEXT. **Proposed for the NEXT queue by name**, so it is deferred
+rather than forgotten.
+
+**What condition 5 turned up that the ruling did not mention.** Following the pin-the-source rule
+produced a second limit -- Wright's, above -- that neither director nor builder had in hand when the
+ruling was written. The rule earned its keep on the first use. It also caught a DOI written from
+memory that pointed at an unrelated paper on Mobius inversion.
+
+---
+
 ## Carried obligations opened by these decisions
 
 | # | Obligation | Owner | Opened by |

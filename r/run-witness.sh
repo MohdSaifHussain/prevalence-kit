@@ -11,7 +11,10 @@
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-image="prevalence-kit-witness:d2.1"
+# Tagged :current, not :d2.1. The image serves every R deliverable from D2.1
+# onward, so a tag naming one of them is a small lie in an artifact the
+# fixtures cite. The real pin is the base image digest below, not the tag.
+image="prevalence-kit-witness:current"
 
 # F16: the base image digest must match the register.
 pinned="sha256:c3f39b365d1077fe24f8e9ab2742e352b6d3950897f51af1624a5bb5550c21c0"

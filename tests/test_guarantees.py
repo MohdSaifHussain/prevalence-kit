@@ -84,6 +84,11 @@ EVIDENCE_PATH = (
     "estimators.py",
     "run.py",
     "verify.py",
+    # Phase 2. It decides how many units each stratum gets and computes the
+    # stratified estimate, so it is as much evidence path as estimators.py.
+    # This line exists because the guard refused to let the module through
+    # unclassified, which is the guard doing its job rather than a formality.
+    "stratified.py",
 )
 
 
@@ -236,4 +241,41 @@ def test_evidence_path_covers_every_runtime_module() -> None:
     assert not unclassified, (
         f"New runtime modules are in neither the evidence path nor the surface list: "
         f"{sorted(unclassified)}. Classify them so the AI guard keeps covering everything."
+    )
+
+
+def test_the_network_guard_stops_at_runtime_dependencies() -> None:
+    """What the guard does NOT look at, asserted so its silence cannot mislead.
+
+    Ruled 2026-08-29, when `defusedxml` went into dev extras. The guard walks
+    `[project.dependencies]` and skips any requirement marked `extra == ...`. So
+    it reads the shipped package's tree and nothing else.
+
+    That is correct -- Hard Rule 1 is about what an operator installs, and dev
+    tools that reach the network are the whole point of `tools/`. But it means
+    adding a dev dependency draws no objection from this guard, and **"the guard
+    did not object" must never be read as "the guard looked."**
+
+    The scope is asserted rather than described, because a description drifts.
+    """
+    data = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+
+    # The guard's own input is the runtime list, not the extras.
+    assert declared_dependencies() == data["project"]["dependencies"]
+    dev = data["project"]["optional-dependencies"]["dev"]
+    assert any(spec.startswith("defusedxml") for spec in dev), (
+        "defusedxml belongs in dev extras. If it moved to runtime dependencies, "
+        "this test is the wrong place to find that out -- but find it out here."
+    )
+    assert not any(spec.startswith("defusedxml") for spec in declared_dependencies())
+
+    # And nothing in dev extras is walked, so none of it can be vouched for here.
+    walked, _ = transitive_requirements("defusedxml")
+    assert "defusedxml" in walked, "sanity: the walker can see it when asked directly"
+    runtime_walk: set[str] = set()
+    for spec in declared_dependencies():
+        seen, _ = transitive_requirements(spec.split(";")[0].split("[")[0].strip())
+        runtime_walk |= seen
+    assert "defusedxml" not in runtime_walk, (
+        "defusedxml appeared in the runtime tree. It is a dev tool and must not ship."
     )

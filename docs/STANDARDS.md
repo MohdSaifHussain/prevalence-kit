@@ -70,11 +70,71 @@ so.** `docs/CORRECTIONS.md` C-22.
 | S-1.4 | Misclassification correction | Rogan, W.J. & Gladen, B., *Estimating Prevalence from the Results of a Screening Test*, **Am. J. Epidemiol.** | **1978**, DOI `10.1093/oxfordjournals.aje.a112510` | never |
 | S-1.5 | Confidence limits for corrected prevalence | Lang, Z. & Reiczigel, J., *Confidence limits for prevalence of disease adjusted for estimated sensitivity and specificity*, **Prev. Vet. Med.** | **2014**, DOI `10.1016/j.prevetmed.2013.09.015` | never |
 | S-1.6 | Exact limits with an imperfect test (Phase 2 cross-check) | Reiczigel, J., Földi, J., Ózsvári, L., **Epidemiol. Infect.** | **2010**, DOI `10.1017/s0950268810000385` | never |
+| **S-1.7** | **Rounding a Neyman allocation to whole units** -- the method Q4 ruled | Wright, T., *A Simple Method of Exact Optimal Sample Allocation under Stratification with Any Mixed Constraint Patterns*, **U.S. Census Bureau**, Research Report Series (Statistics) **#2014-07** | Issued **21 August 2014**; fetched **2026-08-29** from `https://www.census.gov/content/dam/Census/library/working-papers/2014/adrm/rrs2014-07.pdf` (HTTP 200, 154,969 bytes, sha256 `0fdd5e7ce795552843678d0871cfeacdb46c470c9fc0aa2eb182b352c0b0f196`) | never -- fixed publication |
+| **S-1.8** | Why apportionment sources apply to survey allocation at all | Wright, T., *The Equivalence of Neyman Optimum Allocation for Sampling and Equal Proportions for Apportioning the U.S. House of Representatives*, **The American Statistician** | **2012**, 66(4), 217-224, DOI `10.1080/00031305.2012.733679` | never |
+| **S-1.9** | The formal treatment of largest remainder and its paradoxes | Balinski, M.L. & Young, H.P., *The Quota Method of Apportionment*, **American Mathematical Monthly** | **1975**, 82(7), 701-730, DOI `10.1080/00029890.1975.11993911`. **Metadata verified live via Crossref 2026-08-29; the full text was not read.** See the note below | never |
 
 **Refusal conditions are mathematical consequences, not citations.** The Rogan–Gladen estimator is
 `π̂ = (p̂ + Sp − 1)/(Se + Sp − 1)`. The denominator vanishes at `Se + Sp = 1` and the estimator
 inverts sign below it. Refusing there is arithmetic, and it is marked as such so no reader mistakes
 it for a claim about a source.
+
+### S-1.7 -- largest-remainder rounding, quoted from the source
+
+Q4 ruled that a rounded Neyman allocation uses **largest remainder**, named in the plan. Charter
+section 5.4 says a method that cannot be validated against an authoritative reference does not ship,
+so the method is quoted rather than described from memory.
+
+The survey-sampling literature calls it **controlled rounding**. Wright (2014), S-1.7, section 1,
+verbatim:
+
+> *"In the allocation of the overall sample to the various strata, one may frequently need to round
+> to integer values. The issue is often handled by controlled rounding. This is done by sorting
+> fractional parts (non-integer remainders) from the largest to smallest and assigning the desired
+> number of additional units to the strata with the largest fractional parts."*
+
+That is exactly the rule Q4 ruled, from an official statistical agency, in the survey-allocation
+context rather than the voting one.
+
+**Why an apportionment method belongs in a sampling tool at all.** Wright (2012), S-1.8, proves
+Neyman optimum allocation and the "equal proportions" method used to apportion the U.S. House of
+Representatives are the same procedure. The two literatures are about one problem. Recorded because
+citing voting theory in a prevalence tool otherwise looks like a reach.
+
+### Two honest limits of the ruled method. Neither is a reason to reject it.
+
+**Limit 1 -- controlled rounding is not always the best integer allocation.** From S-1.7's own
+abstract, verbatim:
+
+> *"The exact optimal allocation avoids the need to round to integer values, as is the case with
+> Neyman allocation. Neyman allocation with rounded integers does not always lead to the optimal
+> allocation."*
+
+Wright gives a worked counterexample (section 2.3): Neyman yields `4.70 / 3.66 / 1.64` for n = 10;
+controlled rounding gives `5 / 4 / 1` with variance 97,013, and an exact-optimal allocation does
+better. **So our allocation is defensible and reproducible, and it is not variance-minimal.** That
+is a real cost of the ruling and it is stated here rather than discovered later.
+
+**Limit 2 -- largest remainder is not monotone in n.** Raising the total sample size can *lower* a
+stratum's allocation. Demonstrated on this project's own frames rather than cited, so it is
+checkable:
+
+| Frame | n where a stratum shrinks as n grows by 1 (searched n = 10..6000) |
+|---|---|
+| Barnett Table 2A | **303** values of n. Example: n = 60 gives `31/12/9/4/4`; n = 61 gives `32/13/9/4/3` -- stratum 5 loses a unit |
+| `rare_event` | **173** values of n. Example: n = 48 gives `37/8/3`; n = 49 gives `38/9/2` |
+
+This is the apportionment literature's **Alabama paradox** (S-1.9). **For a single pre-registered n
+it never bites** -- the plan fixes n before any data is touched, so there is no second allocation to
+be inconsistent with. It matters only to someone comparing two runs at different n, who could see it
+and think the tool is broken. Stated so they find the explanation before they find the behaviour.
+
+*Provenance note, per the standing rule.* S-1.9's metadata -- title, authors, journal, volume, issue,
+pages, DOI -- was verified live against Crossref on 2026-08-29. **The full text was not read**, so no
+sentence here is quoted from it, and the paradox above rests on our own computation instead. The DOI
+first written from memory, `10.2307/2319793`, is a different paper entirely -- Bender and Goldman on
+Mobius inversion. Caught by fetching. C-8's class, and the reason S-1.9 is cited by verified metadata
+and nothing more.
 
 ## S-2 — Validation targets
 

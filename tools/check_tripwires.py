@@ -38,7 +38,8 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from xml.etree import ElementTree
+
+from defusedxml import ElementTree  # not xml.etree: see check_tw1
 
 ROOT = Path(__file__).resolve().parents[1]
 TIMEOUT = 30
@@ -88,16 +89,13 @@ def check_tw1() -> Result:
     # same defect that let an unparseable gate.yml through a green checker.
     atom = "{http://www.w3.org/2005/Atom}"
     arxiv = "{http://arxiv.org/schemas/atom}"
-    # The suppression below is justified, not a silencing. S314 warns that `xml`
-    # parses untrusted
-    # data unsafely. Three things bound it here: the feed is fetched over TLS
-    # (this call was plain http:// until ruff pointed at it); CPython's
-    # ElementTree does not resolve external entities, so XXE is not reachable;
-    # and this file is a hand-run phase-close tool outside the shipped package,
-    # so the worst case of an entity-expansion feed is a hung ritual, not a
-    # compromised estimate. `defusedxml` would close the last of those and is a
-    # new dependency for a dev tool -- recorded as the option not taken.
-    entry = ElementTree.fromstring(feed).find(f"{atom}entry")  # noqa: S314
+    # `defusedxml`, not `xml.etree`. Ruled 2026-08-29 over a justified
+    # suppression: a lint-suppression comment here would only have been a
+    # promise about how arXiv
+    # behaves, and a parser that cannot be bombed is a property of our own tree.
+    # That is the same argument as V-17 -- do not assume a source behaves.
+    # Dev extras only; it never reaches the shipped package.
+    entry = ElementTree.fromstring(feed).find(f"{atom}entry")
     if entry is None:
         return Result("TW-1", False, "COULD NOT CHECK: the arXiv feed carried no <entry>")
 

@@ -363,25 +363,6 @@ def test_every_fixture_uses_the_call_barnett_validated() -> None:
         assert entry["call"] == validated, f"{entry['label']} used a call Barnett did not validate"
 
 
-def test_no_estimator_exists_yet() -> None:
-    """D2.1 and D2.2 produce fixtures and no estimator. R2.2's ordering.
-
-    The fixture has to be committed before the estimator that reproduces it,
-    because a test cannot agree with an implementation for the same wrong reason
-    when the expected value predates the implementation. This asserts the half a
-    git log cannot: that there is nothing to have reproduced them yet.
-
-    Delete this test when D2.3 lands. It is scaffolding with a stated end.
-    """
-    root = Path(__file__).resolve().parents[1]
-    src = root / "src" / "prevalence_kit"
-    assert not list(src.glob("stratified*.py"))
-    assert not list(src.glob("neyman*.py"))
-    estimators = (src / "estimators.py").read_text(encoding="utf-8")
-    assert "def stratified" not in estimators
-    assert "neyman" not in estimators.lower()
-
-
 def test_the_fixtures_record_an_unruled_question() -> None:
     """Rounded Neyman allocation does not always sum to n. Found by D2.2.
 

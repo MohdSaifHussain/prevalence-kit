@@ -130,7 +130,8 @@ Each gets a distinct reason code, a negative control, and a positive control.
 | `FRAME_TOO_SMALL` ▸ **AMENDED** | The frame holds fewer items than the plan asks for |
 | `CONTENT_TOO_LARGE` ▸ **AMENDED** | A CSV field exceeds the reader's ceiling |
 
-**23 reason codes at this commit.** `EMPTY_SAMPLE` used to carry four of these situations at once, which told an operator nothing about which of four different things to fix.
+**23 reason codes at Phase 1 close (`d66d225`).** A dated figure, not a live one -- Phase 2
+adds more, and the live total is in the Phase 2 contract §6 where the checker reads it. `EMPTY_SAMPLE` used to carry four of these situations at once, which told an operator nothing about which of four different things to fix.
 | `PLAN_MISSING` ▸ **AMENDED** | The sealed plan copy is absent, so check (a) of D-15 cannot run. *(A missing **working** plan file is not a failure — see R10.)* |
 
 ## 4b. The linearity rule ▸ **AMENDED**

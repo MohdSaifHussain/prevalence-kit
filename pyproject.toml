@@ -36,6 +36,12 @@ dev = [
     "ruff==0.16.5",
     "mypy==2.3.1",
     "types-PyYAML",
+    # Dev only, never [project.dependencies]. tools/check_tripwires.py parses a
+    # remote Atom feed; a parser that cannot be bombed is a property of this
+    # tree, where a justified `# noqa` was only a promise about how arXiv will
+    # behave. Ruled 2026-08-29. 0.7.1 is the LATEST release, from 2021-03-08 --
+    # an old date on a current pin, not a stale pin. Zero dependencies, PSFL.
+    "defusedxml==0.7.1",
 ]
 
 [project.scripts]

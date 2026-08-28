@@ -197,17 +197,44 @@ def check_codes(root: Path) -> list[Problem]:
     from prevalence_kit.errors import Reason
 
     in_code = {r.name for r in Reason}
-    contract = (root / "docs" / "contracts" / "PHASE-1-CONTRACT.md").read_text(encoding="utf-8")
+    # Every contract, discovered, not one named file. Phase 2 added six codes
+    # and this check reported all six as undocumented because it only ever read
+    # the Phase 1 contract. Same shape as V-15: a check that names a row stops
+    # covering the thing the day a second row appears.
+    contract = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in sorted((root / "docs" / "contracts").glob("*-CONTRACT.md"))
+    )
     in_contract = set(re.findall(r"`([A-Z][A-Z_]{4,})`", contract)) & (
         in_code | set(re.findall(r"\| `([A-Z_]+)`", contract))
     )
+
+    # A contract in progress promises codes its deliverables have not built yet.
+    # Those are obligations, not defects, and the difference has to be visible:
+    # a row marked PENDING is expected to be absent, and anything else is not.
+    # Rule 11 -- tracked by name until discharged, never quietly dropped.
+    pending = {
+        name
+        for line in contract.splitlines()
+        if "PENDING" in line
+        for name in re.findall(r"`([A-Z][A-Z_]{4,})`", line)
+    }
+
     problems = [
-        Problem("codes", "contract §4", f"{name} is in the contract but not in Reason")
-        for name in sorted(in_contract - in_code)
+        Problem(
+            "codes",
+            "contracts",
+            f"{name} is in a contract but not in Reason, and is not marked PENDING",
+        )
+        for name in sorted(in_contract - in_code - pending)
     ]
     problems += [
-        Problem("codes", "errors.py", f"{name} exists but the contract never names it")
+        Problem("codes", "errors.py", f"{name} exists but no contract names it")
         for name in sorted(in_code - in_contract)
+    ]
+    problems += [
+        Problem("codes", "errors.py", f"{name} is marked PENDING but already exists")
+        for name in sorted(pending & in_code)
     ]
     return problems
 
@@ -412,8 +439,8 @@ def check_figures(root: Path) -> list[Problem]:
     claims = {
         "reason codes": (
             len(list(Reason)),
-            re.compile(r"\*\*(\d+) reason codes"),
-            root / "docs" / "contracts" / "PHASE-1-CONTRACT.md",
+            re.compile(r"\*\*(\d+) reason codes in total"),
+            root / "docs" / "contracts" / "PHASE-2-CONTRACT.md",
         ),
         "csv ceiling": (
             _CSV_FIELD_LIMIT,
