@@ -156,7 +156,7 @@ Each gets a distinct code, both controls, and a message that says what to do.
 | Code | Fires when |
 |---|---|
 | `CORRECTION_UNDEFINED` | `Se + Sp <= 1` — the Rogan–Gladen denominator vanishes or inverts. **PENDING D2.5** |
-| `CORRECTION_DEGENERATE` | Apparent prevalence is zero or one, so the corrected estimate carries no information. **PENDING D2.5** |
+| ~~`CORRECTION_DEGENERATE`~~ | **STRUCK 2026-08-29. The row was not merely redundant; it was wrong.** See the deviation note below |
 | `STRATUM_UNSAMPLED` | A stratum in the plan received no sampled units |
 | `STRATUM_EMPTY` | A stratum is defined but contains no frame units |
 | `ALLOCATION_IMPOSSIBLE` | Neyman allocation cannot be satisfied — e.g. a stratum's allocation exceeds its size |
@@ -166,6 +166,25 @@ Each gets a distinct code, both controls, and a message that says what to do.
 
 *Under D-22, `STRATUM_UNSAMPLED` and `STRATUM_EMPTY` are separate because they send the operator to
 different artifacts: the sample, versus the frame.*
+
+**Deviation, 2026-08-29: `CORRECTION_DEGENERATE` struck.** This row said *"apparent prevalence is
+zero or one, so the corrected estimate carries no information."*
+
+**That is false in the one case this tool exists for.** Run against the witness at
+`AP = 0, n = 4000, Se = 0.90, Sp = 1.00`, `epi.prev` returns a point estimate of **0** and an upper
+bound of **0.001024**, with no warning. A rare-event measurement that finds no violations and reports
+a defensible upper bound is not an absence of information -- **it is the product.**
+
+Implementing the row as written would have refused the most common honest result in Trust & Safety
+prevalence work.
+
+Where AP = 0 or 1 *is* a problem -- an imperfect test, so `AP < (1 - Sp)` or `AP > Se` -- it is
+already `CORRECTION_OUT_OF_RANGE`. So the row pointed at no artifact of its own in one direction and
+was wrong in the other.
+
+**Caught by running the witness, not by reading the contract.** Two codes remain:
+`CORRECTION_UNDEFINED` and `CORRECTION_OUT_OF_RANGE`, and D-22's test decides them -- the first sends
+the operator to the Se/Sp pair, the second to the relationship between the plan and the sample.
 
 **29 reason codes in total**, across Phase 1's 23 and this phase's 6. Counted from `Reason` by
 `tools/check_claims.py`, not maintained by hand -- the figure moved from the Phase 1 contract to here

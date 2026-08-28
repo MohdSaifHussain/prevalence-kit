@@ -73,7 +73,7 @@ so.** `docs/CORRECTIONS.md` C-22.
 | **S-1.7** | **Rounding a Neyman allocation to whole units** -- the method Q4 ruled | Wright, T., *A Simple Method of Exact Optimal Sample Allocation under Stratification with Any Mixed Constraint Patterns*, **U.S. Census Bureau**, Research Report Series (Statistics) **#2014-07** | Issued **21 August 2014**; fetched **2026-08-29** from `https://www.census.gov/content/dam/Census/library/working-papers/2014/adrm/rrs2014-07.pdf` (HTTP 200, 154,969 bytes, sha256 `0fdd5e7ce795552843678d0871cfeacdb46c470c9fc0aa2eb182b352c0b0f196`) | never -- fixed publication |
 | **S-1.8** | Why apportionment sources apply to survey allocation at all | Wright, T., *The Equivalence of Neyman Optimum Allocation for Sampling and Equal Proportions for Apportioning the U.S. House of Representatives*, **The American Statistician** | **2012**, 66(4), 217-224, DOI `10.1080/00031305.2012.733679` | never |
 | **S-1.10** | **The Rogan-Gladen witness.** O-8 said there was none; that was true of `survey` and `svy`, not of the world | R **`epiR`** (Stevenson et al.), `epi.prev()`. Intervals *"based on code provided by Reiczigel et al. (2010)"* -- S-1.6 | **2.0.92 in our image**, because the base image's CRAN snapshot is frozen at 2026-04-23. **2.0.96 is current on CRAN** (published 2026-08-03), outside the snapshot. `GPL (>= 2)`, which CRAN expands to `GPL-2 \| GPL-3` | **2026-11-29** |
-| S-1.11 *(context, never a method source for v1.0)* | A published alternative that answers where we refuse | Kopacka, I. & Fuchs, K., *Overcoming limitations of the Rogan-Gladen correction: a closed-form solution to a simplified Bayesian method for true prevalence estimation*, **Prev. Vet. Med.** | **2026**, vol 253, DOI `10.1016/j.prevetmed.2026.106891`. Verified live via Crossref 2026-08-29; full text not read. **NEXT queue, not v1.0** | **every phase close** |
+| S-1.11 *(context, never a method source for v1.0)* | A published alternative that answers where we refuse | Kopacka, I. & Fuchs, K., *Overcoming limitations of the Rogan-Gladen correction: a closed-form solution to a simplified Bayesian method for true prevalence estimation*, **Prev. Vet. Med.** | **2026**, vol 253, DOI `10.1016/j.prevetmed.2026.106891`. Verified live via Crossref 2026-08-29; full text not read. **NEXT queue, not v1.0.** Cited as *published work*, never as a package feature -- our pinned `epiR` 2.0.92 does not implement it, and the disclosure must hold regardless of what any version ships. C-25 | **every phase close** |
 | **S-1.9** | The formal treatment of largest remainder and its paradoxes | Balinski, M.L. & Young, H.P., *The Quota Method of Apportionment*, **American Mathematical Monthly** | **1975**, 82(7), 701-730, DOI `10.1080/00029890.1975.11993911`. **Metadata verified live via Crossref 2026-08-29; the full text was not read.** See the note below | never |
 
 **Refusal conditions are mathematical consequences, not citations.** The Rogan–Gladen estimator is
@@ -206,9 +206,37 @@ argument and no `simplified.bayes`** -- verified in the image. So S-1.11's metho
 | Se + Sp = 1 exactly | tp = **-Inf** |
 | Se + Sp < 1 | tp = 6.6, and **the interval inverts**: lower 6.712724 above upper 6.459273 |
 
-**That last row is the argument for refusing.** `epiR` returns a number whose lower bound exceeds its
-upper bound. Our refusal is not a stylistic preference over a working alternative; it is declining to
-print something that is not an interval.
+**That last row is the argument for refusing, and it belongs in the refusal itself.** Where
+`Se + Sp < 1`, `epi.prev` returns **lower 6.712724 above upper 6.459273**. An inverted interval is
+not an interval. So refusing is not a policy choice made in preference to a working alternative --
+**there is nothing there to print.** An auditor reading our code should find that reason, not the
+weaker one, and `CORRECTION_UNDEFINED`'s detail text carries it.
+
+**Recorded as a property of the witness, not only of the region.** A witness that returns an inverted
+interval inside the region we refuse is evidence *about* that region, and it sits here beside the
+narrowing rather than in the estimator alone.
+
+**PINNED AT 2.0.92, ruled 2026-08-29.** The same frozen snapshot that serves `survey` 4.5, so the
+whole witness is reproducible from one pin. **2.0.96 is current on CRAN, outside the snapshot**, and
+carries its own re-check date under **D-27** -- a version we could move to, not one we are running.
+
+**The standing rule this produced, from C-25:**
+
+> **The witness's documentation is not the witness. Only the pinned build is.**
+
+Everything quoted from the 2.0.96 manual described a version we do not run. Every behaviour in the
+table above was re-verified in 2.0.92 directly before it entered this register.
+
+**System libraries, and which side of the line they fall on.** `epiR` pulls in `sf`, which links
+against **proj, gdal, geos and udunits2**. Those are installed **in the witness image only**. They
+are **not** in `[project.dependencies]`, not in the dev extras, and never reach anything an operator
+installs.
+
+**Hard Rule 1 is untouched, and this is stated rather than left to be inferred**, because the
+zero-network guard's scope is now asserted: it walks `[project.dependencies]` and skips anything
+marked `extra ==`. The witness image is on the far side of that line -- **the guard does not look at
+it, and the guard not objecting to it is not evidence about it.** The evidence is this paragraph and
+`r/Dockerfile`.
 
 ## S-2 — Validation targets
 

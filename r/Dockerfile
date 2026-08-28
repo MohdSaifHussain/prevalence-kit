@@ -36,8 +36,17 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       libudunits2-dev libproj-dev libgdal-dev libgeos-dev \
  && rm -rf /var/lib/apt/lists/*
+#
+# 2.0.92, and that is not a typo for 2.0.96. The snapshot above is frozen at
+# 2026-04-23; 2.0.96 was published 2026-08-03, so the snapshot serves 2.0.92.
+# Ruled 2026-08-29: pin what the snapshot gives, so the whole witness comes from
+# one pin, and record 2.0.96 as current-but-outside. S-1.10.
+#
+# The assertion is the point. Without it a snapshot bump would move the witness
+# silently, which is V-17's shape.
 RUN R -q -e 'install.packages("epiR"); \
-             cat("epiR", as.character(packageVersion("epiR")), "\n")'
+             stopifnot(as.character(packageVersion("epiR")) == "2.0.92"); \
+             cat("epiR", as.character(packageVersion("epiR")), "pinned\n")'
 
 WORKDIR /witness
 COPY barnett_table_2b.R /witness/barnett_table_2b.R

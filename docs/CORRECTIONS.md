@@ -17,11 +17,11 @@ neither the director nor the AI can quietly absorb the other's.
 | Chat reviewer (draft author) | 3 | 0 | **3** |
 | Research report (passed through unverified) | 2 | 0 | **2** |
 | Stale-at-draft-time, queued but built on anyway | 1 | 0 | **1** |
-| **Builder (Claude Code)** | **19** | **0** | **19** |
-| Reviewer instrument | **1** | 0 | **2** (1 noted) |
+| **Builder (Claude Code)** | **20** | **0** | **20** |
+| Reviewer instrument | **2** | 0 | **3** (1 noted) |
 | Director | 0 | 0 | 0 |
 | Tool artifact (noted, not a defect) | - | - | **1** |
-| **Total** | **26** | **0** | **27** |
+| **Total** | **28** | **0** | **29** |
 
 C-1 … C-6 are Phase 0: defects in the chat-drafted vision, all caught before any code, none reaching
 an artifact. **C-7 … C-13 are Phase 1, and all seven are mine.** Five were caught by the director's
@@ -33,8 +33,14 @@ C-13 are wrong *reporting* — the statements were accurate and the omissions ma
 class does not show up by re-deriving a number, only by reconciling a report against the artifact.
 
 **What this table counts, and it matters because the count gets quoted.** It counts claims that
-**reached a commit**. It does not count errors caught while working -- a wrong sentence noticed and
-rewritten before it was committed is ordinary work, not a correction.
+**reached a commit, or changed a ruling**. It does not count errors caught while working -- a wrong
+sentence noticed and rewritten before it was committed is ordinary work, not a correction.
+
+**The second half was added 2026-08-29, and it widened the scope.** The builder judged that a
+sentence which never reached a commit needed no entry. The director overruled it: *"A claim that
+never reached a commit but did reach a director's ruling has done more damage than one sitting
+unread in a file."* C-25 is the instance. Rulings are in the record too, so the widened scope is
+still something the table can be checked against.
 
 Without that line the number is ambiguous the first time someone else reads it, and nobody could say
 which kind it is or compare it with its own history. Ruled 2026-08-29, when a wrong claim about
@@ -471,6 +477,11 @@ mechanism has now been tested by the world rather than by its authors.
 **Refusals go to stderr.** `| Out-Null` swallowed stdout and the refusal still printed. That is what
 makes the CLI usable in a pipeline, and it was confirmed by accident rather than by a test.
 
+**Narrowed 2026-08-29: the sentence below held for five instances and then broke.** C-26 is a
+sixth, and it is wrong about a **fact in a source** rather than about a contract's action --
+because a summarising fetch tool dropped a character. The characterisation is kept as what was
+true when it was written, with its boundary now known.
+
 **The class is now a property, not a run of luck.** Five occasions: the harness's clean frame that
 never exercised V-7; the harness encoding the wrong reading of E2; the E8c command that omitted
 `--plan` instead of deleting the file; and now a re-run directed into a dirty directory. The
@@ -629,6 +640,71 @@ algebra instead.
 **The test docstring was already correct** -- it distinguishes "tends to 0.9603" from "at n = 4000
 it is 0.96076". So the defect was in the prose I wrote *about* the code, not in the code or its
 tests, which is its own small lesson about where to look.
+
+---
+
+## C-25 - A claim about CRAN's package read as a claim about our build
+
+| | |
+|---|---|
+| **Claimed** | D2.5 anchoring plan, 2026-08-29: *"`epiR` already ships it as `tp.method = \"simplified.bayes\"` -- it is the authors' own package, not a third party adopting them."* |
+| **Actually** | True of `epiR` **2.0.96** on CRAN. **False of the build we run.** The witness image pins CRAN to the 2026-04-23 snapshot, which serves **2.0.92**, and `epi.prev()` there has **no `tp.method` argument and no `simplified.bayes`** -- verified by inspecting `formals(epi.prev)` in the image. |
+| **Direction** | Against a ruling. The sentence was accurate about CRAN and was read -- reasonably -- as being about our witness. |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | The builder, by building the image and running it. Nothing about reading CRAN would have shown it. |
+| **Severity** | **Medium, and higher than its wording suggests.** It did not reach a commit. It reached a **ruling**: the director changed a disclosure requirement on the premise that our witness returns an answer where we refuse. |
+| **Replaced by** | The disclosure restated to cite **the paper, not the package** -- S-1.11, Kopacka & Fuchs (2026) -- so it holds whatever any package version ships. And S-1.10 records that our witness is 2.0.92, with what that version does and does not have. |
+| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+
+**The builder proposed no C-number and was overruled**, and the reasoning is what changed the
+table's scope. The director's words: *"A claim that never reached a commit but did reach a
+director's ruling has done more damage than one sitting unread in a file."* The header now says the
+table counts claims that reached a commit **or changed a ruling**.
+
+**The ruling it changed was right for a different reason, and that is recorded rather than quietly
+kept.** A refusal that implies *no method can answer this* is an overclaim because Kopacka & Fuchs
+(2026) exists as published work -- not because our pinned image ships it. The disclosure stands; its
+premise is corrected.
+
+**The standing rule it produces:**
+
+> **The witness's documentation is not the witness. Only the pinned build is.**
+
+Everything quoted from the 2.0.96 manual described a version we do not run. The failure behaviours
+were re-verified directly in 2.0.92 before any of them entered the register.
+
+---
+
+## C-26 - A reviewer finding that was manufactured by a summarising fetch tool
+
+| | |
+|---|---|
+| **Claimed** | Director's review, 2026-08-29: the register spells the third author of S-1.6 **Ozsvari** while Crossref returns **Ozvari**, so one of them has a typo and the disagreement should be recorded rather than reconciled. |
+| **Actually** | **There is no disagreement.** Crossref returns codepoints `U+00D3 U+005A U+0053 U+0056 U+00C1 U+0052 U+0049` -- O-Z-S-V-A-R-I with acutes, the **S present**. The register matches it exactly. The apparent missing letter was mojibake in a terminal rendering: the accented characters were mangled, not the `S`. |
+| **Direction** | Against the register, which was correct. A correction was proposed against a document that had nothing wrong with it. |
+| **Source** | **Reviewer instrument.** |
+| **Caught by** | The builder, by asking the Crossref API for the raw record and printing codepoints instead of glyphs. The director then re-checked the same way and withdrew the finding. |
+| **Severity** | Low in effect -- nothing was changed on the strength of it. Notable in kind: it is the first instance of its class that is about a **fact in a source** rather than about a contract's action. |
+| **Replaced by** | Nothing to replace. The register was right. Recorded because the *finding* was the defect. |
+| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+
+**This breaks C-19's characterisation, and the break is the point.**
+
+C-19 records the director's own sentence, which had held for five instances:
+
+> *"My instruments have been wrong about what the contract's action is, never about what the code
+> does."*
+
+**That sentence is now true of five instances and false of the sixth.** This one was wrong about a
+character in a bibliographic record.
+
+**The mechanism is new and worth naming.** The reviewer's fetch tool **summarises a page through a
+model** rather than returning bytes. A summariser can drop or normalise a character without saying
+so. **So any character-level claim made from a summarising fetch is unreliable** -- spellings,
+diacritics, digests, exact quotations.
+
+**The remedy, adopted by the director:** for anything where a character matters, go to the raw API
+and read codepoints. That is what settled this, twice, independently.
 
 ---
 
