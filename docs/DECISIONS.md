@@ -827,6 +827,47 @@ the better answer if a third list ever appears.**
 
 ---
 
+## D-29 - The register names the route the bytes actually came from
+
+**Date:** 2026-08-29 - **Made in:** the director's V-17 ruling - **Ruled by:** director
+
+S-2.1 keeps **CRAN** as `survey`'s upstream and method source. **S-8.4** records the **p3m mirror**
+as the route the R image installs from. Both are named, and the difference between them is measured
+rather than assumed.
+
+**The defect.** The register said CRAN. The build fetched from Posit Package Manager, because that
+is the mirror `rocker/r-ver` pins. The mirror is a good choice and that was never the issue. The
+issue is that **one source was named and another was used, and nobody had checked they carry the
+same package.**
+
+**Both halves were needed, and the director offered them as alternatives.** They are not
+alternatives:
+
+- **Verifying the bytes** closes the defect. It turns *should be identical* into *verified
+  identical*, which is the distinction this project exists for.
+- **Recording the route** stops it recurring. **D-27**, ruled the same day, says a retrieval
+  procedure is a pinned thing with its own re-check date -- and this route had no entry at all.
+
+Verifying without recording leaves the register still saying CRAN, so the next reader meets the same
+confusion. Recording without verifying documents the gap honestly and never closes it.
+
+**What the measurement found.** 339 of 341 regular files byte-identical. The two that differ are
+`DESCRIPTION`, where the mirror stamps `Repository: RSPM`, and `MD5`, which follows from it. Full
+evidence in `docs/STANDARDS.md` under S-2.
+
+**Stated no wider than the evidence.** The comparison is of the two **source** tarballs. The image
+installs a **binary** p3m built from its copy. We did not rebuild that binary, so what is proven is
+that p3m's source is CRAN's source.
+
+**And it is watched.** **TW-5** re-runs the comparison. A re-check date with no instrument is a
+memory, which is what V-17 was.
+
+**Recorded because it tested D-27 on the day D-27 was written.** D-27 generalised C-22 into
+"retrieval procedures get their own re-check dates." V-17 was a retrieval route with no entry at
+all, found within the hour. The rule earned its keep immediately.
+
+---
+
 ## Carried obligations opened by these decisions
 
 | # | Obligation | Owner | Opened by |

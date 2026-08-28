@@ -162,6 +162,43 @@ pivot is cheap by design — that is why it is not in v1.0.
 
 ---
 
+## TW-5 — The mirror stops carrying CRAN's bytes
+
+**Added 2026-08-29, from V-17. Not fired on its first check.**
+
+**Why it matters.** S-2.1 names CRAN as the source of `survey`. The R image installs from
+**Posit Package Manager**, because that is the mirror `rocker/r-ver` pins. Two names, one package,
+and until V-17 nobody had checked they were the same package.
+
+**What fires it.** Any file beyond the known metadata pair differing between CRAN's tarball and the
+mirror's, or the file lists diverging at all.
+
+**Baseline, measured 2026-08-29.** 355 entries: 341 regular files, 14 directories.
+**339 of the 341 files are byte-identical.** Two differ, both repository metadata:
+
+| File | Why it differs |
+|---|---|
+| `DESCRIPTION` | The mirror writes `Repository: RSPM` where CRAN writes `Repository: CRAN`, and adds `Encoding: UTF-8` |
+| `MD5` | Follows from the line above — it lists `DESCRIPTION`'s own checksum |
+
+`R/`, `src/`, `man/`, `data/`, `inst/`, `tests/` and `NAMESPACE` match exactly.
+
+**Monitor.** `tools/check_tripwires.py` TW-5 fetches both tarballs and compares them member by
+member. The two allowed differences are named in the code, so a third one fires.
+
+**Cadence.** Every phase close. Every release.
+
+**Pivot if it fires.** Read the differing file. If the mirror is serving something CRAN is not, build
+the witness image against CRAN directly and record the change in S-2.1a and S-8.4.
+
+**Preserved.** Everything. This watches a supply route, not a design choice.
+
+**What it does not cover, stated so nobody reads it wider.** It compares **source** tarballs. The
+image installs a **binary** p3m built from its own copy of that source. Rebuilding that binary and
+comparing is a stronger check and is not done.
+
+---
+
 ## TW-4 — A SHA-pinned GitHub Action falls behind its runtime
 
 **Added 2026-08-29, after the first CI run. FIRED on its first check.**

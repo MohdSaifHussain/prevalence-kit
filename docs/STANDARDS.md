@@ -80,7 +80,7 @@ it for a claim about a source.
 
 | ID | Target | Source | Pin | Re-check |
 |---|---|---|---|---|
-| S-2.1 | Numerical cross-check for every estimator | R **`survey`** (Lumley) | **4.5**, published **2026-02-24**; re-verified live **2026-08-29**; source `https://cran.r-project.org/src/contrib/survey_4.5.tar.gz` (HTTP 200); GPL-2 \| GPL-3 | **2026-11-28** |
+| S-2.1 | Numerical cross-check for every estimator | R **`survey`** (Lumley) | **4.5**, published **2026-02-24**; re-verified live **2026-08-29**. **Upstream:** `https://cran.r-project.org/src/contrib/survey_4.5.tar.gz` (HTTP 200). **Retrieved from:** the p3m mirror, S-8.4 -- the two were compared byte for byte, V-17. GPL-2 \| GPL-3 | **2026-11-28** |
 | S-2.1a | The R environment the witness runs in | `rocker/r-ver`, **pinned by digest, not by tag** | **`rocker/r-ver@sha256:c3f39b365d1077fe24f8e9ab2742e352b6d3950897f51af1624a5bb5550c21c0`** (tag `4.5.3`, pushed 2026-06-24). Docker 29.7.2 on this machine. | **2026-11-29** |
 | S-2.1b | The witness **as actually executed**, 2026-08-29 (O-3) | `r/Dockerfile` builds on S-2.1a | **R 4.5.3 (2026-03-11)**, **`survey` 4.5**, `jsonlite` 2.0.0. CRAN frozen at the base image's snapshot `https://p3m.dev/cran/__linux__/noble/2026-04-23`, so the install is deterministic and serves the version S-2.1 pins. **The exact call:** `svydesign(ids = ~1, strata = ~stratum, weights = ~w, data = sample_rows)` — no `fpc`, which is what makes it the with-replacement form S-2.3 specifies | **2026-11-29** |
 | S-2.2 | Second independent cross-check where coverage overlaps | Python **`svy`** (Samplics LLC) | **0.25.0**, uploaded **2026-08-26**; MIT | **2026-09-28** — fast-moving, 48 releases |
@@ -102,6 +102,45 @@ deviation `0.0539 pp` against published `0.054 pp`.
 
 **Provenance caveat carried forward:** Barnett's assessment was *"commissioned and funded by
 Google."* Expert review, not independent peer review. State this wherever it is cited.
+
+### V-17 -- the register said CRAN, the build installed from a mirror
+
+**The defect.** S-2.1 named CRAN. The R image installs from **Posit Package Manager**
+(`p3m.dev`), because that is the mirror `rocker/r-ver` pins. Mirroring CRAN at a frozen date is a
+good choice for reproducibility and is not the problem. The problem was that **the register named
+one source, the build fetched from another, and nobody had checked the two carry the same package.**
+
+That is the gap between *should be identical* and *verified identical*, which is the gap this whole
+project exists to close.
+
+**What we did.** Fetched both tarballs and compared them file by file.
+
+| | |
+|---|---|
+| CRAN | `https://cran.r-project.org/src/contrib/survey_4.5.tar.gz`, 2,417,046 bytes, sha256 `8a2ab01759f9acf6000274255edf00e342dfbf320a39fb76d42594e4d262b519` |
+| p3m | `https://p3m.dev/cran/2026-04-23/src/contrib/survey_4.5.tar.gz`, 2,416,230 bytes, sha256 `18b6b42755169daefe49525401857fa9817ea0b77ca551f87c94dda01a9f71ab` |
+
+**The archives are not byte-identical. The package is.**
+
+The tarball holds 355 entries: **341 regular files** and 14 directories. **339 of the 341 files are
+byte-identical.** `R/`, `src/`, `man/`, `data/`, `inst/`, `tests/` and `NAMESPACE` all match exactly.
+
+**Exactly two files differ, and both are repository metadata:**
+
+- `DESCRIPTION` -- the mirror writes `Repository: RSPM` where CRAN writes `Repository: CRAN`, and
+  adds an `Encoding: UTF-8` line.
+- `MD5` -- follows from the line above, because it lists `DESCRIPTION`'s own checksum.
+
+So the mirror serves CRAN's `survey` 4.5 with a mirror stamp on it. **That is now measured, not
+assumed.**
+
+**Stated at the width of the evidence, and no wider.** This compares the two **source** tarballs.
+The image installs a **binary** build that p3m compiled from its copy of that source. We have not
+rebuilt that binary ourselves, so what is proven is that the source p3m serves is CRAN's source, not
+that the binary is a faithful build of it.
+
+**Watched, not remembered.** **TW-5** re-runs this comparison. A third differing file means the
+mirror is serving something CRAN is not.
 
 ## S-3 — Platform methodology (context; sets the honest limits)
 
@@ -353,6 +392,7 @@ re-check date.** D-27.
 |---|---|---|---|---|
 | S-8.1 | Fetch an EU legal act as readable text | `curl -H "Accept: application/xhtml+xml" -H "Accept-Language: eng" http://publications.europa.eu/resource/celex/<CELEX>` | **2026-08-29**: HTTP 200, 48,730 bytes on `32011D0833`; HTTP 200, 721,977 bytes on `32024R2835` | **2026-09-29** |
 | S-8.2 | Probe whether a CELEX work exists at all | the same URL, **no** `Accept` header | **2026-08-29**: HTTP 200, `application/rdf+xml`, 339,544 bytes. This is the form `tools/check_tripwires.py` TW-3 uses, **deliberately**: it needs existence, not content | **2026-09-29** |
+| S-8.4 | Install `survey` into the R image | `install.packages("survey")` inside `rocker/r-ver` (S-2.1a), which pins its CRAN mirror to `https://p3m.dev/cran/__linux__/noble/2026-04-23` | **2026-08-29**: serves `survey` **4.5**, the version S-2.1 pins. Compared against CRAN's own tarball: **339 of 341 regular files byte-identical**. See V-17 for the two that differ and why | **2026-11-29** |
 | S-8.3 | `eur-lex.europa.eu` directly | any scripted fetch | **2026-08-29**: **HTTP 202, 0 bytes**, on the legal notice and on the CELEX record for `32011D0833`. Unusable. Measured twice, by two instruments | **2026-11-29** |
 
 **The standing rule.** It has two incidents behind it now, not one: the reviewer's three empty

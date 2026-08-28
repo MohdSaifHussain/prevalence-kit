@@ -277,3 +277,46 @@ def test_the_real_workflow_is_valid_yaml() -> None:
     root = Path(__file__).resolve().parents[1]
     _, parse_error = module.ci_run_steps(root / ".github" / "workflows" / "gate.yml")
     assert parse_error is None, parse_error
+
+
+# --------------------------------------------------------------------- V-17
+
+
+def test_the_register_names_the_route_the_witness_used() -> None:
+    """V-17. The register said CRAN; the R image installed from a Posit mirror.
+
+    Two names for one package, and nobody had checked they carry the same bytes.
+    They do -- 339 of 341 regular files, the two exceptions being repository
+    metadata -- but that was measured only after the gap was found.
+
+    This is the offline half: whatever route the witness actually ran through
+    must be named in `docs/STANDARDS.md`. The byte comparison itself needs the
+    network and lives in `tools/check_tripwires.py` as TW-5.
+
+    The same shape as the `gate` check: two lists that must agree, with
+    something making them agree.
+    """
+    import json
+
+    root = Path(__file__).resolve().parents[1]
+    fixture = json.loads(
+        (root / "r" / "fixtures" / "barnett_table_2b.json").read_text(encoding="utf-8")
+    )
+    register = (root / "docs" / "STANDARDS.md").read_text(encoding="utf-8")
+
+    route = fixture["environment"]["cran_snapshot"]
+    assert route in register, (
+        f"the witness installed from {route}, which docs/STANDARDS.md does not name. "
+        "That is V-17: one source named, another used."
+    )
+
+    # The image digest and the survey version travel with it.
+    assert fixture["environment"]["image_digest"].removeprefix("sha256:") in register
+    assert fixture["environment"]["survey_version"] == "4.5"
+
+
+def test_the_route_check_notices_an_unrecorded_route(tmp_path: Path) -> None:
+    """The negative control. Without it the check passes forever, checking nothing."""
+    register = "S-2.1 pins survey 4.5 from CRAN and names no mirror.\n"
+    route = "https://p3m.dev/cran/__linux__/noble/2026-04-23"
+    assert route not in register

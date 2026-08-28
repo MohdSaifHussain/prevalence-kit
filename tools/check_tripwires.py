@@ -12,6 +12,9 @@ close and at release, and the result is recorded in the phase outcome as
         stops an action updating itself, so the pin has an expiry and somebody
         has to watch it. That is the cost of pinning, not an argument against
         it. O-19.
+  TW-5  The p3m mirror stops carrying CRAN's bytes. The register names CRAN as
+        the source of `survey`; the R image installs from a Posit mirror. V-17.
+        Verified once by hand; this is what keeps it verified.
 
 **This tool makes network calls. The shipped package does not.**
 It lives in `tools/`, is not part of `prevalence_kit`, and is never imported by
@@ -35,6 +38,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from xml.etree import ElementTree
 
 ROOT = Path(__file__).resolve().parents[1]
 TIMEOUT = 30
@@ -59,10 +63,15 @@ class Result:
         return f"  {self.tripwire}: {mark} -- {self.detail}"
 
 
-def fetch(url: str, *, as_json: bool = False) -> str | dict:  # type: ignore[type-arg]
+def fetch(  # type: ignore[type-arg]
+    url: str, *, as_json: bool = False, as_bytes: bool = False
+) -> str | bytes | dict:
     request = urllib.request.Request(url, headers={"User-Agent": AGENT})  # noqa: S310
     with urllib.request.urlopen(request, timeout=TIMEOUT) as response:  # noqa: S310
-        body = response.read().decode("utf-8", errors="replace")
+        raw = response.read()
+    if as_bytes:
+        return bytes(raw)
+    body = raw.decode("utf-8", errors="replace")
     return json.loads(body) if as_json else body
 
 
@@ -71,13 +80,32 @@ def check_tw1() -> Result:
     notes: list[str] = []
     fired = False
 
-    feed = fetch(f"http://export.arxiv.org/api/query?id_list={BASELINE_ARXIV_VERSION[:-2]}")
+    feed = fetch(f"https://export.arxiv.org/api/query?id_list={BASELINE_ARXIV_VERSION[:-2]}")
     assert isinstance(feed, str)
-    version = re.search(r"<id>http://arxiv\.org/abs/(\S+?)</id>", feed[feed.index("<entry>") :])
-    if version and version.group(1) != BASELINE_ARXIV_VERSION:
+
+    # Parsed as XML, not pattern-matched. C-23: check an artifact the way its
+    # real consumer reads it. This used a regex over the Atom feed, which is the
+    # same defect that let an unparseable gate.yml through a green checker.
+    atom = "{http://www.w3.org/2005/Atom}"
+    arxiv = "{http://arxiv.org/schemas/atom}"
+    # The suppression below is justified, not a silencing. S314 warns that `xml`
+    # parses untrusted
+    # data unsafely. Three things bound it here: the feed is fetched over TLS
+    # (this call was plain http:// until ruff pointed at it); CPython's
+    # ElementTree does not resolve external entities, so XXE is not reachable;
+    # and this file is a hand-run phase-close tool outside the shipped package,
+    # so the worst case of an entity-expansion feed is a hung ritual, not a
+    # compromised estimate. `defusedxml` would close the last of those and is a
+    # new dependency for a dev tool -- recorded as the option not taken.
+    entry = ElementTree.fromstring(feed).find(f"{atom}entry")  # noqa: S314
+    if entry is None:
+        return Result("TW-1", False, "COULD NOT CHECK: the arXiv feed carried no <entry>")
+
+    ident = (entry.findtext(f"{atom}id") or "").rsplit("/", 1)[-1]
+    if ident and ident != BASELINE_ARXIV_VERSION:
         fired = True
-        notes.append(f"paper is now {version.group(1)}, baseline {BASELINE_ARXIV_VERSION}")
-    if "journal_ref" in feed:
+        notes.append(f"paper is now {ident}, baseline {BASELINE_ARXIV_VERSION}")
+    if entry.find(f"{arxiv}journal_ref") is not None:
         fired = True
         notes.append("a journal_ref appeared -- the preprint may have been accepted")
 
@@ -180,7 +208,80 @@ def check_tw4() -> Result:
     )
 
 
-CHECKS = {"TW-1": check_tw1, "TW-2": check_tw2, "TW-3": check_tw3, "TW-4": check_tw4}
+CRAN_SURVEY = "https://cran.r-project.org/src/contrib/survey_4.5.tar.gz"
+P3M_SURVEY = "https://p3m.dev/cran/2026-04-23/src/contrib/survey_4.5.tar.gz"
+MIRROR_EXPECTED_DIFFERENCES = {"survey/DESCRIPTION", "survey/MD5"}
+"""The only two files allowed to differ between CRAN and the mirror.
+
+Measured 2026-08-29: the tarball holds 355 entries, of which **341 are regular
+files** and 14 are directories. **339 of the 341 are byte-identical.**
+`DESCRIPTION` differs because the mirror stamps `Repository: RSPM` over
+`Repository: CRAN` and adds an `Encoding:` line; `MD5` differs because it lists
+DESCRIPTION's own checksum. Any third file appearing here means the mirror is
+serving something CRAN is not.
+
+The count is 341 and not 355 because the first hand-count of this treated
+directory entries as files. This tool reported 339/341 on its first run and the
+figure here was corrected to match it -- re-derive from the artifact, do not
+restate the sentence.
+"""
+
+
+def check_tw5() -> Result:
+    """The mirror the R image builds from must still carry CRAN's bytes.
+
+    V-17: the register named CRAN and the build retrieved from Posit Package
+    Manager, and nobody had checked the two carry the same package. They do,
+    except for two metadata files. This watches that it stays true.
+    """
+    import io
+    import tarfile
+
+    def members(url: str) -> dict[str, bytes]:
+        raw = fetch(url, as_bytes=True)
+        assert isinstance(raw, bytes)
+        with tarfile.open(fileobj=io.BytesIO(raw), mode="r:gz") as tar:
+            out: dict[str, bytes] = {}
+            for member in tar.getmembers():
+                if member.isfile():
+                    handle = tar.extractfile(member)
+                    if handle is not None:
+                        out[member.name] = handle.read()
+            return out
+
+    cran, mirror = members(CRAN_SURVEY), members(P3M_SURVEY)
+
+    notes: list[str] = []
+    fired = False
+    only_cran = sorted(set(cran) - set(mirror))
+    only_mirror = sorted(set(mirror) - set(cran))
+    if only_cran or only_mirror:
+        fired = True
+        notes.append(
+            f"file lists differ: {len(only_cran)} only on CRAN, "
+            f"{len(only_mirror)} only on the mirror"
+        )
+
+    differing = {name for name in set(cran) & set(mirror) if cran[name] != mirror[name]}
+    unexpected = sorted(differing - MIRROR_EXPECTED_DIFFERENCES)
+    if unexpected:
+        fired = True
+        notes.append(f"content differs beyond the metadata pair: {', '.join(unexpected)}")
+
+    detail = "; ".join(notes) or (
+        f"{len(set(cran) & set(mirror)) - len(differing)} of {len(cran)} files byte-identical; "
+        f"only {', '.join(sorted(differing))} differ, as recorded"
+    )
+    return Result("TW-5", fired, detail)
+
+
+CHECKS = {
+    "TW-1": check_tw1,
+    "TW-2": check_tw2,
+    "TW-3": check_tw3,
+    "TW-4": check_tw4,
+    "TW-5": check_tw5,
+}
 
 
 def main(argv: Iterable[str] | None = None) -> int:
@@ -200,6 +301,7 @@ def main(argv: Iterable[str] | None = None) -> int:
         print(f"    TW-3  CELEX {DSA_CELEX} in force, unamended")
         for repo, (sha, tag) in sorted(pinned_actions().items()):
             print(f"    TW-4  {repo} pinned {tag} @ {sha[:12]}...")
+        print("    TW-5  survey 4.5: CRAN vs the p3m mirror, 339/341 files byte-identical")
         return 0
 
     results: list[Result] = []

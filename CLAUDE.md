@@ -75,7 +75,15 @@ ritual, not a CI job — a tripwire firing is a decision for the director, not a
 5. **End every report with what remains open, by name and severity.** C-12 is what happens otherwise.
 6. **A finding closed in one artifact can be open in another** — D-23. `check_claims`'s `fixtures`
    check covers the shipped example; the general class is still open.
-7. **Never delete or overwrite the director's working directories.** `C:\Users\mohds\ts-sentry` is
+7. **An instrument that does not cover what it appears to.** Five instances: C-15, C-19, V-15,
+   V-16, C-23. Every one looked like coverage and was not. When you add or trust a check, ask what
+   it does **not** read.
+8. **Check an artifact the way its real consumer reads it.** Structured files -- YAML, JSON, TOML,
+   CSV, XML -- get the **consumer's parser**, never a regex. A regex reading YAML has a different
+   parser from the thing it checks and can only agree by luck; that is how an unparseable
+   `gate.yml` passed a green checker (**C-23**). **Markdown is the exception**, and the reason is
+   the rule: its consumer is a human, who reads it loosely too.
+9. **Never delete or overwrite the director's working directories.** `C:\Users\mohds\ts-sentry` is
    read-only.
 
 ## Where things stand

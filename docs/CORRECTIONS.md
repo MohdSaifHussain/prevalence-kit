@@ -32,6 +32,15 @@ of the limit I raised as Q2 rather than a separate finding.
 C-13 are wrong *reporting* — the statements were accurate and the omissions made them mislead. That
 class does not show up by re-deriving a number, only by reconciling a report against the artifact.
 
+**What this table counts, and it matters because the count gets quoted.** It counts claims that
+**reached a commit**. It does not count errors caught while working -- a wrong sentence noticed and
+rewritten before it was committed is ordinary work, not a correction.
+
+Without that line the number is ambiguous the first time someone else reads it, and nobody could say
+which kind it is or compare it with its own history. Ruled 2026-08-29, when a wrong claim about
+rounding was caught before commit and deliberately **not** given a C-number. The class it belongs to
+is still tracked, below.
+
 Entries stay **open** until the corrected text is committed and verified.
 
 ---
@@ -573,9 +582,60 @@ real consumer refuses**, and reported green.
 That is the same shape as V-16, which I had just fixed, and the same shape as C-19 before it: an
 instrument that looks like it covers something and does not. Third instance in one session.
 
-**The rule it produces:** *check an artifact the way its real consumer reads it.* GitHub parses that
-file as YAML. So must we. A checker that agrees with a looser reader than the one that matters is
-not checking the same thing.
+**RULED 2026-08-29: accepted, and the rule generalises past checkers.**
+
+> **Check an artifact the way its real consumer reads it.**
+>
+> Anywhere this project reads a **structured** file -- YAML, JSON, TOML, CSV, XML -- the check uses
+> the **same parser the consumer uses**. A regex reading YAML is a checker with a different parser
+> from the thing it checks, so it can only ever agree by luck.
+>
+> **Markdown is the exception, and the reason is the rule.** Markdown's consumer is a human, and a
+> human reads it loosely too. So `check_claims` scanning Markdown with regexes is sound for the same
+> reason the YAML one was not: the checker and the consumer read it the same way.
+
+**Applied on the day it was ruled**, not left as prose. An audit of every structured-file reader in
+the tree found one more instance: `tools/check_tripwires.py` TW-1 read arXiv's **Atom XML** with a
+regex. It now uses `xml.etree.ElementTree`. Everything else already used the right parser --
+`json.loads`, `yaml.safe_load`, `csv.DictReader` in both `src/` and `tools/`.
+
+---
+
+## Classes, tracked separately from the count
+
+A correction gets a C-number when it reached a commit. A **class** keeps its own tally, because a
+pattern that stops being counted stops being visible. These threads include instances the table
+above does not, and say so.
+
+### Believed mechanism -- a claim about how something works, believed because it sounds right, never run
+
+| # | Where | Reached a commit? |
+|---|---|---|
+| 1 | C-7 -- the ruff integer, quoted as a file count | yes |
+| 2 | V-5 -- a chunk-count claim that no run supported | yes |
+| 3 | C-10 -- Layer 3 said to fix V-2 on its own | yes |
+| 4 | C-20 -- the exit-code argument said to rest on two checks | yes |
+| 5 | V-14 -- a branch called unreachable that every existing user hits | yes |
+| 6 | Barnett rounding, 2026-08-29 -- stratum 1 said to land on exactly 2098.5, with R's half-to-even rule producing 2098. The raw value is **2098.4952**, below the midpoint, so no tie-break is involved. Read "2098.50" in a two-decimal table and invented a mechanism for it | **no -- caught before commit** |
+
+**Instance 6 has no C-number on purpose.** It never reached a commit, and the table above counts
+what escaped. Recorded here so the class keeps its count.
+
+**The fix is the part worth keeping.** The raw allocation print went from two decimals to four, so
+the display that caused the misreading no longer exists. That is rule 14: not a resolution to read
+more carefully, but a changed artifact where the mistake is no longer available.
+
+### An instrument that does not cover what it appears to
+
+| # | Where | What was not covered |
+|---|---|---|
+| 1 | C-15 / D-23 | F-4 was closed in the test fixture and regressed into the shipped example. Three instruments looked at the repository and none looked there |
+| 2 | C-19 / V-12 | `verify` printed `[ok]` for a check that never ran |
+| 3 | V-15 | `check_paths` read a fixed list of globs, so a new document was silently uncovered |
+| 4 | V-16 | CI ran six of the gate's seven checks. No test file was type-checked on the remote |
+| 5 | C-23 | `check_gate` read `gate.yml` with a regex, so it passed a file GitHub cannot parse |
+
+**The rule this class produced** is in `CLAUDE.md` beside the others.
 
 ---
 
