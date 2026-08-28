@@ -38,3 +38,4 @@ LOG
 2026-08-28T13:46:45Z | 2026-08-28 19:16:45 +0530 | PHASE-1 | GATE | Phase 1 contract PROPOSED (docs/contracts/PHASE-1-CONTRACT.md). Awaiting director approval. No code written.
 2026-08-28T13:57:59Z | 2026-08-28 19:27:59 +0530 | PHASE-1 | START | Contract APPROVED with binding addition D-14 (chunk manifest). E2-complement answered -> D-15 (dual plan check). Build starts.
 2026-08-28T14:15:37Z | 2026-08-28 19:45:37 +0530 | PHASE-1 | GATE | REVIEW STOP. Core built, gate clean (ruff x2, mypy strict, 88 tests). 7 self-found defects + 2 questions. Awaiting director rulings.
+2026-08-28T14:38:38Z | 2026-08-28 20:08:38 +0530 | PHASE-1 | GATE | Review stop CLOSED by director: 7 accepted w/ mods + 10 reviewer findings (V-1 critical) + 4 record defects. V-1 reproduced independently. Mechanism proposed, NOT implemented. Awaiting ruling.
