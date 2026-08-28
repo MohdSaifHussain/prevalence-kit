@@ -34,3 +34,5 @@ LOG
 2026-08-28T13:03:04Z | 2026-08-28 18:33:04 +0530 | PHASE-0 | NOTE | This log created at director's request mid-session. Clock reading above is a single `date` call; both stamps share it because both were written in the same command.
 2026-08-28T13:18:30Z | 2026-08-28 18:48:31 +0530 | PHASE-0 | STAMP | Source verification complete: 24 claims checked. Drafting deliverables.
 2026-08-28T13:29:15Z | 2026-08-28 18:59:15 +0530 | PHASE-0 | GATE | Deliverables drafted (charter, verification, tripwires, prior-art, standards, security, rulings queue). STOPPED for director rulings. No code, no git init.
+2026-08-28T13:46:45Z | 2026-08-28 19:16:45 +0530 | PHASE-0 | CLOSE | Charter RATIFIED. 7 rulings applied, recorded verbatim in docs/RATIFICATION.md. git init + first commit (local only, no remote). Phase 0 closed.
+2026-08-28T13:46:45Z | 2026-08-28 19:16:45 +0530 | PHASE-1 | GATE | Phase 1 contract PROPOSED (docs/contracts/PHASE-1-CONTRACT.md). Awaiting director approval. No code written.
