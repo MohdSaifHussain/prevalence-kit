@@ -207,17 +207,22 @@ Expected results are stated **in advance**, including exit codes.
 | E7 | Edit one byte in the ledger, rerun `verify` | **Non-zero exit. Reason code `LEDGER_BROKEN`.** Not a stack trace. |
 | E8 ▸ **CORRECTED** | Edit **any field in the plan file** — the estimand, the seed, the population — then rerun `verify` | **Non-zero exit. Reason code `PLAN_HASH_MISMATCH`.** *(The drafted wording said "edit one label in the plan". Plans contain no labels. Builder's drafting defect, corrected.)* |
 | E8b ▸ **AMENDED** | Run the **full chain through ingest and estimate first**, and only **then** edit the plan file. Rerun `verify`. | **Non-zero exit. Reason code `PLAN_HASH_MISMATCH`.** Post-ingest edits are covered — see §7b. |
-| E8c ▸ **AMENDED** | Delete the working plan file, rerun `verify` | **Exit 0**, and the output **says in words** that the on-disk plan check was skipped. Proves R10. |
+| E8c ▸ **RESTATED** | **Delete the working plan file** (do not merely omit `--plan` -- see below), then rerun `verify` | **Exit 0.** The plan line reads `[--] ... NOT CHECKED`, names the recorded path, and the summary reads **`N checks, 1 not performed`** -- never "nothing out of place". Proves R10. |
 | E8d ▸ **AMENDED** | Run the full chain. Then edit the plan, **re-run `plan`**, and re-run the full chain into the same workspace. Rerun `verify`. | **Non-zero exit, named reason code, and the code must NOT be `ESTIMATE_MISMATCH`.** Expect `RUN_ALREADY_OPEN` at the re-plan. |
 | E9 | Edit one byte in a sealed chunk, rerun `verify` | **Non-zero exit. Reason code `SEAL_TAMPERED`.** |
 | E9b ▸ **AMENDED** | **Drop the final chunk** of a sealed item, rerun `verify` | **Non-zero exit. Reason code `SEAL_TRUNCATED`.** |
 | E9c ▸ **RESTATED AGAIN** | **Swap `0000.bin` and `0001.bin` of item `item-0154`** in `<run>/sealed/` — the one deliberately multi-chunk item in the shipped example — then rerun `verify` | **Non-zero exit. Reason code `SEAL_REORDERED`.** Distinct from E9 and E9b, which use the same item. |
 | E10 | `grep -ri "<sentinel string>"` across every output artifact | **No matches.** Proves R4. |
-| E11 | `pytest -q` | All pass. Every refusal has both controls. |
+| E11 ▸ **RESTATED** | `pytest` (**not** `pytest -q`) | All pass, and **the count is printed**. `pyproject.toml` already sets `addopts = "-q"`, so `pytest -q` is `-qq`, which suppresses the summary line -- an exit check whose command cannot produce its own evidence. Expected at this commit: **see the count in the phase outcome**, compared against the number printed. |
 | E12 | `ruff check . && ruff format --check . && mypy --strict src` | All clean. Both ruff halves. |
 | E13 | Run the zero-network test | Passes. **Then add `httpx` to the dependencies and run it again — it must fail.** A guard that has only ever passed is a decoration. |
 | E14 | Run `tools/check_claims.py --selftest` | Passes, and demonstrates it catches a planted mismatch. |
 | E15 | Run the tripwire script | Reports TW-1/2/3 against the 2026-08-28 baselines. |
+
+**E8c's action is deleting the file, not omitting the flag.** Omitting `--plan` no longer skips
+anything: `verify` falls back to the path recorded in the plan ledger entry. The two actions
+produced identical output under the old semantics, which is how V-12 survived a hand-run --
+`docs/CORRECTIONS.md` C-19.
 
 **E2's action is stated as an action on the *filesystem*, not on the plan.** The original wording -- *"point the plan's data path at a nonexistent file"* -- reads naturally as *edit the plan so it names a file that does not exist*. Under that reading the plan record changes, so the hash changes, and the stated expectation of "same plan hash" is **false**. The check is that the hash does not depend on the *data*; the path is part of the commitment and is supposed to affect it. The director performed the correct action and the hash was identical.
 

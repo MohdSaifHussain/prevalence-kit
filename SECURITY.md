@@ -229,17 +229,37 @@ later needed, it is achievable via AES-GCM AAD. Full reasoning: `docs/DECISIONS.
 **Having declined the specification that solves whole-message integrity, we carry that obligation
 ourselves.** The manifest above is the cost of that choice, paid rather than deferred. D-14.
 
-### 3.8 It is not a moderation or enforcement system
+### 3.8 The ledger records where the plan file was, and that travels
+
+`plan` writes the working plan file's path into the plan ledger entry, so `verify` can check the
+working file without being told where it is. That closes a real hole: forgetting `--plan` used to
+give a clean `verify` on a tampered plan (V-12).
+
+**The consequence, stated rather than absorbed.** A run directory that is shared, published, or
+attached to an audit carries that path with it. On this platform it is absolute, so it can disclose
+a username and directory structure. Paths already appear in refusal messages; this is the first time
+one is written into the ledger, which is the artifact most likely to be handed to someone else.
+
+It is a small disclosure and it is not nothing. If a run will leave your machine, look at
+`ledger.jsonl` entry 0 before it does. The plan **hash** is unaffected -- the path is in the entry
+body, not in the hashed plan record -- so removing or rewriting the field would break the chain, not
+the plan's identity. There is no supported way to redact it in this version.
+
+**A moved run reports honestly rather than silently.** Copy a run to another machine and the
+recorded path will not exist there; `verify` says `NOT CHECKED`, names the path, and says it may
+belong to another machine. That is the honest outcome, not a failure.
+
+### 3.9 It is not a moderation or enforcement system
 
 It measures. It never judges content, never actions an account, never removes anything. If you need
 a detector, ROOST ships several. This is not one.
 
-### 3.9 It has not been through an external security audit
+### 3.10 It has not been through an external security audit
 
 Built by directing an AI under a governed process, with the gates and tests described here. That is
 not the same as a penetration test or a professional code audit, and it is not claimed to be.
 
-### 3.10 It is not validated in production
+### 3.11 It is not validated in production
 
 Validation is on synthetic data and one public dataset. **No claim of production deployment.**
 

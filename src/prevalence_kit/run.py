@@ -136,6 +136,17 @@ def do_plan(ws: Workspace, plan: Plan) -> str:
             "plan_hash": plan_hash,
             "plan_seal": manifest.as_record(),
             "estimand": plan.estimand.description,
+            # Where the working plan file was when the run opened. In the entry
+            # BODY, deliberately not in `Plan.as_record()`, so the plan hash is
+            # untouched and D-15's principle survives: where a file sits on
+            # someone's disk is not part of the commitment, and moving a plan
+            # still does not change its identity. The body is digest-protected by
+            # the chain like everything else.
+            #
+            # `verify` defaults to this path, so forgetting `--plan` is no longer
+            # a case where the tool knows where the plan was and declines to look.
+            # V-12, D-24. Disclosure consequence: SECURITY.md section 3.11.
+            "plan_source_path": str(plan.source_path) if plan.source_path else None,
         },
     )
     return plan_hash

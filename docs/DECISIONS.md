@@ -642,6 +642,56 @@ example by hand, which is a STANDARD practice. It is not evidence for FULL.
 
 ---
 
+---
+
+## D-24 - The ledger records where the plan file was; the plan hash does not
+
+**Date:** 2026-08-28 - **Made in:** the director's V-12 ruling - **Ruled by:** director
+
+`plan` writes `plan_source_path` into the **plan ledger entry body**, and `verify` falls back to it
+when `--plan` is not given.
+
+**Why the body and not `Plan.as_record()`.** D-15 says where a file sits on someone's disk is not
+part of the commitment, so moving a plan must not change its identity. Putting the path in the
+hashed record would break that. Putting it in the entry body leaves the plan hash untouched while
+still protecting the path under the chain like every other field.
+
+**What it closes.** Labelling alone was not enough. Parts 1-3 of the builder's proposal turned a
+false `[ok]` into an honest `[--]`, but an operator who forgot `--plan` still got a **green exit on
+a tampered plan**, now with a better sentence explaining why nobody looked. In the director's words:
+*better labelling of a hole is not a closed hole.* With the path recorded there is no longer a case
+where the tool knows where the plan was and declines to look.
+
+**The three conditions, ruled rather than preferred:**
+
+1. A check that did not run never prints `[ok]`.
+2. The summary never says "nothing out of place" when something was not performed. The count and the
+   shortfall go in one sentence, so a script reading only the last line sees it.
+3. The only remaining not-performed case is a file that is genuinely gone. **Any other must be
+   brought back before shipping as a skip.**
+
+**Exit code stays 0** on a genuinely absent file. That is not evidence of tampering and E8c promises
+it. An auditor scripting `verify` and reading only the exit code is a real person.
+
+**Alternative not taken.** Exit non-zero when any check is not performed - rejected: it would change
+E8c's specified outcome, and absence of a working file is not a defect. *(The builder argued this
+rested on E6 as well as E8c. That was wrong: E6 skips nothing, because `verify` redraws from the
+recorded `frame.json` rather than the original input. The argument holds on one check, not two.
+`docs/CORRECTIONS.md` C-20.)*
+
+**Two consequences recorded rather than absorbed**, per the ruling: an absolute path now travels in
+a shared run directory (`SECURITY.md` section 3.8), and a run moved to another machine reports
+`NOT CHECKED` naming a path that means nothing there - which the message now says out loud.
+
+**One condition-3 case found, and reported rather than shipped quietly.** A `Plan` built by
+`Plan.from_mapping` has no `source_path`, so nothing is recorded and `verify` reports
+`NOT CHECKED -- this run recorded no plan path`. **It is unreachable through the CLI**: all five
+verbs call `Plan.load`, which always sets it. It requires the Python API, which Phase 1 does not
+document as a supported surface. Raised for the director under condition 3 rather than absorbed as a
+second skip.
+
+---
+
 ## Carried obligations opened by these decisions
 
 | # | Obligation | Owner | Opened by |

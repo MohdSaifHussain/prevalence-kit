@@ -25,7 +25,7 @@ from prevalence_kit import report as report_mod
 from prevalence_kit.errors import Reason, Refusal
 from prevalence_kit.plan import Plan
 from prevalence_kit.run import Workspace, do_plan, do_sample
-from prevalence_kit.verify import verify_run
+from prevalence_kit.verify import summarise, verify_run
 from tests.conftest import PLAN_YAML, POSITIVES, write_labels
 
 CLI = [sys.executable, "-m", "prevalence_kit.cli"]
@@ -319,3 +319,143 @@ def test_the_prediction_holds_on_a_second_emission(
     predicted = json.loads(as_json.read_text(encoding="utf-8"))["entries_verify_will_report"]
     actual = next(c for c in verify_run(run, plan_path) if c.name == "ledger chain")
     assert f"{predicted} entries" in actual.note
+
+
+# ------------------------------------------------------------------- V-12
+
+
+def test_the_tampered_plan_is_caught_without_the_flag(run: Workspace, plan_path: Path) -> None:
+    """V-12, and the reason labelling alone was not enough.
+
+    The hole: omit `--plan`, leave a TAMPERED plan on disk, and `verify` printed
+    `[ok] plan (working file): SKIPPED -- no plan file on disk to compare`,
+    summarised "nothing out of place", and exited 0 -- while E8/V-2's protection
+    silently did not run.
+
+    `verify` now falls back to the path recorded in the plan ledger entry, so
+    there is no case where the tool knows where the plan was and declines to
+    look. Called with no plan_path at all, exactly as an operator who forgot the
+    flag would.
+    """
+    plan_path.write_text(yaml.safe_dump(PLAN_YAML | {"seed": "tampered"}), encoding="utf-8")
+
+    with pytest.raises(Refusal) as exc:
+        verify_run(run)
+    assert exc.value.reason is Reason.PLAN_HASH_MISMATCH
+
+
+def test_an_untampered_plan_passes_without_the_flag(run: Workspace) -> None:
+    """The positive control. The fallback must check, not merely refuse."""
+    checks = verify_run(run)
+    working = next(c for c in checks if c.name == "plan (working file)")
+    assert working.performed
+    assert "unchanged since the run opened" in working.note
+
+
+def test_the_plan_path_is_recorded_but_not_hashed(
+    tmp_path: Path, plan: Plan, plan_path: Path
+) -> None:
+    """D-24. The path is in the entry body; the plan hash must not move.
+
+    D-15 says where a file sits on disk is not part of the commitment, so a plan
+    copied elsewhere keeps its identity. Recording the path in the hashed record
+    would have broken that.
+    """
+    ws = Workspace(tmp_path / "run")
+    do_plan(ws, plan)
+
+    body = ws.ledger.verify()[0].body
+    assert body["plan_source_path"] == str(plan_path)
+    assert "plan_source_path" not in plan.as_record()
+
+    moved = tmp_path / "elsewhere.yaml"
+    moved.write_text(plan_path.read_text(encoding="utf-8"), encoding="utf-8")
+    assert Plan.load(moved).plan_hash == plan.plan_hash
+
+
+def test_a_deleted_plan_is_not_performed_and_says_so(run: Workspace, plan_path: Path) -> None:
+    """E8c as written: delete the file. The one honest remaining skip."""
+    plan_path.unlink()
+    checks = verify_run(run)
+    working = next(c for c in checks if c.name == "plan (working file)")
+
+    assert not working.performed
+    assert "NOT CHECKED" in working.note
+    assert str(plan_path) in working.note
+    assert "another machine" in working.note
+
+
+def test_an_unperformed_check_never_prints_ok(run: Workspace, plan_path: Path) -> None:
+    """Condition 1 of the ruling."""
+    plan_path.unlink()
+    line = next(c for c in verify_run(run) if not c.performed).line()
+    assert line.startswith("  [--]")
+    assert "[ok]" not in line
+
+
+def test_the_summary_names_the_shortfall(run: Workspace, plan_path: Path) -> None:
+    """Condition 2. The count and the shortfall in one sentence.
+
+    A script scraping only the last line must see that something was skipped,
+    which is why the shortfall is not on a separate line.
+    """
+    assert "nothing out of place" in summarise(verify_run(run))
+
+    plan_path.unlink()
+    line = summarise(verify_run(run))
+    assert "nothing out of place" not in line
+    assert "1 not performed" in line
+    assert "plan (working file)" in line
+
+
+def test_verify_still_exits_zero_on_a_genuinely_absent_plan(tmp_path: Path) -> None:
+    """A missing working file is not evidence of tampering, and E8c promises 0.
+
+    An auditor scripting `verify` and reading only the exit code is a real
+    person. What they must never get is exit 0 beside "nothing out of place"
+    when a check was skipped -- which the test above covers.
+    """
+    plan_path, frame = build_inputs(tmp_path)
+    run_dir = tmp_path / "run"
+    cli("plan", str(plan_path), "--run", str(run_dir))
+    cli("sample", str(plan_path), str(frame), "--run", str(run_dir))
+    plan_path.unlink()
+
+    result = cli("verify", "--run", str(run_dir))
+    assert result.returncode == 0
+    assert "not performed" in result.stdout
+    assert "nothing out of place" not in result.stdout
+
+
+def test_the_only_unperformed_case_reachable_from_the_cli_is_a_missing_file(
+    tmp_path: Path,
+) -> None:
+    """Condition 3, asserted rather than asserted-in-prose.
+
+    Every CLI verb loads the plan from a file, so `source_path` is always set and
+    a path is always recorded. The `no plan path recorded` branch needs the
+    Python API, which Phase 1 does not document as a surface -- raised with the
+    director under condition 3 rather than shipped quietly as a second skip.
+    """
+    plan_path, frame = build_inputs(tmp_path)
+    run_dir = tmp_path / "run"
+    cli("plan", str(plan_path), "--run", str(run_dir))
+    cli("sample", str(plan_path), str(frame), "--run", str(run_dir))
+
+    assert "not performed" not in cli("verify", "--run", str(run_dir)).stdout
+
+    plan_path.unlink()
+    out = cli("verify", "--run", str(run_dir)).stdout
+    assert "1 not performed" in out
+    assert "no file at" in out
+
+
+def test_a_plan_without_a_source_path_records_none(tmp_path: Path) -> None:
+    """The condition-3 case itself, pinned so it cannot change unnoticed."""
+    ws = Workspace(tmp_path / "run")
+    do_plan(ws, Plan.from_mapping(PLAN_YAML))  # no source_path
+
+    assert ws.ledger.verify()[0].body["plan_source_path"] is None
+    working = next(c for c in verify_run(ws) if c.name == "plan (working file)")
+    assert not working.performed
+    assert "recorded no plan path" in working.note

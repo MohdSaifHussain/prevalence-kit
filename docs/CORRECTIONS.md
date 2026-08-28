@@ -17,10 +17,11 @@ neither the director nor the AI can quietly absorb the other's.
 | Chat reviewer (draft author) | 3 | 0 | **3** |
 | Research report (passed through unverified) | 2 | 0 | **2** |
 | Stale-at-draft-time, queued but built on anyway | 1 | 0 | **1** |
-| **Builder (Claude Code)** | **11** | **0** | **11** |
+| **Builder (Claude Code)** | **13** | **0** | **13** |
+| Reviewer instrument | **1** | 0 | **1** |
 | Director | 0 | 0 | 0 |
 | Tool artifact (noted, not a defect) | - | - | **1** |
-| **Total** | **17** | **0** | **17** |
+| **Total** | **20** | **0** | **20** |
 
 C-1 … C-6 are Phase 0: defects in the chat-drafted vision, all caught before any code, none reaching
 an artifact. **C-7 … C-13 are Phase 1, and all seven are mine.** Five were caught by the director's
@@ -358,6 +359,51 @@ resolved it the same way. That is what a shared upstream defect looks like, and 
 | **Severity** | None. Logged so that the next person who sees the number has somewhere to look instead of investigating it again. |
 | **Replaced by** | Gate evidence is exit codes and the test count. Neither this project nor its record quotes the ruff integer. |
 | **Status** | **noted** - carries forward as a known artifact of the tool, not an open item |
+
+---
+
+---
+
+## C-19 - V-12: a check that did not run, reported as a check that passed
+
+| | |
+|---|---|
+| **Claimed** | Phase 1 close: E8c performed, `verify` "exit 0 with the skip stated in words", 8 checks, nothing out of place. |
+| **Actually** | With `--plan` omitted and a **tampered** `plan.yaml` sitting on disk, `verify` printed `[ok] plan (working file): SKIPPED -- no plan file on disk to compare`, summarised **"8 checks, nothing out of place"**, and exited **0**. Three faults in increasing order: the message was false (the file *was* on disk), the `[ok]` counted a check that never ran, and **E8/V-2's protection - the flagship one - silently did not run.** |
+| **Direction** | Against the operator, in the command the report tells them to trust. |
+| **Source** | **Builder (Claude Code)** for the code. **The reviewer** for the check that missed it: the E8c command handed to the director omitted `--plan` while `plan.yaml` sat in the working directory, instead of deleting the file as the contract says. The director performed it faithfully. |
+| **Caught by** | The builder, reconciling the director's hand-run transcript against the contract's wording, after the director asked for exactly that reconciliation |
+| **Severity** | **High.** A stated protection not running, reported as green. |
+| **Replaced by** | D-24: the path is recorded in the plan entry body and `verify` defaults to it, so there is no longer a case where the tool knows where the plan was and declines to look. Plus the three conditions - no `[ok]` for an unperformed check, no "nothing out of place" when one was skipped, and any further skip brought back before shipping. |
+| **Status** | **OPEN** - closes at the Phase 1 to 2 boundary |
+
+**The pattern, now specific enough to name.** This is the **third** instance of the
+reviewer-instrument class, after the harness's clean frame that never exercised V-7 and the harness
+encoding the wrong reading of E2. The director's own characterisation, recorded as given:
+
+> *My instruments have been wrong about what the contract's action is, never about what the code
+> does.*
+
+That is a sharper statement than contract section 7a's, and it says where a second instrument helps
+and where it cannot. It reads the same contract the builder wrote; where that contract is ambiguous
+or wrong, both instruments inherit the defect. **Only executing the action as written catches it** -
+which is what the director's hand-run is for, and why the transcript was worth reading line by line
+against the wording.
+
+---
+
+## C-20 - I argued the exit-code question rested on two checks; it rests on one
+
+| | |
+|---|---|
+| **Claimed** | V-12 proposal: *"E6 and E8c legitimately skip and are specified as exit 0, so this would change two passing exit checks."* |
+| **Actually** | **E6 skips nothing.** Run with `frame.txt` and `labels.csv` moved off disk, it reports the full eight checks - because `verify` redraws from the recorded `frame.json`, not from the original input. That is R5 working exactly as designed. Only E8c skips. |
+| **Direction** | Against the strength of my own argument. I presented a conclusion as resting on two supports when it rests on one. |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | The director, running E6 rather than reasoning about it - and the evidence was already in the transcript he had sent me, which I had read and reconciled without noticing |
+| **Severity** | Low in effect: the conclusion survives. Notable in kind - this is the believed-mechanism class again (C-10, V-5, C-7), and it appeared **in the same message where I corrected someone else's reading of a transcript.** |
+| **Replaced by** | Recorded in D-24's "alternative not taken": the argument holds on one check, not two. |
+| **Status** | **OPEN** - closes at the Phase 1 to 2 boundary |
 
 ---
 

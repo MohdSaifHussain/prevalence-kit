@@ -36,12 +36,42 @@ record of every emission is something an auditor wants, not something to forbid.
 
 @dataclass(frozen=True, slots=True)
 class Check:
+    """One thing `verify` looked at.
+
+    `performed` is separate from `ok` on purpose. A check that did not run is not
+    a check that passed, and printing `[ok]` for one is how a green line comes to
+    mean nothing. V-12: `verify` used to print
+
+        [ok] plan (working file): SKIPPED -- no plan file on disk to compare
+
+    and count it toward "8 checks, nothing out of place" -- while a tampered plan
+    sat on disk unread.
+    """
+
     name: str
     ok: bool
     note: str
+    performed: bool = True
 
     def line(self) -> str:
-        return f"  [{'ok' if self.ok else '--'}] {self.name}: {self.note}"
+        if not self.performed:
+            return f"  [--] {self.name}: {self.note}"
+        return f"  [{'ok' if self.ok else '!!'}] {self.name}: {self.note}"
+
+
+def summarise(checks: list[Check]) -> str:
+    """The last line. A script scraping only this must still see a shortfall.
+
+    Never says "nothing out of place" when something was not performed: the count
+    and the shortfall go in the same sentence.
+    """
+    not_performed = [c for c in checks if not c.performed]
+    if not_performed:
+        return (
+            f"verified: {len(checks)} checks, {len(not_performed)} not performed "
+            f"({', '.join(c.name for c in not_performed)})."
+        )
+    return f"verified: {len(checks)} checks, nothing out of place."
 
 
 def verify_run(ws: Workspace, plan_path: Path | None = None) -> list[Check]:
@@ -177,15 +207,32 @@ def _verify_plan(ws, entries, plan_path, checks) -> Plan:  # type: ignore[no-unt
         )
     )
 
-    # (b) The working file, when it is still there. Catches edits made at any
-    #     point after the run opened -- before ingest or long after it.
-    candidate = plan_path or plan.source_path
-    if candidate is None or not Path(candidate).exists():
+    # (b) The working file. `--plan` is an explicit override; otherwise fall back
+    #     to the path recorded when the run opened, so forgetting the flag is not
+    #     a case where the tool knows where the plan was and declines to look.
+    #     The only remaining not-performed case is a file that is genuinely gone.
+    recorded_path = entry.body.get("plan_source_path")
+    candidate = plan_path or (Path(str(recorded_path)) if recorded_path else None)
+
+    if candidate is None:
         checks.append(
             Check(
                 "plan (working file)",
                 True,
-                "SKIPPED -- no plan file on disk to compare. Only the sealed copy was checked.",
+                "NOT CHECKED -- this run recorded no plan path. Pass --plan <path> to "
+                "compare the working file against the sealed copy.",
+                performed=False,
+            )
+        )
+    elif not Path(candidate).exists():
+        checks.append(
+            Check(
+                "plan (working file)",
+                True,
+                f"NOT CHECKED -- no file at {candidate}. That path was recorded when this run "
+                "was created, so it may belong to another machine. Only the sealed copy was "
+                "checked; pass --plan <path> if the file is elsewhere.",
+                performed=False,
             )
         )
     elif Plan.load(Path(candidate)).plan_hash != recorded_hash:

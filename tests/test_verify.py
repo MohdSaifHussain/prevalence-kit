@@ -70,7 +70,9 @@ def test_verify_says_out_loud_when_it_skipped_the_plan_file(
     checks = verify_run(run, plan_path)
     working = next(c for c in checks if c.name == "plan (working file)")
     assert working.ok
-    assert "SKIPPED" in working.note
+    assert not working.performed, "a check that did not run must not report as performed"
+    assert "NOT CHECKED" in working.note
+    assert str(plan_path) in working.note, "the message must name the path it looked for"
 
 
 # ------------------------------------------------------------ negative controls

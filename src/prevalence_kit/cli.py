@@ -30,7 +30,7 @@ from . import report as report_mod
 from .errors import Refusal
 from .plan import Plan
 from .run import Workspace, do_estimate, do_ingest, do_plan, do_sample
-from .verify import verify_run
+from .verify import summarise, verify_run
 
 EXIT_OK = 0
 EXIT_BUG = 1
@@ -152,7 +152,8 @@ def verify(run_dir: Path, plan_path: Path | None) -> None:
     checks = verify_run(Workspace(run_dir), plan_path)
     for check in checks:
         click.echo(check.line())
-    click.echo(f"\nverified: {len(checks)} checks, nothing out of place.")
+    click.echo("")
+    click.echo(summarise(checks))
 
 
 @main.command("emit-report")

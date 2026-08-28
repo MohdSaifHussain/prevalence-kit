@@ -43,3 +43,4 @@ LOG
 2026-08-28T16:53:44Z | 2026-08-28 22:23:44 +0530 | PHASE-1 | NOTE | Plan-load family + V-11/V-7/F-6/V-10 closed. D-20/D-21, O-14, C-12/C-13 recorded. 158 tests, 17s. All 19 accepted findings now closed pending director verification.
 2026-08-28T17:34:47Z | 2026-08-28 23:04:47 +0530 | PHASE-1 | NOTE | D1.8/D1.12/D1.13/D1.14/D1.15 built. O-1, O-2, O-7, O-9 and the key-location doc discharged. 207 tests. Ready for E1-E15 by hand.
 2026-08-28T17:44:31Z | 2026-08-28 23:14:31 +0530 | PHASE-1 | NOTE | C-15 fixed: F-4 regression in examples/synthetic. make_example.py, check_claims sixth check (fixtures), RUN_NOT_FOUND, D-23, C-15. 210 tests.
+2026-08-28T18:17:54Z | 2026-08-28 23:47:54 +0530 | PHASE-1 | NOTE | V-12 closed: plan_source_path recorded, verify defaults to it, Check gains performed state. D-24, C-19, C-20. 221 tests.
