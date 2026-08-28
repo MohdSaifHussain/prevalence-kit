@@ -134,6 +134,13 @@ breaches it is a deviation to be recorded, not absorbed.
 - `emit-dsa` — an emitter shaped to the 2024/2835 Annex I template
 - Beta-Binomial upper bounds for very low prevalence
 - Label-quality gates as a fuller module (kappa / alpha)
+- **Wright's exact optimal sample allocation** — authorised for this queue by the director,
+  2026-08-29. Solves the integer allocation directly instead of rounding a Neyman solution, and is
+  variance-minimal where our ruled largest-remainder rounding is not (`docs/STANDARDS.md` S-1.7,
+  measured: 0 on every shipped fixture, worst 0.73% of variance across 37,910 random designs).
+  **Deferred for the same reason as Q1: neither R `survey` nor `svy` implements it, so R2.3 would
+  have nothing to check it against.** It needs a witness before it can be built. Sources: Wright
+  (2014) S-1.7, Wright (2012) S-1.8.
 - **Per-stratum sensitivity/specificity for Rogan–Gladen** — deferred by name, Phase 2 Q1. The
   corrected variance under stratification has **no published anchor** in `docs/STANDARDS.md`, so
   nothing could witness it. It needs its own anchor before it can be built.

@@ -24,6 +24,7 @@ import pytest
 
 from prevalence_kit.errors import Reason, Refusal
 from prevalence_kit.stratified import (
+    MIN_UNITS_PER_STRATUM,
     Rounding,
     Stratum,
     allocate,
@@ -338,3 +339,101 @@ def test_both_allocations_reach_the_record() -> None:
 
     # An outsider can re-derive the final numbers from the raw ones alone.
     assert list(largest_remainder(tuple(raw), total)) == units
+
+
+# ------------------------------------------------- the variance gap, measured
+
+
+def design_variance(weights: list[float], rates: list[float], units: tuple[int, ...]) -> float:
+    """Var = sum W_h^2 p_h(1-p_h)/n_h. The quantity Neyman allocation minimises."""
+    return sum(w * w * p * (1 - p) / n for w, p, n in zip(weights, rates, units, strict=True))
+
+
+def best_integer_allocation(
+    weights: list[float], rates: list[float], n: int, around: tuple[int, ...], window: int = 2
+) -> tuple[tuple[int, ...], float]:
+    """Exhaustively search integer allocations within `window` units of `around`.
+
+    Bounded, and the bound is the honest part: this finds the best allocation
+    IN THE WINDOW, not the global optimum. Stated wherever the result is used.
+    Admissible means every stratum keeps Q2's floor of 2, because an allocation
+    the tool would refuse is not a fair comparison for one it would accept.
+    """
+    import itertools
+
+    best: tuple[int, ...] = around
+    best_variance = float("inf")
+    for candidate in itertools.product(
+        *[range(max(MIN_UNITS_PER_STRATUM, c - window), c + window + 1) for c in around]
+    ):
+        if sum(candidate) != n:
+            continue
+        variance = design_variance(weights, rates, candidate)
+        if variance < best_variance:
+            best_variance, best = variance, candidate
+    return best, best_variance
+
+
+@pytest.mark.parametrize(
+    "label", ["barnett_neyman_4000", "two_stratum_neyman_1000", "rare_event_neyman_5000"]
+)
+def test_the_ruled_rounding_is_optimal_on_every_fixture(label: str) -> None:
+    """Rule 8: the limit S-1.7 states as a sentence, measured as a number.
+
+    Wright (2014) says controlled rounding of Neyman "does not always lead to
+    the optimal allocation". True, and until now that was all we could say.
+
+    On our own fixtures the gap is exactly zero: the ruled allocation IS the
+    best integer allocation within two units per stratum. Widening the window to
+    three and four finds nothing better.
+
+    Stated at the width of the search -- best in a bounded window, not a proof
+    of global optimality. The negative control below is what makes a zero here
+    mean something.
+    """
+    fixture = allocation_fixture(label)
+    weights, rates = as_list(fixture["W_h"]), as_list(fixture["p_h"])
+    n = fixture["n_total"]
+
+    ruled = largest_remainder(tuple(as_list(fixture["result"]["raw"])), n)
+    _, best_variance = best_integer_allocation(weights, rates, n, ruled)
+
+    gap = (design_variance(weights, rates, ruled) - best_variance) / best_variance
+    assert gap == pytest.approx(0.0, abs=1e-12), f"{label}: ruled allocation is {gap:.4%} worse"
+
+
+def test_the_optimality_search_can_find_a_gap() -> None:
+    """The negative control, and without it the test above proves nothing.
+
+    A search that reports "no gap" everywhere might simply be broken. This is a
+    design where the ruled rounding really is suboptimal, found by searching
+    37,910 randomly generated admissible designs on 2026-08-29. The ruled
+    rounding was not the in-window optimum in 1,976 of them -- 5.21% -- and this
+    was the worst.
+
+    Recorded as a pinned value rather than re-searched, so the suite stays fast
+    and the figure cannot drift.
+    """
+    weights = [0.3653, 0.0954, 0.2376, 0.3017]
+    rates = [0.07938, 0.44399, 0.03966, 0.47125]
+    n = 20
+
+    raw = neyman_raw(
+        tuple(
+            Stratum(f"s{i}", round(w * 1_000_000), p)
+            for i, (w, p) in enumerate(zip(weights, rates, strict=True))
+        ),
+        n,
+    )
+    ruled = largest_remainder(raw, n)
+    assert ruled == (6, 3, 2, 9)
+
+    best, best_variance = best_integer_allocation(weights, rates, n, ruled)
+    assert best == (6, 3, 3, 8)
+
+    gap = (design_variance(weights, rates, ruled) - best_variance) / best_variance
+    assert gap == pytest.approx(0.00731572, rel=1e-3), f"gap moved: {gap:.6%}"
+
+    # Reported in variance, but an operator reads a standard error, which moves
+    # by roughly half as much. Both figures are in docs/STANDARDS.md S-1.7.
+    assert ((1 + gap) ** 0.5 - 1) == pytest.approx(0.00365120, rel=1e-3)

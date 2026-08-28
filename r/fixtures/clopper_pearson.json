@@ -1,0 +1,204 @@
+{
+  "what": "Clopper-Pearson exact binomial intervals, from base R",
+  "deliverable": "D2.4",
+  "produced_by": "r/clopper_pearson_fixtures.R",
+  "generated_before_any_estimator": true,
+  "exact_call": "binom.test(k, n, conf.level = 0.95)$conf.int",
+  "witness_note": "stats::binom.test is base R, a different implementation lineage from survey. It reaches the interval by inverting an incomplete beta (qbeta). The Python side root-finds on the exact binomial tail. Two arithmetic paths, one definition -- which is what makes agreement mean something.",
+  "defining_property": "P(X >= k | n, lower) = alpha/2 and P(X <= k | n, upper) = alpha/2. This is the definition, not a consequence of it.",
+  "environment": {
+    "image_digest": "sha256:c3f39b365d1077fe24f8e9ab2742e352b6d3950897f51af1624a5bb5550c21c0",
+    "r_version": "R version 4.5.3 (2026-03-11)",
+    "cran_snapshot": "https://p3m.dev/cran/__linux__/noble/2026-04-23"
+  },
+  "standards": {
+    "anchor": "S-1.1 Brown, Cai & DasGupta (2001), DOI 10.1214/ss/1009213286"
+  },
+  "confidence": 0.95,
+  "cases": [
+    {
+      "n": 1,
+      "k": 0,
+      "note": "n=1, no successes. The smallest thing that must still produce a bound",
+      "point": 0,
+      "lower": 0,
+      "upper": 0.975
+    },
+    {
+      "n": 1,
+      "k": 1,
+      "note": "n=1, all successes",
+      "point": 1,
+      "lower": 0.02500000000000002,
+      "upper": 1
+    },
+    {
+      "n": 2,
+      "k": 0,
+      "note": "zero successes: lower bound must be exactly 0",
+      "point": 0,
+      "lower": 0,
+      "upper": 0.841886116991581
+    },
+    {
+      "n": 2,
+      "k": 2,
+      "note": "all successes: upper bound must be exactly 1",
+      "point": 1,
+      "lower": 0.1581138830084191,
+      "upper": 1
+    },
+    {
+      "n": 10,
+      "k": 0,
+      "note": "zero out of ten -- the rule-of-three regime",
+      "point": 0,
+      "lower": 0,
+      "upper": 0.3084971078187608
+    },
+    {
+      "n": 10,
+      "k": 10,
+      "note": "ten out of ten",
+      "point": 1,
+      "lower": 0.6915028921812392,
+      "upper": 1
+    },
+    {
+      "n": 10,
+      "k": 1,
+      "note": "interior, n=10 k=1",
+      "point": 0.1,
+      "lower": 0.002528578544461786,
+      "upper": 0.4450161170281954
+    },
+    {
+      "n": 10,
+      "k": 5,
+      "note": "interior, n=10 k=5",
+      "point": 0.5,
+      "lower": 0.1870860284473986,
+      "upper": 0.8129139715526015
+    },
+    {
+      "n": 10,
+      "k": 9,
+      "note": "interior, n=10 k=9",
+      "point": 0.9,
+      "lower": 0.5549838829718046,
+      "upper": 0.9974714214555382
+    },
+    {
+      "n": 20,
+      "k": 1,
+      "note": "interior, n=20 k=1",
+      "point": 0.05,
+      "lower": 0.001265089497949805,
+      "upper": 0.2487327627720277
+    },
+    {
+      "n": 20,
+      "k": 10,
+      "note": "interior, n=20 k=10",
+      "point": 0.5,
+      "lower": 0.2719578495607918,
+      "upper": 0.7280421504392082
+    },
+    {
+      "n": 20,
+      "k": 19,
+      "note": "interior, n=20 k=19",
+      "point": 0.95,
+      "lower": 0.7512672372279723,
+      "upper": 0.9987349105020502
+    },
+    {
+      "n": 40,
+      "k": 1,
+      "note": "interior, n=40 k=1",
+      "point": 0.025,
+      "lower": 0.0006327449320494193,
+      "upper": 0.1315858584827657
+    },
+    {
+      "n": 40,
+      "k": 20,
+      "note": "interior, n=40 k=20",
+      "point": 0.5,
+      "lower": 0.3380178137372346,
+      "upper": 0.6619821862627655
+    },
+    {
+      "n": 40,
+      "k": 39,
+      "note": "interior, n=40 k=39",
+      "point": 0.975,
+      "lower": 0.8684141415172343,
+      "upper": 0.9993672550679505
+    },
+    {
+      "n": 100,
+      "k": 1,
+      "note": "interior, n=100 k=1",
+      "point": 0.01,
+      "lower": 0.0002531460329774208,
+      "upper": 0.05445938539208062
+    },
+    {
+      "n": 100,
+      "k": 50,
+      "note": "interior, n=100 k=50",
+      "point": 0.5,
+      "lower": 0.398321129503301,
+      "upper": 0.601678870496699
+    },
+    {
+      "n": 100,
+      "k": 99,
+      "note": "interior, n=100 k=99",
+      "point": 0.99,
+      "lower": 0.9455406146079194,
+      "upper": 0.9997468539670226
+    },
+    {
+      "n": 4000,
+      "k": 0,
+      "note": "rare event, no violations found at all",
+      "point": 0,
+      "lower": 0,
+      "upper": 0.0009217947494830556
+    },
+    {
+      "n": 4000,
+      "k": 1,
+      "note": "rare event, a single violation",
+      "point": 0.00025,
+      "lower": 6.329431965133451e-06,
+      "upper": 0.001392115121966268
+    },
+    {
+      "n": 4000,
+      "k": 8,
+      "note": "rare event, Barnett-scale n at roughly 0.2%",
+      "point": 0.002,
+      "lower": 0.0008638411024434883,
+      "upper": 0.003936973885950823
+    },
+    {
+      "n": 4000,
+      "k": 9,
+      "note": "rare event, one more",
+      "point": 0.00225,
+      "lower": 0.001029343313298641,
+      "upper": 0.004266885064660175
+    },
+    {
+      "n": 1999514,
+      "k": 137,
+      "note": "Civil Comments scale, very low prevalence",
+      "point": 6.851664954583963e-05,
+      "lower": 5.752454739524753e-05,
+      "upper": 8.099737934689705e-05
+    }
+  ]
+}

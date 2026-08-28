@@ -83,7 +83,12 @@ ritual, not a CI job — a tripwire firing is a decision for the director, not a
    parser from the thing it checks and can only agree by luck; that is how an unparseable
    `gate.yml` passed a green checker (**C-23**). **Markdown is the exception**, and the reason is
    the rule: its consumer is a human, who reads it loosely too.
-9. **Never delete or overwrite the director's working directories.** `C:\Users\mohds\ts-sentry` is
+9. **"The guard did not object" is not "the guard looked."** Know what each check does *not*
+   read, and assert that scope rather than describe it. The zero-network guard walks
+   `[project.dependencies]` and skips anything marked `extra ==`, so a dev dependency draws no
+   objection from it -- correctly, and silently. `test_the_network_guard_stops_at_runtime_dependencies`
+   is what makes that a fact instead of a belief.
+10. **Never delete or overwrite the director's working directories.** `C:\Users\mohds\ts-sentry` is
    read-only.
 
 ## Where things stand

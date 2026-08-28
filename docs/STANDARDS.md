@@ -112,8 +112,32 @@ abstract, verbatim:
 
 Wright gives a worked counterexample (section 2.3): Neyman yields `4.70 / 3.66 / 1.64` for n = 10;
 controlled rounding gives `5 / 4 / 1` with variance 97,013, and an exact-optimal allocation does
-better. **So our allocation is defensible and reproducible, and it is not variance-minimal.** That
-is a real cost of the ruling and it is stated here rather than discovered later.
+better. **So our allocation is defensible and reproducible, and it is not variance-minimal.**
+
+**How much is it costing us? Measured 2026-08-29, because a limit stated as a sentence is a shrug
+and a limit stated as a number is something an auditor can weigh.** Rule 8.
+
+For each allocation we enumerate every integer allocation within **two units per stratum** that sums
+to n and keeps Q2's floor, compute the design variance of each, and compare.
+
+| | Result |
+|---|---|
+| **On all three Neyman fixtures** | **gap exactly 0.** The ruled allocation *is* the best in the window. Widening to three and four units finds nothing better |
+| Across 37,910 randomly generated admissible designs | the ruled rounding was not the in-window optimum in **1,976 of them, 5.21%** |
+| **Worst gap found anywhere** | **0.7316% of variance**, which is **0.3651% of the standard error** an operator actually reads |
+
+*Stated at the width of the search.* This is the best allocation found in a **bounded window**, not a
+proof of global optimality. The zero on our fixtures means something only because the same search
+finds real gaps elsewhere -- the negative control is pinned in
+`test_the_optimality_search_can_find_a_gap`, and without it a search that reports zero everywhere
+might simply be broken.
+
+**Not grounds to revisit Q4.** Under 1% of variance at its worst, and zero on every fixture we
+ship. **Wright's counterexample is not even admissible here** -- it puts a stratum at 1 unit, which
+`ALLOCATION_TOO_THIN` refuses, so Q2's floor already excludes part of the region where rounding is
+worst. Recorded because that was luck rather than design.
+
+That is a real cost of the ruling, now with a size on it, stated here rather than discovered later.
 
 **Limit 2 -- largest remainder is not monotone in n.** Raising the total sample size can *lower* a
 stratum's allocation. Demonstrated on this project's own frames rather than cited, so it is
