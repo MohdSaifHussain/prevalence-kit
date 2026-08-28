@@ -263,6 +263,13 @@ concrete finding that only FULL-tier ceremony would have produced.
   specific version of the caveat above, added 2026-08-29 under ruling Q5 / D-31. The method that
   does propagate that uncertainty is Lang & Reiczigel (2014), S-1.5, and adopting it is a plan
   schema change rather than an estimator swap.
+- **At rare-event prevalence, an ordinary-sounding specificity makes the correction undefined, not
+  merely imprecise.** The correction is defined only when specificity is at least `1 - apparent
+  prevalence`. At an apparent prevalence of 0.2% that means **above 99.8%**. A team reading "99%
+  specificity" hears excellent; at that rate the test alone produces five times more apparent
+  positives from clean content than the whole sample contained, and the corrected estimate goes
+  negative. The tool refuses and names the figure you need. Added 2026-08-29, from the
+  `fpr_exceeds_prevalence` case.
 - **Interval guarantees are sampling-only.** They do not account for rater quality. This matches the
   caveat YouTube publishes for VVR: *"The confidence intervals do not take into account rater
   quality, which may impact our measurements."*
@@ -305,6 +312,7 @@ Every change to this charter after ratification gets a row here.
 
 | # | Date | Change | Ruled by | Verbatim ruling |
 |---|---|---|---|---|
+| A-2 | 2026-08-29 | **Honest limits gain a second line**: at rare-event prevalence an ordinary-sounding specificity makes the Rogan-Gladen correction undefined rather than imprecise. From the `fpr_exceeds_prevalence` case, found by the D2.5 fixture contradicting its own author's note. | Director | D2.5 review, this session |
 | A-1 | 2026-08-29 | **Honest limits gain one line** under ruling Q5 / D-31: the corrected interval treats supplied Se and Sp as exact. A limit added, never narrowed -- section 8's rule is intact. Wright's exact optimal allocation added to the NEXT queue the same day. | Director | Q5 ruling, this session |
 | A-0 | 2026-08-28 | **Charter ratified.** Seven Phase 0 rulings applied: R-1 (lean estimators, httpx rationale, dual cross-check, svy credited), R-2 (regulatory positioning inverted), R-3 (three citation fixes, ROOST conflict recorded unresolved), R-4 (Brown/Cai/DasGupta anchor; Wilson + Clopper-Pearson; Jeffreys dropped), R-5 (Fernet; Cobblestone rejected on soak time), R-6 (dev 3.14, floor 3.12), R-7 (pre-registered threshold estimand, multi-threshold sensitivity curve) | Director | `docs/RATIFICATION.md` — full text of all seven |
 

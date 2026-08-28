@@ -155,7 +155,8 @@ Each gets a distinct code, both controls, and a message that says what to do.
 
 | Code | Fires when |
 |---|---|
-| `CORRECTION_UNDEFINED` | `Se + Sp <= 1` — the Rogan–Gladen denominator vanishes or inverts. **PENDING D2.5** |
+| `CORRECTION_UNDEFINED` | `Se + Sp <= 1` — the Rogan–Gladen denominator vanishes or inverts. **Built in D2.5.** The witness itself shows why this cannot be printed rather than merely should not be: at Se 0.60, Sp 0.30 `epi.prev` returns a lower bound of 6.712724 above an upper bound of 6.459273 |
+| `CORRECTION_OUT_OF_RANGE` *(added 2026-08-29)* | The corrected estimate falls outside [0, 1]. The Se/Sp pair and the sample are each fine alone and jointly impossible — **D-22's fourth case**, which is why it is separate from the row above: that one sends the operator to two numbers in the plan, this one to the relationship between the plan and the data. **Built in D2.5** |
 | ~~`CORRECTION_DEGENERATE`~~ | **STRUCK 2026-08-29. The row was not merely redundant; it was wrong.** See the deviation note below |
 | `STRATUM_UNSAMPLED` | A stratum in the plan received no sampled units |
 | `STRATUM_EMPTY` | A stratum is defined but contains no frame units |
@@ -186,7 +187,7 @@ was wrong in the other.
 `CORRECTION_UNDEFINED` and `CORRECTION_OUT_OF_RANGE`, and D-22's test decides them -- the first sends
 the operator to the Se/Sp pair, the second to the relationship between the plan and the sample.
 
-**29 reason codes in total**, across Phase 1's 23 and this phase's 6. Counted from `Reason` by
+**31 reason codes in total**, across Phase 1's 23 and this phase's 8. Counted from `Reason` by
 `tools/check_claims.py`, not maintained by hand -- the figure moved from the Phase 1 contract to here
 when Phase 2 added codes and the checker went on reading the closed phase's number.
 
@@ -283,6 +284,7 @@ exists so that is a scheduled decision rather than a remembered intention.
 | **O-16** | **DISCHARGED 2026-08-29.** R2's cross-version determinism is now *asserted*. Run `33204075014` printed an identical draw on **CPython 3.12.14 / 3.13.15 / 3.14.7**: `('item-0129', 'item-0089', 'item-0169', 'item-0027', 'item-0008')`. Verified by the director from the run log, not from the builder's table. **The first externally-produced evidence in this project's life.** | Phase 1 close |
 | **O-17** | **DISCHARGED 2026-08-29.** The workflow has executed: `https://github.com/MohdSaifHussain/prevalence-kit/actions/runs/33204075014`, head `7f19bd9`, four jobs, all success. It is no longer a gate verified by reading. **Its first run produced V-16 and the `pytest -q` defect** — which is what a first execution is for. | Phase 1 close |
 | **O-18** | **CLOSED 2026-08-29.** Decision 2011/833/EU permits reuse; Article 6(2)(a)'s source acknowledgement is the binding condition and the register satisfies it. **The closure covers Commission documents only** — Regulation (EU) 2022/2065 is a Parliament and Council act and is **not** covered. Boundary written into `docs/STANDARDS.md` S-4.3 so it travels with the clearance. | Phase 3 |
+| **O-21** *(new)* | **The README must carry the rare-event specificity fact.** Charter section 8 now states it and `CORRECTION_OUT_OF_RANGE` says it to an operator who hits it. The README is where someone decides whether to adopt the tool at all, and this is the fact that makes its refusals read as judgement rather than fragility: 99% specificity sounds excellent and makes the correction undefined at 0.2% prevalence. | **Phase 3** |
 | **O-20** *(new)* | **D-30 condition 1 is honoured at the API and not yet at the plan file.** `allocate()` takes `rounding` as a **required argument with no default**, which is what holds the line today: the rule cannot be a constant in the source. Still owed: `allocation_rounding` as a field in the hashed plan record, and `ALLOCATION_ROUNDING_UNDECLARED` refusing at load when a stratified plan omits it. Opened as a numbered obligation rather than a bullet in a report, because everything said in that report was true and the omission is what would have misled -- C-12's shape. | **D2.8** |
 | **O-19** *(new)* | **Re-pin the CI actions before GitHub drops Node 20.** `checkout` v5.0.0 and `setup-python` v5.6.0, both two majors behind, both targeting Node 20. Watched by **TW-4**, which **fired on its first check**. | Phase 3 |
 

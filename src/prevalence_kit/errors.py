@@ -51,6 +51,17 @@ class Reason(StrEnum):
     ALLOCATION_TOO_THIN = "ALLOCATION_TOO_THIN"
     ALLOCATION_ROUNDING_UNDECLARED = "ALLOCATION_ROUNDING_UNDECLARED"
 
+    # Rogan-Gladen. Two codes, not three: CORRECTION_DEGENERATE was struck
+    # 2026-08-29 because AP = 0 or 1 is either already out of range or perfectly
+    # well defined, and the contract's description of it was wrong.
+    #
+    # D-22 separates these two by the artifact the operator must open.
+    # UNDEFINED sends them to the Se/Sp pair -- two numbers that are internally
+    # impossible. OUT_OF_RANGE sends them to the relationship between the plan
+    # and the sample, each of which looks fine alone.
+    CORRECTION_UNDEFINED = "CORRECTION_UNDEFINED"
+    CORRECTION_OUT_OF_RANGE = "CORRECTION_OUT_OF_RANGE"
+
 
 class Refusal(Exception):
     """The tool declined to produce a number it could not defend.
