@@ -52,6 +52,7 @@ WORKDIR /witness
 COPY barnett_table_2b.R /witness/barnett_table_2b.R
 COPY stratified_fixtures.R /witness/stratified_fixtures.R
 COPY clopper_pearson_fixtures.R /witness/clopper_pearson_fixtures.R
+COPY rogan_gladen_fixtures.R /witness/rogan_gladen_fixtures.R
 
 # Default is the anchor. D2.2 is run by naming its script:
 #   docker run ... <image> /witness/stratified_fixtures.R
