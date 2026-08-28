@@ -322,6 +322,169 @@ behaviour implied by exit check E8. Rejected: it makes R5 unprovable.
 
 ---
 
+---
+
+## D-16 — Sampling by keyed hash, not by a pseudo-random generator
+
+**Date:** 2026-08-28 · **Made in:** Phase 1 build; approved at the V-1 ruling · **Ruled by:** director
+
+`draw_srs` selects by sorting the frame on `SHA-256(seed ‖ item_id)` and taking the first *n*.
+Sorting a population by a keyed hash is a uniformly random permutation, so the first *n* are a
+simple random sample without replacement.
+
+**Reason.** Two requirements, not preferences.
+
+1. **R2 wants byte-identical output** across 3.12 / 3.13 / 3.14 and across platforms.
+   `random.sample`'s internal algorithm is an implementation detail with no stability promise.
+   SHA-256 has one.
+2. **R5 wants an outsider to be able to recompute the sample without running this code.**
+   "SHA-256 the seed and the id, sort, take *n*" is a few lines in any language. A Mersenne Twister
+   draw sequence is not.
+
+The director's assessment at the V-1 ruling: *"The keyed sort is the stronger of the two decisions;
+it is what makes R5's 'an outsider can recompute this' true rather than aspirational."*
+
+**Alternative not taken.** `random.sample` with a seeded `random.Random` — rejected on both counts
+above.
+
+**Pinned.** `test_draw_pinned_against_a_recorded_value` locks the selection rule itself, so a later
+refactor that changes which items are drawn has to say why.
+
+**Record note.** `sampling.py` cited a "D-17" for this decision before any such entry existed. The
+code comment pre-empted the log by two numbers. Corrected to D-16 before this entry was written; see
+`docs/CORRECTIONS.md` C-8.
+
+---
+
+## D-17 — A run is linear: four evidence steps, once each, in order
+
+**Date:** 2026-08-28 · **Made in:** V-1 mechanism ruling · **Ruled by:** director
+
+**The rule, in the words it is written in the code and the contract:**
+
+> Linearity binds the four evidence steps — `plan`, `sample`, `ingest-labels`, `estimate` — at most
+> once each, in that order. `report` may repeat, and each emission appends its own entry.
+
+Enforced in two independent places, because they cover different cases:
+
+| Layer | Where | Code |
+|---|---|---|
+| 1 | `do_plan` refuses a non-empty ledger | `RUN_ALREADY_OPEN` |
+| 2 | `verify` refuses repeats **and** out-of-order steps | `RUN_NOT_LINEAR` |
+| 3 | the plan is ledger entry 0; "genesis" names entry 0 | — |
+| 4 | `plan.sealed` is write-once | `SEAL_ALREADY_WRITTEN` |
+
+**What this closes.** Running the chain, disliking the number, lowering the pre-registered
+threshold, and re-running everything into the same workspace took the estimate from 0.225 to 1.000
+while `verify` exited 0 — and printed the *second* plan's hash under the word "genesis". A stated
+protection (`SECURITY.md` §1.3, §2.2) failing, not a stated limit.
+
+**Why layers, not alternatives.** Layer 1 alone leaves an already-corrupted record certifiable, and
+`verify` must never assume the writer behaved — it is the auditor's tool. Layer 2 alone lets the bad
+record be created. Layer 3 is required regardless: the false "genesis" string is its own defect and
+would survive both other fixes. **Layer 4 is a prerequisite for Layer 3, not a fourth extra** —
+confirmed by execution: bind entry 0 while `do_plan` can still overwrite `plan.sealed` and the
+sealed-copy check fails first with a seal code, so the working-file check never runs.
+
+**Why strict, and this fact is load-bearing for the ruling.** Every step raises its `Refusal`
+*before* `ledger.append`, so **a failed step writes no entry**. Verified, and asserted in
+`test_a_failed_step_writes_no_entry`. Therefore the ordinary retry-after-a-mistake workflow passes
+strict linearity untouched — and a repeated step in a ledger is always a repeated *success*: a step
+that completed, produced a result, and was then deliberately done again. That is not a usability
+case. It is the p-hacking path.
+
+The builder estimated the usability cost as "real"; the director measured it and it is close to
+nil. Recorded because the estimate was wrong and the correction is the reason the strict option was
+takeable.
+
+**Alternatives not taken.**
+
+- *Only `plan` is once-only, later steps may repeat with `verify` binding the last.* Rejected: it
+  reopens the same hole one layer down.
+- *An explicit `--amend` verb.* Rejected, and not only on the six-verb cap. In the director's words:
+  *"An amend flag is a p-hacking affordance with a polite name: it moves the auditor's question from
+  'did the plan change?' — which the tool can answer — to 'was the amendment legitimate?', which it
+  cannot."* "A new measurement is a new workspace" leaves both runs on disk as separate records,
+  which is strictly more honest and costs the operator one directory. Recorded in NEXT if anyone
+  asks for it; not built.
+
+**The `report` exemption.** Re-emitting cannot change the number — the estimate is already sealed
+and chained — and a record of every emission is something an auditor wants, not something to forbid.
+Ruled before `emit-report` was built, deliberately, rather than letting the builder hit it and
+quietly pick one.
+
+**Ordering is checked, not only repetition.** A ledger scrambled to
+`plan → estimate → sample → ingest-labels`, with every link honestly re-chained, used to verify
+clean: `by_step` was a dict and dicts do not care about order. Same root cause as V-1 — `verify`
+trusting the shape of a record it should be re-deriving.
+
+---
+
+## D-18 — O-4 narrowed: R `survey` is the primary witness
+
+**Date:** 2026-08-28 · **Made in:** ruling Q1 · **Ruled by:** director
+
+**D-3's original assumption is withdrawn on evidence.** D-3 said every estimator both libraries
+implement would be validated against both, to ≥ 4 significant digits. That assumed the two implement
+the same estimator. For Wilson they do not.
+
+**O-4 as narrowed:** R `survey` 4.5 is the **primary witness**. `svy` is used as a witness **only
+where its estimator is the same estimator**.
+
+**Evidence, quoted rather than recalled.** `svy` 0.25.0 sdist, PyPI sha256
+`870ef8104e10c6f7e8bfd3cf1c71ccad2e07d41bb79fc8163a4b9c7f7900a93c`, uploaded
+`2026-08-26T13:54:41.421035Z`. Provenance independently re-checked by the director against the PyPI
+JSON API. File `src/svy/estimation/base.py`, lines 713–746:
+
+- line 716: *"Replaces n with n_eff = p(1-p)/se² and uses t-quantile for df."*
+- line 730: `n_eff = (p * (1 - p)) / (se**2)`
+- line 739: `z = self._t_crit(alpha, df)` — a **t**-quantile, not *z*
+
+**Stated at the width of the evidence, and no wider.** The source shows the two estimators **differ
+in construction**. It does **not** show by how much they disagree at any given *n*. The earlier
+builder claim that "the two will not agree to 4 significant digits at small n" is a claim about
+magnitude that this evidence does not carry. It is very likely true and it is unmeasured.
+**Obligation O-13** carries the measurement to Phase 2, which will either confirm it or narrow the
+sentence again.
+
+**A second confirmation of D-2, recorded because it previously rested on one reading.** The PyPI
+registry metadata for `svy` 0.25.0 lists `httpx>=0.28.1` in `requires_dist`. D-2's zero-network
+rationale is now corroborated by the registry as well as by the installed distribution.
+
+**Our own Wilson is confirmed by two independent witnesses, neither of which is its own algebra:**
+the score-equation property test, and a quadratic root-finder using the numerically-stable form
+(reviewer-supplied, now adopted into the suite). Maximum absolute disagreement 6.367 × 10⁻¹³ across
+63 (k, n) pairs including n = 1, 2 and k = 0, k = n.
+
+---
+
+## D-19 — CSV fields may hold a whole piece of content
+
+**Date:** 2026-08-28 · **Made in:** Phase 1 build · **Reason: builder's finding, recorded below**
+
+`_read_labels` raises the `csv` module's field-size limit to **64 MiB** for the duration of the
+read, and restores it afterwards.
+
+**Reason.** `csv` caps a single field at 128 KiB and raises a bare `_csv.Error` past it. Trust &
+Safety content routinely exceeds that — a long post, a transcript, a thread — and this tool chunks
+content precisely so that size is not a limit. A library default is not a reason to refuse an
+operator's data, and a raw `_csv.Error` is not a refusal.
+
+**Not unbounded.** 64 MiB rather than `sys.maxsize`, so a runaway file refuses rather than
+exhausting memory.
+
+**Restored afterwards** because `csv.field_size_limit` is process-global and this tool does not get
+to leave it changed for whatever else is running in the same interpreter.
+
+**How it was found, which is the part worth keeping.** Not by review. By changing the test fixture
+to contain one deliberately multi-chunk item — a change made for an unrelated reason (F-4) — which
+immediately broke fourteen tests with `_csv.Error`. The defect was in production code and had been
+invisible because every fixture item was small. The director's instruction at the V-1 ruling was
+*"Build the record shapes that a dishonest or broken writer would produce, and make verify meet
+them."* This is the same lesson pointing at input rather than at records.
+
+---
+
 ## Carried obligations opened by these decisions
 
 | # | Obligation | Owner | Opened by |
@@ -331,3 +494,4 @@ behaviour implied by exit check E8. Rejected: it makes R5 unprovable.
 | O-10 | README must credit `svy` explicitly as the estimator layer. Assert by overclaim scanner. | Phase 3 | D-4 |
 | O-11 | Chunk-digest manifest bound into the ledger; `verify` discriminates tamper / truncate / reorder / substitute by distinct reason code. | Phase 1 | **D-14** |
 | O-12 | `verify` states in words when the on-disk plan check was skipped because the file is absent. | Phase 1 | **D-15** |
+| O-13 | Measure how far `svy`'s design-based Wilson diverges from the textbook binomial interval at small *n*. D-18 records that they differ in construction; the magnitude is unmeasured. | Phase 2 | **D-18** |

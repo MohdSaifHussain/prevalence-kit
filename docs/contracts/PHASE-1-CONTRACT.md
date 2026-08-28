@@ -1,6 +1,6 @@
 # Phase 1 contract — the proof slice
 
-**Status: APPROVED — 28 August 2026, with one binding addition (D-14) ruled in.**
+**Status: APPROVED — 28 August 2026. Amended at the review-stop close (D-17, D-18).**
 Building is authorised. The addition and the E2-complement answer are marked ▸ **AMENDED** below.
 
 | | |
@@ -116,7 +116,33 @@ Each gets a distinct reason code, a negative control, and a positive control.
 | `ESTIMATE_MISMATCH` | `verify` recomputes a different estimate than the one recorded |
 | `LABELS_UNMATCHED` | Labels do not correspond one-to-one with the drawn sample |
 | `EMPTY_SAMPLE` | n = 0 — no interval is defined |
+| `RUN_ALREADY_OPEN` ▸ **AMENDED** | `plan` was run into a workspace that already holds a measurement |
+| `RUN_NOT_LINEAR` ▸ **AMENDED** | An evidence step repeats, or the steps are recorded out of order, or a step name is unknown |
+| `SEAL_ALREADY_WRITTEN` ▸ **AMENDED** | A second seal into the write-once `plan.sealed` store |
+| `SEAL_ID_COLLISION` ▸ **AMENDED** | A sealed directory already belongs to a different item id |
+| `KEY_MISSING` ▸ **AMENDED** | The sealing key is absent (was reported as `SEAL_TAMPERED`, and on the `verify` path as a raw `FileNotFoundError`) |
 | `PLAN_MISSING` ▸ **AMENDED** | The sealed plan copy is absent, so check (a) of D-15 cannot run. *(A missing **working** plan file is not a failure — see R10.)* |
+
+## 4b. The linearity rule ▸ **AMENDED**
+
+Stated here in the words it was ruled, so nobody has to infer it:
+
+> **Linearity binds the four evidence steps — `plan`, `sample`, `ingest-labels`, `estimate` — at
+> most once each, in that order. `report` may repeat, and each emission appends its own entry.**
+
+Enforced in two independent places. `do_plan` refuses a workspace that already holds a measurement;
+`verify` refuses a non-linear ledger regardless of what wrote it, because an auditor may be handed a
+record this code never produced.
+
+**Why strict, and this fact is load-bearing.** Every step raises its `Refusal` *before*
+`ledger.append`, so a failed step writes no entry. The ordinary retry-after-a-mistake workflow
+therefore passes untouched, and a repeated step in a ledger is always a repeated *success* — a step
+that completed, produced a result, and was then deliberately done again. That is not a usability
+case. Asserted by `test_a_failed_step_writes_no_entry`, not assumed. *(D-17.)*
+
+**Why `report` is exempt.** Re-emitting cannot change the number — the estimate is already sealed
+and chained — and a record of every emission is something an auditor wants, not something to forbid.
+Ruled before `emit-report` was built, deliberately.
 
 ## 5. Out of scope for Phase 1
 
@@ -166,14 +192,16 @@ Expected results are stated **in advance**, including exit codes.
 | E3 | `sample` → `ingest-labels` → `estimate` → `emit-report`, full chain | A report at a named path. **Exit 0.** |
 | E4 | **Read `report.md` by eye** | Estimate, 95% interval, design, n, every hash, and an Honest Limits block. Does it read in plain English? Does the interval look sane against the synthetic truth? |
 | E5 | `verify` | **Exit 0.** Prints each link checked. |
+| E5b ▸ **AMENDED** | Scramble a ledger's step order — e.g. `plan, estimate, sample, ingest-labels` — **re-chaining every link honestly**, then rerun `verify` | **Non-zero exit. Reason code `RUN_NOT_LINEAR`.** |
 | E6 | Delete the original input file, rerun `verify` | **Exit 0.** Proves R5 — it reproduces from the sealed record alone. |
 | E7 | Edit one byte in the ledger, rerun `verify` | **Non-zero exit. Reason code `LEDGER_BROKEN`.** Not a stack trace. |
 | E8 ▸ **CORRECTED** | Edit **any field in the plan file** — the estimand, the seed, the population — then rerun `verify` | **Non-zero exit. Reason code `PLAN_HASH_MISMATCH`.** *(The drafted wording said "edit one label in the plan". Plans contain no labels. Builder's drafting defect, corrected.)* |
 | E8b ▸ **AMENDED** | Run the **full chain through ingest and estimate first**, and only **then** edit the plan file. Rerun `verify`. | **Non-zero exit. Reason code `PLAN_HASH_MISMATCH`.** Post-ingest edits are covered — see §7b. |
 | E8c ▸ **AMENDED** | Delete the working plan file, rerun `verify` | **Exit 0**, and the output **says in words** that the on-disk plan check was skipped. Proves R10. |
+| E8d ▸ **AMENDED** | Run the full chain. Then edit the plan, **re-run `plan`**, and re-run the full chain into the same workspace. Rerun `verify`. | **Non-zero exit, named reason code, and the code must NOT be `ESTIMATE_MISMATCH`.** Expect `RUN_ALREADY_OPEN` at the re-plan. |
 | E9 | Edit one byte in a sealed chunk, rerun `verify` | **Non-zero exit. Reason code `SEAL_TAMPERED`.** |
 | E9b ▸ **AMENDED** | **Drop the final chunk** of a sealed item, rerun `verify` | **Non-zero exit. Reason code `SEAL_TRUNCATED`.** |
-| E9c ▸ **AMENDED** | **Swap two chunks** of a sealed item, rerun `verify` | **Non-zero exit. Reason code `SEAL_REORDERED`.** Distinct from E9 and E9b. |
+| E9c ▸ **RESTATED** | **Swap the first two chunks of the multi-chunk item** — the synthetic generator seals one deliberately large item for this purpose — then rerun `verify` | **Non-zero exit. Reason code `SEAL_REORDERED`.** Distinct from E9 and E9b. |
 | E10 | `grep -ri "<sentinel string>"` across every output artifact | **No matches.** Proves R4. |
 | E11 | `pytest -q` | All pass. Every refusal has both controls. |
 | E12 | `ruff check . && ruff format --check . && mypy --strict src` | All clean. Both ruff halves. |
@@ -181,7 +209,9 @@ Expected results are stated **in advance**, including exit codes.
 | E14 | Run `tools/check_claims.py --selftest` | Passes, and demonstrates it catches a planted mismatch. |
 | E15 | Run the tripwire script | Reports TW-1/2/3 against the 2026-08-28 baselines. |
 
-**E7, E8, E9, E9b, E9c and E13 are the ones that matter most.** They are the phase's real product:
+**E8d exists because E8 and E8b both passed while E8d failed.** Both of those edit the plan file; neither re-runs `plan`, which is the path that actually defeated pre-registration. A checklist that only tests the path the builder had in mind is a checklist testing the builder.
+
+**E7, E8, E8d, E9, E9b, E9c and E13 are the ones that matter most.** They are the phase's real product:
 gates that demonstrably refuse, for named and **distinct** reasons. E9, E9b and E9c must produce
 **three different reason codes** — if any two collapse into one, the gate has not been built.
 
@@ -228,6 +258,19 @@ of the irreversible and a heavier written record, and Phase 1 has nothing irreve
 
 Recording the forecast now means the re-ask can be *wrong*, which is the only way it is worth
 running.
+
+### Discharged — 28 August 2026 ▸ **AMENDED**
+
+**Ruling: remain at STANDARD.**
+
+The discharge standard, fixed before any evidence existed, was that moving to FULL requires naming a
+concrete finding attributable to a FULL-only practice. **No such finding can be named.** V-1 — the
+most serious defect in the phase — was found by the Reviewer role and by adversarial execution at
+the review stop. Both are STANDARD practices.
+
+**The forecast, recorded in advance, said the re-ask would probably not fire. It did not.** The
+verdict rests on an absence, which needs no counterfactual; any gloss that "FULL would have found it
+sooner" is a claim about a run that never happened.
 
 ## 9. Carried obligations owned by Phase 1
 

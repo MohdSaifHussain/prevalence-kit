@@ -17,13 +17,16 @@ neither the director nor the AI can quietly absorb the other's.
 | Chat reviewer (draft author) | 3 | 0 | **3** |
 | Research report (passed through unverified) | 2 | 0 | **2** |
 | Stale-at-draft-time, queued but built on anyway | 1 | 0 | **1** |
+| **Builder (Claude Code)** | **5** | **0** | **5** |
 | Director | 0 | 0 | 0 |
-| Builder (Claude Code, this session) | 0 | 0 | 0 |
-| **Total** | **6** | **0** | **6** |
+| **Total** | **11** | **0** | **11** |
 
-All six were caught in Phase 0 source verification, before any code. None reached an artifact.
-Entries stay **open** until the corrected text is committed in the ratified documents; they close
-when the replacement is in place and verified.
+C-1 … C-6 are Phase 0: defects in the chat-drafted vision, all caught before any code, none reaching
+an artifact. **C-7 … C-11 are Phase 1, and all five are mine.** Four were caught by the director's
+reviewer and one by the director; **none was caught by my own review stop**, which is the measurement
+of the limit I raised as Q2 rather than a separate finding.
+
+Entries stay **open** until the corrected text is committed and verified.
 
 ---
 
@@ -120,6 +123,88 @@ Trust Services). Not a lookalike. Still unofficial. The rule bites on *official*
 
 **This correction improved the deliverable.** The float labels became the demonstration's main axis
 rather than a caveat buried in it.
+
+---
+
+---
+
+## C-7 — Two gate numbers I reported that do not reproduce
+
+| | |
+|---|---|
+| **Claimed** | Phase 1 review stop, gate line: *"`mypy --strict` clean (16 files)"* and *"`ruff format --check` clean (29 files)"* |
+| **Actually** | `mypy --strict src` — the command exit check **E12 actually specifies** — reports **10** source files, not 16. I had run `mypy` with the project config, which also checks `tests/`. And ruff's summary integer is not a file count at all: it reported 29, then 30 at the next commit whose only diff was a `.txt` and a `.md`, against **16** tracked `.py` files. |
+| **Direction** | Both moved **against me**: I quoted a larger, more impressive number than the specified command produces, and quoted a second number that measures nothing. |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | The director's reviewer, re-running the commands. Confirmed by me: `mypy --strict src` → 10; `ruff format --check .` → 30 against `git ls-files '*.py'` → 16. |
+| **Severity** | Low in magnitude; the standing rule it breaks is not. *Numbers the director will repeat come from a run someone actually performed, stated with its conditions.* I had not performed the run I was quoting. |
+| **Replaced by** | Gate evidence is now reported as **exit codes and the test count**, both re-derived per report. The file-count integers are not quoted at all. |
+| **Status** | **OPEN** — closes when a phase-close report ships using exit codes only |
+
+**Note on the dated document.** `docs/PHASE-1-REVIEW-STOP.md` is **not** edited. It is a dated
+reading and stands as the honest record of what was believed on 28 August 2026. This entry is the
+correction, per the standing rule.
+
+---
+
+## C-8 — A code comment cited a decision that did not exist
+
+| | |
+|---|---|
+| **Claimed** | `sampling.py:18`: *"docs/DECISIONS.md D-17."* And `plan.py:9` cited `tests/test_plan.py::test_hash_does_not_need_the_data`. |
+| **Actually** | `DECISIONS.md` held D-1 … D-15. There was no D-17 and no D-16 either — the code comment pre-empted the log by two numbers. `tests/test_plan.py` does not exist; the test is at `test_core.py:50`. |
+| **Direction** | Both point at things that do not exist, so neither could mislead a reader into a wrong belief — they would simply fail to resolve. Still: a citation that cannot be followed is not a citation. |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | The director's reviewer, by looking. Confirmed by me: `grep -cE '^## D-' docs/DECISIONS.md` → 15. |
+| **Severity** | Low individually. As a class it is the standing rule *"verify a filename or entity exists before naming it"*, and three of the four record defects found were that rule. |
+| **Replaced by** | The keyed-sort decision is now genuinely logged as **D-16**, and the comment points at it. `plan.py` points at `test_core.py`. |
+| **Status** | **OPEN** — closes at Phase 1 close, when the claim-search checker (O-7, D1.13) can assert every `D-nn` and path citation in `src/` resolves |
+
+---
+
+## C-9 — A present-tense validation claim in the shipped package docstring
+
+| | |
+|---|---|
+| **Claimed** | `src/prevalence_kit/__init__.py`: *"The statistics **are validated** against R `survey` and Python `svy`."* |
+| **Actually** | Neither cross-check exists. O-4 is open, the work is Phase 2, and D-18 has since narrowed it: `svy` is not a witness for Wilson at all, because its Wilson is a different estimator. |
+| **Direction** | Against the evidence — the claim was wider than the artifact, in the one file that ships inside the package. |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | The director's reviewer |
+| **Severity** | Medium. Doctrine rule 7: claims at the exact width of the evidence. A package docstring is read by people who will never open the repository. |
+| **Replaced by** | *"`svy` and R `survey` are the estimator layer; this package does not claim to replace them. Cross-validation against R `survey` is a Phase 2 obligation (O-4) and is not yet done."* |
+| **Status** | **OPEN** — closes when O-4 is discharged and the sentence can be rewritten as a fact |
+
+---
+
+## C-10 — My own claim that Layer 3 fixes V-2 on its own
+
+| | |
+|---|---|
+| **Claimed** | `docs/contracts/PHASE-1-V1-PROPOSAL.md` §4: binding `entries[0]` *"also fixes V-2: … the working file compares against entry 0's hash and refuses `PLAN_HASH_MISMATCH`."* |
+| **Actually** | It does not, on its own. `_verify_plan` unseals the sealed copy **before** it looks at the working file. With `do_plan` still free to overwrite `plan.sealed/`, entry 0's manifest no longer matches disk, so step (a) refuses `SEAL_MANIFEST_MISMATCH` and the working-file check at step (b) **is never reached**. Layer 4 is a **prerequisite** for the V-2 fix, not a fourth extra. |
+| **Direction** | Against me: I claimed one layer did work that needs two. |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | The director's reviewer, by simulating Layer 3 without Layer 4. Confirmed by me before building: step (a) refused `SEAL_MANIFEST_MISMATCH`, step (b) never ran. |
+| **Severity** | Medium. It would have shipped as a wrong sentence in the record, and it would have reordered the work wrongly. |
+| **Class** | **The same class as V-5**: a claim about a mechanism, believed because it sounds right, never run. That is now three entries of this shape (C-10, V-5, and C-7's ruff number). |
+| **Replaced by** | Build order Layer 4 → 3 → 1 → 2, and refusals asserted by `Reason`, not by whether a refusal happened |
+| **Status** | **OPEN** — closes when the V-1 mechanism is signed off at phase close |
+
+---
+
+## C-11 — My estimate of strict linearity's usability cost was too high
+
+| | |
+|---|---|
+| **Claimed** | `PHASE-1-V1-PROPOSAL.md` §5: strict linearity is *"a real usability cost on a legitimate workflow"* — specifically retrying after a mistake. |
+| **Actually** | Close to nil. Every step raises its `Refusal` **before** `ledger.append`, so a failed step writes no entry, and the retry-after-a-mistake workflow passes strict linearity untouched. A repeated step in a ledger is therefore always a repeated *success*. |
+| **Direction** | Against me, and in the direction that made me hedge a ruling I should have recommended cleanly. |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | The director, by running it rather than reasoning about it |
+| **Severity** | Low as a defect, notable as a pattern: I described a system property I had not measured, in a document asking for a ruling on it. |
+| **Replaced by** | D-17 records the fact and its consequence, and `test_a_failed_step_writes_no_entry` asserts it so it cannot quietly stop being true |
+| **Status** | **OPEN** — closes at phase close |
 
 ---
 
