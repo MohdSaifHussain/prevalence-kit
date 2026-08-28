@@ -75,7 +75,7 @@ about the other two calls, which have no published anchor of their own in this p
 | Estimator | How its witness is itself validated |
 |---|---|
 | Stratified + Neyman | **Barnett Table 2B**, published, re-derived in Phase 0 §C6 |
-| Clopper-Pearson | **No published table.** Checked against an independent implementation of the exact beta-quantile form — the method used for Wilson in Phase 1, which agreed to 6.4 × 10⁻¹³ by a different arithmetic path |
+| Clopper-Pearson | ~~**No published table.** Checked against an independent implementation we write.~~ **Corrected 2026-08-29, in our favour: there is an external witness.** `stats::binom.test` ships with base R and is a different lineage from `survey`. It inverts an incomplete beta; we root-find on the binomial tail. **S-2.4.** Worst disagreement 7.1 × 10⁻¹¹ across 23 cases |
 | Rogan–Gladen | **Lang & Reiczigel (2014) worked results**, treated as the same kind of anchor and generated the same way. Obligation **O-8** |
 
 ## 3. Deliverables

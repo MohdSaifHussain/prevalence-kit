@@ -168,6 +168,7 @@ and nothing more.
 | S-2.1a | The R environment the witness runs in | `rocker/r-ver`, **pinned by digest, not by tag** | **`rocker/r-ver@sha256:c3f39b365d1077fe24f8e9ab2742e352b6d3950897f51af1624a5bb5550c21c0`** (tag `4.5.3`, pushed 2026-06-24). Docker 29.7.2 on this machine. | **2026-11-29** |
 | S-2.1b | The witness **as actually executed**, 2026-08-29 (O-3) | `r/Dockerfile` builds on S-2.1a | **R 4.5.3 (2026-03-11)**, **`survey` 4.5**, `jsonlite` 2.0.0. CRAN frozen at the base image's snapshot `https://p3m.dev/cran/__linux__/noble/2026-04-23`, so the install is deterministic and serves the version S-2.1 pins. **The exact call:** `svydesign(ids = ~1, strata = ~stratum, weights = ~w, data = sample_rows)` — no `fpc`, which is what makes it the with-replacement form S-2.3 specifies | **2026-11-29** |
 | S-2.2 | Second independent cross-check where coverage overlaps | Python **`svy`** (Samplics LLC) | **0.25.0**, uploaded **2026-08-26**; MIT | **2026-09-28** — fast-moving, 48 releases |
+| **S-2.4** | **The Clopper-Pearson witness** | R **`stats::binom.test`**, base R -- a different implementation lineage from `survey` | **R 4.5.3**, in the S-2.1a image. Call: `binom.test(k, n, conf.level = 0.95)$conf.int`. 23 cases in `r/fixtures/clopper_pearson.json` | **2026-11-29** |
 | S-2.3 | Stratified/Neyman allocation reproduction | Barnett, A., *YouTube's Violative View Rate Methodology: A Statistical Assessment*, MIT | **September 2021**, Tables 2A / 2B | never — fixed publication |
 
 **Why by digest and not by tag.** `rocker/r-ver:4.5` and `:4.5.3` resolve to the same image today.
@@ -225,6 +226,38 @@ that the binary is a faithful build of it.
 
 **Watched, not remembered.** **TW-5** re-runs this comparison. A third differing file means the
 mirror is serving something CRAN is not.
+
+### S-2.4 -- why base R is a real witness for Clopper-Pearson, and not a mirror
+
+The Phase 2 contract's §2.3 assumed Clopper-Pearson had **no external witness**, because it has no
+published table, and planned to check it against an implementation we wrote. That was pessimistic in
+our favour: `stats::binom.test` ships with base R, returns the Clopper-Pearson interval, and is a
+different lineage from `survey`.
+
+**The independence is structural, not promised.** The two sides reach the interval by different
+arithmetic:
+
+| | Route |
+|---|---|
+| R | inverts an **incomplete beta**, via `qbeta` |
+| prevalence-kit | root-finds on the **binomial tail**, in log space via `lgamma` |
+
+`lgamma` is the log of the *complete* gamma -- a log factorial. **There is no incomplete beta
+function anywhere in this package.** So the failure the director warned about -- checking `betainc`
+against `betainc`, which would look like agreement and mean nothing -- cannot occur here by
+construction rather than by care.
+
+**Measured 2026-08-29, across all 23 cases from n = 1 to n = 1,999,514:**
+
+| What | Worst disagreement |
+|---|---|
+| The method, in full double precision | **7.1e-11** |
+| After our own `DIGITS = 12` record rounding | 6.9e-09 |
+| The defining property at our endpoints -- `P(X >= k | lower)` against `alpha/2` | **3.9e-13** |
+
+**The rounding is the larger of the two, and that matters for how the first figure is read.** The
+6.9e-09 is our record format, not our estimator. R2.3 asks for four significant digits; both clear
+it by orders of magnitude.
 
 ## S-3 — Platform methodology (context; sets the honest limits)
 

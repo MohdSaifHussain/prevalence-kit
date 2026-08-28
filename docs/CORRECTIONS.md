@@ -617,9 +617,14 @@ above does not, and say so.
 | 4 | C-20 -- the exit-code argument said to rest on two checks | yes |
 | 5 | V-14 -- a branch called unreachable that every existing user hits | yes |
 | 6 | Barnett rounding, 2026-08-29 -- stratum 1 said to land on exactly 2098.5, with R's half-to-even rule producing 2098. The raw value is **2098.4952**, below the midpoint, so no tie-break is involved. Read "2098.50" in a two-decimal table and invented a mechanism for it | **no -- caught before commit** |
+| 7 | Clopper-Pearson width, 2026-08-29 -- asserted "Clopper-Pearson is never narrower than Wilson", reasoning that it is the conservative interval. **Conservative means coverage at least 1 - alpha; it does not mean wider everywhere.** At k = 0 and n = 4000 it is about 4% narrower, and both endpoints have closed forms that say so. Caught by the test written to assert it | **no -- caught before commit** |
 
-**Instance 6 has no C-number on purpose.** It never reached a commit, and the table above counts
-what escaped. Recorded here so the class keeps its count.
+**Instances 6 and 7 have no C-number on purpose.** Neither reached a commit, and the table above
+counts what escaped. Recorded here so the class keeps its count.
+
+**Both were caught by the artifact rather than by rereading.** Instance 6 by the fixture printing the
+raw value; instance 7 by the test written to assert the false property. Neither would have been found
+by thinking harder about it.
 
 **The fix is the part worth keeping.** The raw allocation print went from two decimals to four, so
 the display that caused the misreading no longer exists. That is rule 14: not a resolution to read
