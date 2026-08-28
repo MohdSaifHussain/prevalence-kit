@@ -17,11 +17,11 @@ neither the director nor the AI can quietly absorb the other's.
 | Chat reviewer (draft author) | 3 | 0 | **3** |
 | Research report (passed through unverified) | 2 | 0 | **2** |
 | Stale-at-draft-time, queued but built on anyway | 1 | 0 | **1** |
-| **Builder (Claude Code)** | **15** | **0** | **15** |
+| **Builder (Claude Code)** | **16** | **0** | **16** |
 | Reviewer instrument | **1** | 0 | **2** (1 noted) |
 | Director | 0 | 0 | 0 |
 | Tool artifact (noted, not a defect) | - | - | **1** |
-| **Total** | **22** | **0** | **23** |
+| **Total** | **23** | **0** | **24** |
 
 C-1 … C-6 are Phase 0: defects in the chat-drafted vision, all caught before any code, none reaching
 an artifact. **C-7 … C-13 are Phase 1, and all seven are mine.** Five were caught by the director's
@@ -147,7 +147,7 @@ rather than a caveat buried in it.
 | **Replaced by** | Gate evidence is now reported as **exit codes and the test count**, both re-derived per report. The file-count integers are not quoted at all. |
 | **Status** | **OPEN** — closes when a phase-close report ships using exit codes only |
 
-**Note on the dated document.** `docs/PHASE-1-REVIEW-STOP.md` is **not** edited. It is a dated
+**Note on the dated document.** `docs/contracts/PHASE-1-REVIEW-STOP.md` is **not** edited. It is a dated
 reading and stands as the honest record of what was believed on 28 August 2026. This entry is the
 correction, per the standing rule.
 
@@ -469,6 +469,43 @@ director's characterisation, recorded verbatim at C-19, holds on all five:
 
 > *My instruments have been wrong about what the contract's action is, never about what the code
 > does.*
+
+---
+
+---
+
+## V-15 - A wrong path in CLAUDE.md, and the reason the checker missed it
+
+| | |
+|---|---|
+| **Claimed** | `CLAUDE.md` and `docs/CORRECTIONS.md` both named `docs/PHASE-1-REVIEW-STOP.md`. |
+| **Actually** | The file is at `docs/contracts/PHASE-1-REVIEW-STOP.md`. The next session reads `CLAUDE.md` first and would have gone looking for a document that is not there. |
+| **Direction** | Against the next session, in the file written to orient it. |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | The director |
+| **Severity** | Low as a typo. **The real finding is that `check_claims` passed.** |
+| **Status** | **OPEN** - closes at the Phase 1 to 2 boundary |
+
+**Why the checker missed it.** `check_paths` read a fixed list of globs -- `src/**/*.py` and
+`tests/*.py`. `CLAUDE.md` was not in it, so adding a new document silently reduced coverage: no
+failure, no warning, just less checked than the day before.
+
+That is **D-23's principle turned on the checker's own inputs**. *A check that names its question
+generalises; a check that names a row does not.* This check named its files.
+
+**Fixed by discovery, not by adding a row.** `check_paths` now reads every `.py`, `.md` and `.txt`
+in the repository, so the next document added is covered on the day it lands. Its selftest plants a
+bad path in **`CLAUDE.md` specifically** - a file the old list would never have opened.
+
+**Three things the widened scan found immediately**, which is the coverage that was missing:
+
+1. This defect, in two files.
+2. **A bug in the checker's own regex.** `awesome-safety-tools/README.md` matched on its
+   `tools/README.md` suffix and was reported as a missing file. Fixed with a lookbehind.
+3. Two paths that are deliberately absent and now say so in a `KNOWN_ABSENT` set with a reason each:
+   `src/svy/estimation/base.py`, quoted from another package as D-18's evidence, and
+   `tests/test_plan.py`, quoted in C-8 as the defect itself. **An explicit set beats widening the
+   regex or skipping whole files: every exemption is visible and has to be justified when added.**
 
 ---
 

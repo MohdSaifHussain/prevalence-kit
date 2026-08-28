@@ -53,7 +53,9 @@ ROOT = Path(__file__).resolve().parents[1]
 
 CITATION = re.compile(r"\b([DCO])-(\d{1,3})\b")
 FINDING_REF = re.compile(r"\b([FV])-(\d{1,2})\b")
-PATH_LIKE = re.compile(r"`?((?:src|tests|docs|tools)/[\w./-]+\.(?:py|md|toml|txt))`?")
+PATH_LIKE = re.compile(r"(?<![\w./-])((?:src|tests|docs|tools)/[\w./-]+\.(?:py|md|toml|txt))")
+"""A repository path. The lookbehind matters: without it `awesome-safety-tools/README.md`
+matched on its `tools/README.md` suffix and was reported as a missing file."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -134,14 +136,50 @@ def check_citations(root: Path) -> list[Problem]:
     return problems
 
 
+SCANNED = ("**/*.py", "**/*.md", "**/*.txt")
+"""What the path check reads. Patterns, not a list of files.
+
+A named list stops covering a document the day it is added -- no failure, no
+warning, just less coverage than yesterday. CLAUDE.md was added, named a path
+that did not exist, and this check passed. D-23's principle applied to the
+checker's own inputs: a check that names its question generalises; a check that
+names a row does not. V-15.
+"""
+
+
+KNOWN_ABSENT = {
+    # Quoted as evidence from another package, not a path in this repository.
+    # docs/DECISIONS.md D-18 quotes svy 0.25.0's source by file and line.
+    "src/svy/estimation/base.py",
+    # Quoted as the defect itself. docs/CORRECTIONS.md C-8 records that plan.py
+    # once cited this file, which never existed. Naming it is the point.
+    "tests/test_plan.py",
+    # Also quoted as the defect. V-15 records that CLAUDE.md named this path
+    # when the file is under docs/contracts/.
+    "docs/PHASE-1-REVIEW-STOP.md",
+    # Quoted as the regex bug. V-15 records that awesome-safety-tools/README.md
+    # matched on this suffix before the lookbehind was added.
+    "tools/README.md",
+}
+"""Paths deliberately named that do not exist here, each with a stated reason.
+
+An explicit set beats widening the regex or skipping whole files: every
+exemption is visible and has to be justified when it is added.
+"""
+
+
 def check_paths(root: Path) -> list[Problem]:
     problems: list[Problem] = []
-    for path in repo_files(root, "src/**/*.py", "tests/*.py"):
+    for path in repo_files(root, *SCANNED):
+        # This file carries deliberately broken paths as selftest fixtures.
+        if path.name == "check_claims.py":
+            continue
         for named in PATH_LIKE.findall(path.read_text(encoding="utf-8")):
-            if not (root / named).exists():
-                problems.append(
-                    Problem("paths", f"{path.relative_to(root)}", f"{named} does not exist")
-                )
+            if named in KNOWN_ABSENT or (root / named).exists():
+                continue
+            problems.append(
+                Problem("paths", f"{path.relative_to(root)}", f"{named} does not exist")
+            )
     return problems
 
 
@@ -319,9 +357,12 @@ def selftest() -> int:
     plants: dict[str, tuple[str, str, str]] = {
         "citations": ("src/prevalence_kit/errors.py", '"""Refusals.', '"""Refusals. See D-999.'),
         "paths": (
-            "src/prevalence_kit/errors.py",
-            '"""Refusals.',
-            '"""Refusals. See tests/test_nonexistent.py.',
+            # Deliberately CLAUDE.md, not a Python file: the old check read a
+            # fixed list of src/ and tests/ globs, so this plant would not have
+            # been seen at all. V-15 was exactly that gap.
+            "CLAUDE.md",
+            "# prevalence-kit",
+            "# prevalence-kit\n\nSee docs/does-not-exist.md.",
         ),
         "codes": (
             "src/prevalence_kit/errors.py",

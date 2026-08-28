@@ -21,7 +21,7 @@ This project runs the **governed-orchestration** skill at **STANDARD** tier, man
 |---|---|
 | `PROJECT_CHARTER.md` | **Binding.** Scope, six verbs, hard rules, honest limits |
 | `docs/contracts/PHASE-2-CONTRACT.md` | **Binding, current.** Proposed; 3 numbered questions ruled |
-| `docs/DECISIONS.md` | D-1 … D-25. Why each choice, and what was rejected |
+| `docs/DECISIONS.md` | D-1 … D-26. Why each choice, and what was rejected |
 | `docs/CORRECTIONS.md` | Every claim that was wrong, counted **by source separately** |
 | `docs/FINDINGS.md` | Findings register. `check_claims` reconciles it against the code |
 | `docs/STANDARDS.md` | Every source pinned by version, date, digest or DOI |
@@ -29,7 +29,7 @@ This project runs the **governed-orchestration** skill at **STANDARD** tier, man
 | `SECURITY.md` | Threat model. §3 is the limits, carried forward unchanged |
 | `TIME-LOG.txt` | Append-only wall clock. Stamp on request |
 
-`docs/PHASE-1-REVIEW-STOP.md` and `docs/RULINGS-QUEUE.md` are **dated readings — never edited.**
+`docs/contracts/PHASE-1-REVIEW-STOP.md` and `docs/RULINGS-QUEUE.md` are **dated readings — never edited.**
 Corrections to them go in `docs/CORRECTIONS.md` with the date and the direction the number moved.
 
 ## The gate is seven checks, not four
@@ -66,7 +66,7 @@ ritual, not a CI job — a tripwire firing is a decision for the director, not a
 ## Where things stand
 
 **Phase 0** ratified. **Phase 1** closed at `d66d225` — 222 tests, 20 findings closed, 23 corrections
-open. **Phase 2** contract proposed and its questions ruled; no Phase 2 code exists.
+recorded. **Phase 2** contract **approved**, Q1-Q3 ruled; no Phase 2 code exists.
 
 **Two blockers owed before Phase 2 code, both needing a remote:**
 
