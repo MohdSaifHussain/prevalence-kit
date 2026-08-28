@@ -629,7 +629,7 @@ Tracked by name until discharged. Each is owned by a named phase.
 | O-5 | Re-derive the ts-sentry "1,230 tests" and finding-bridge "739 prompts" figures from those repositories before they appear in any README | Phase 3 | open |
 | O-6 | Confirm whether a ROOST `awesome-safety-tools` PR needs a new Measurement category | Phase 3 | open |
 | O-7 | Build a checker that searches for restated claims across files, per rule 14 | Phase 1 | **discharged 2026-08-28** — `tools/check_claims.py`, five checks, selftest proves each can fail |
-| O-8 | Rogan–Gladen has no library witness — validate against the worked results in Lang & Reiczigel (2014) | Phase 2 | open |
+| O-8 **(restated 2026-08-29 by D-31)** | ~~Rogan–Gladen has no library witness — validate against the worked results in Lang & Reiczigel (2014)~~ **Both halves wrong in our favour.** Witness is `epiR::epi.prev()` 2.0.92, **S-1.10**; interval anchor is **S-1.6** Reiczigel et al. (2010), Se/Sp *known*, **not S-1.5** | Phase 2 | open — discharges at **D2.6** |
 | O-9 | Implement and test Fernet chunking above the in-memory limit; assert chunk-boundary behaviour | Phase 1 | **discharged 2026-08-28** — `test_chunking_is_exact_at_the_boundary` and the F-2 pair |
 | O-10 | README credits `svy` as the estimator layer; assert by overclaim scanner | Phase 3 | open |
 | O-19 | **Re-pin the CI actions before GitHub drops Node 20.** Both are SHA-pinned two major versions back (S-5.4) and both target Node 20. When it is dropped, the failure is a **red X on every job with nothing wrong in this repository**. Watched by **TW-4**, which **FIRED on its first run**, 2026-08-29 | Phase 3 | open |

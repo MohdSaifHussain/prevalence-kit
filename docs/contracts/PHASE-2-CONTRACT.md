@@ -1,8 +1,17 @@
 # Phase 2 contract — the honest-statistics layer
 
-**Status: APPROVED and UNBLOCKED — 29 August 2026. Q1-Q4 ruled.**
-O-16, O-17 and O-18 discharged; the push and CI have happened. D2.1 and D2.2 are done.
+**Status: APPROVED and UNBLOCKED — 29 August 2026. Q1-Q7 ruled.**
+O-16, O-17 and O-18 discharged; the push and CI have happened. **D2.1 through D2.5 are done.**
 **Q4 was found by D2.2 and ruled the same day — D-30.** See §10.
+
+**Amended 2026-08-29, before D2.6, and the reason is the amendment's whole point.** A fresh session
+read this contract against the rulings it is supposed to encode and found it disagreeing with them in
+three places: the D2.6 row named **S-1.5** as its governing standard when **D-31** had ruled **S-1.6**;
+§2.3 carried the same stale citation; and exit check **F8** still expected `CORRECTION_DEGENERATE`,
+struck the same day, so as written it could not pass. **Building against a contract row that cites the
+wrong paper is building against a wrong spec, and this contract is binding.** Q6 and Q7 are written in
+at the same time, for the same reason — *a ruling that does not reach the binding document is not
+binding.* Every change is marked ▸ **AMENDED** in place.
 
 | | |
 |---|---|
@@ -76,7 +85,7 @@ about the other two calls, which have no published anchor of their own in this p
 |---|---|
 | Stratified + Neyman | **Barnett Table 2B**, published, re-derived in Phase 0 §C6 |
 | Clopper-Pearson | ~~**No published table.** Checked against an independent implementation we write.~~ **Corrected 2026-08-29, in our favour: there is an external witness.** `stats::binom.test` ships with base R and is a different lineage from `survey`. It inverts an incomplete beta; we root-find on the binomial tail. **S-2.4.** Worst disagreement 7.1 × 10⁻¹¹ across 23 cases |
-| Rogan–Gladen | **Lang & Reiczigel (2014) worked results**, treated as the same kind of anchor and generated the same way. Obligation **O-8** |
+| Rogan–Gladen ▸ **AMENDED** | ~~**Lang & Reiczigel (2014) worked results**, treated as the same kind of anchor and generated the same way.~~ **Restated 2026-08-29 under D-31, and both halves of the old row were wrong in our favour.** There *is* a library witness — `epiR::epi.prev()`, **S-1.10** — and the interval that matches our assumption is **S-1.6** Reiczigel et al. (2010), Se/Sp *known*, not S-1.5. **The narrowing is the point and it must not be lost:** Jenő Reiczigel is a listed contributor to `epiR`, so this is the method author's own implementation of the method author's own paper. **It confirms we implement the method as its author does. It does not independently confirm the method** — which is weaker than Barnett in a specific, named way. Obligation **O-8** |
 
 ## 3. Deliverables
 
@@ -89,8 +98,8 @@ Each names the top standard it must follow.
 | D2.3 | **Stratified sampling + Neyman allocation**, written against D2.2 | S-1.2 Neyman (1934) · S-1.3 Cochran 3rd ed. |
 | D2.4 | Clopper-Pearson interval + its independent-implementation check | **S-1.1** Brown, Cai & DasGupta (2001) |
 | D2.5 | Rogan–Gladen correction | **S-1.4** Rogan & Gladen (1978) |
-| D2.6 | Rogan–Gladen CI propagation + Lang & Reiczigel fixtures | **S-1.5** Lang & Reiczigel (2014) · O-8 |
-| D2.7 | **Refusals**: `Se + Sp <= 1`, degenerate zero apparent prevalence, unsampled stratum, and any further undefined case found | Charter §6.4 · doctrine rule 5 |
+| D2.6 ▸ **AMENDED** | Rogan–Gladen CI propagation, written against the **`epiR` fixture already committed under D2.5** — there are no "Lang & Reiczigel fixtures" and there never were. Clamped to [0, 1] under **Q6**, Clopper-Pearson only under **Q7** | **S-1.6** Reiczigel et al. (2010) · S-1.10 · O-8 · **D-31** · **Q6** · **Q7** |
+| D2.7 ▸ **AMENDED** | **Refusals**: `Se + Sp <= 1`, ~~degenerate zero apparent prevalence~~ **(struck — see §6)**, an interval method the correction cannot honour (**Q7**), unsampled stratum, and any further undefined case found | Charter §6.4 · doctrine rule 5 |
 | D2.8 | Plan schema extension: `design: stratified`, strata definition, allocation method, **`allocation_rounding` (required under `stratified`, Q4 / D-30)**, optional `sensitivity`/`specificity` | Charter §4 `plan` · D-22 · **D-30** |
 | D2.9 | `svy` cross-check **where its estimator is the same estimator**, in a separate optional environment | **O-4 as narrowed by D-18** |
 | D2.10 | Measure how far `svy`'s design-based Wilson diverges from the textbook interval at small *n* | **O-13** |
@@ -164,9 +173,18 @@ Each gets a distinct code, both controls, and a message that says what to do.
 | `STRATA_UNDEFINED` | `design: stratified` with no strata definition |
 | `ALLOCATION_TOO_THIN` | Neyman allocated fewer than 2 units to a stratum — zero within-stratum degrees of freedom, so its variance contribution is undefined. Q2. **Checked after rounding, not before** — D-30 condition 4 |
 | `ALLOCATION_ROUNDING_UNDECLARED` | `design: stratified` with no `allocation_rounding` field. The rounding rule is a commitment the operator makes, so it cannot be defaulted. **Q4 / D-30 condition 1** |
+| `CORRECTION_INTERVAL_UNSUPPORTED` ▸ **AMENDED** *(added 2026-08-29, **Q7**; **PENDING** until D2.6 builds it)* | The plan pre-registers `interval: wilson` **and** supplies `sensitivity`/`specificity`. A Wilson-transformed corrected interval has no pre-existing expected value, so R2.2 forbids shipping one — and silently handing back a Clopper-Pearson-based interval instead would substitute a method inside a pre-registered measurement, which is V-1's and V-7's class. **Refused at plan load, before any data is touched.** Built in **D2.6** |
 
 *Under D-22, `STRATUM_UNSAMPLED` and `STRATUM_EMPTY` are separate because they send the operator to
 different artifacts: the sample, versus the frame.*
+
+**Q6, ruled 2026-08-29 — a clamped bound is disclosed, never silent.** The corrected interval is
+clamped to [0, 1] at **both** ends. This is not a refusal and it gets no code, because the estimate
+is defined and the interval is real; it is a construction the operator must be able to see. Three
+binding conditions, in **D-32**: clamp both ends, **record in the output that a bound was clamped**,
+and **record the raw bound in the ledger beside the clamped one** so `verify` re-derives both and an
+auditor sees what the arithmetic produced before policy touched it. *A silently clamped bound is a
+small lie in the artifact an outsider reads.*
 
 **Deviation, 2026-08-29: `CORRECTION_DEGENERATE` struck.** This row said *"apparent prevalence is
 zero or one, so the corrected estimate carries no information."*
@@ -221,7 +239,10 @@ Expected results stated in advance. Commands are CLI invocations; the director r
 | F5 | Compare estimate against the R fixture | Agreement to ≥ 4 significant digits, printed. |
 | F6 | Clopper-Pearson vs the independent implementation | Agreement printed; docstring names it as an implementation check, not a published anchor. |
 | F7 | Rogan–Gladen with Se = 0.6, Sp = 0.3 (`Se + Sp <= 1`) | **Exit 2, `CORRECTION_UNDEFINED`.** |
-| F8 | Rogan–Gladen with zero apparent prevalence | **Exit 2, `CORRECTION_DEGENERATE`.** |
+| F8 ▸ **AMENDED** | Rogan–Gladen at zero apparent prevalence with an **imperfect** specificity — `pos = 0, n = 4000, Se = 0.90, Sp = 0.99` | **Exit 2, `CORRECTION_OUT_OF_RANGE`.** The corrected estimate is `-0.011236`, outside [0, 1] |
+| F8b ▸ **AMENDED** | Rogan–Gladen at zero apparent prevalence with **perfect** specificity — `pos = 0, n = 4000, Se = 0.90, Sp = 1.00` | **Exit 0.** Point estimate `0`, upper bound `0.001024`. **This is the case `CORRECTION_DEGENERATE` would have refused, and it is the most common honest result in T&S work.** The struck code's whole defect, made runnable |
+| F8c ▸ **AMENDED** | Rogan–Gladen where the corrected lower bound goes negative but the point estimate is defined — `pos = 8, n = 4000, Se = 0.90, Sp = 0.999` | **Exit 0.** Interval printed as `[0, 0.003267]`, **with the output saying the lower bound was clamped** and the ledger carrying the raw `-0.000151` beside it. **Q6 / D-32.** |
+| F8d ▸ **AMENDED** | A plan with `interval: wilson` that also supplies `sensitivity` and `specificity` | **Exit 2, `CORRECTION_INTERVAL_UNSUPPORTED`**, at `plan` — before any data is touched. **Q7.** |
 | F9 | A stratified plan with an unsampled stratum | **Exit 2, `STRATUM_UNSAMPLED`.** |
 | F10 | An empty stratum | **Exit 2, `STRATUM_EMPTY`.** Distinct from F9. |
 | F11 | Rogan–Gladen with valid Se/Sp | **Exit 0** — the positive control. A gate that refuses everything proves nothing. |
@@ -392,6 +413,91 @@ than cite it from memory. Controlled rounding of Neyman is **not always the vari
 allocation** (Wright's own counterexample), and largest remainder is **not monotone in n**. Both in
 `docs/STANDARDS.md` under S-1.7. Neither is a reason to reject the ruling; both would have been
 found later by someone else.
+
+---
+
+### Q6 — The corrected interval's lower bound goes negative while the point estimate is fine
+
+Found by reading the D2.5 fixture before writing any interval code, not by reasoning. The
+`rare_event` case — `pos = 8, n = 4000, Se = 0.90, Sp = 0.999` — has a corrected point estimate of
+`0.001112`, comfortably inside [0, 1], so `rogan_gladen()` **accepts** it today. Its interval, from
+the witness, is `[-0.0001514559, 0.0032669342]`. `epi.prev` prints the negative bound with no
+warning.
+
+This is a **third** rare-event surprise in this phase, after `fpr_exceeds_prevalence` and the
+inverted interval, and the record anticipated neither this one nor the cluster.
+
+| | Option | Consequence |
+|---|---|---|
+| A | **Refuse** | Wrong. The point estimate is defined, the upper bound is meaningful, and this is precisely the rare-event measurement the tool exists to produce. **A tool that refuses `pos = 8, n = 4000` at 0.11% prevalence has refused its own use case** |
+| B | **Print the negative bound**, as the witness does | Nonsense on its face. An auditor who sees a negative prevalence stops trusting the surrounding numbers — **correctly** |
+| **C** | **Clamp to [0, 1], and say so in the output** | Ruled |
+
+**RULED: C.** The director's grounds, recorded as given.
+
+**It is what this codebase already does.** `wilson()` computes `low=_fixed(max(0.0, centre - half))`
+and has since Phase 1. Printing a negative lower bound for the corrected interval would make the tool
+inconsistent with itself **in the one place a reader compares two of its intervals side by side.**
+
+**It is safe in the way that matters.** The true prevalence cannot be below zero, so `[0, U]` covers
+everything `[-ε, U]` covered. **Clamping cannot reduce coverage.** It makes the interval very
+slightly conservative, which is the direction this project already chose when it picked
+Clopper-Pearson as the conservative option.
+
+**Three binding conditions, as ruled — see D-32.**
+
+1. **Clamp both ends.** An upper bound above 1 gets the same treatment for the same reason, and the
+   symmetric case will arrive.
+2. **Record in the output that a bound was clamped**, so a reader knows `[0, U]` is a *construction*
+   and not a *measurement*. **A silently clamped bound is a small lie in the artifact an outsider
+   reads.**
+3. **Record the raw bound in the ledger beside the clamped one**, so `verify` re-derives both and an
+   auditor can see what the arithmetic produced before policy touched it.
+
+**This is visible to an operator, so T-2 gives it a decision entry** with both alternatives and why
+each loses. **D-32.**
+
+**The cluster, recorded now so Phase 3 does not rediscover it.** Three rare-event surprises have now
+landed in one phase: an ordinary-sounding specificity making the correction *undefined* rather than
+imprecise; a witness returning an inverted interval; and a negative lower bound in the accept region.
+When **O-21** reaches the README these are **grouped and introduced as one thing** — *at the
+prevalence rates this tool is for, several ordinary intuitions fail, and here they are* — rather than
+as three scattered caveats. That framing is worth more than the three separate sentences.
+
+---
+
+### Q7 — Wilson is the charter's primary interval, and the corrected interval has no Wilson witness
+
+The fixture witnesses `epi.prev(..., method = "c-p")` only. Verified across all nine
+positive-denominator cases: `RG(ap_lower) == tp_lower` and `RG(ap_upper) == tp_upper` to every printed
+digit, so the witness builds the corrected interval by transforming a **Clopper-Pearson** interval on
+the apparent prevalence, endpoint by endpoint. A **Wilson**-transformed corrected interval would have
+no pre-existing expected value — an **R2.2** breach inside the phase built on R2.2.
+
+| | Option | Consequence |
+|---|---|---|
+| A | Ship a Wilson-transformed corrected interval too | Breaches R2.2 in the phase whose whole shape is R2.2. Q1's argument exactly |
+| B | Clopper-Pearson only, **noted in the docstring** | The builder's recommendation, and **not enough** — see below |
+| **C** | **Clopper-Pearson only, and refuse rather than switch silently** | Ruled |
+
+**RULED: C.** The recommendation was right and B was too weak.
+
+**The director's grounds.** Charter §4 makes **Wilson primary**. If an operator pre-registers Wilson
+and supplies Se/Sp, and the tool quietly produces a Clopper-Pearson-based corrected interval instead,
+**the number they get is not the one their plan committed to.** Silently substituting a method inside
+a pre-registered measurement is the class **V-1** and **V-7** were both about. A docstring does not
+protect an operator who never reads it at the moment they need it — **D-20's reasoning, applied to an
+interval instead of a threshold.**
+
+**So: refuse at plan load.** New code `CORRECTION_INTERVAL_UNSUPPORTED`, both controls, and **R8 at
+full strength in the fix text** — pre-register Clopper-Pearson if you want the correction, or drop the
+Se/Sp and report uncorrected. **That converts a silent substitution into a decision the operator makes
+before any data is touched, which is what pre-registration is for.**
+
+**Alternative not taken: allow it with a loud note.** Rejected. A note is read once, at a moment the
+operator has already decided; the plan hash is the commitment, and a commitment the tool routinely
+substitutes a different method into is not one. The refusal is at `plan`, not at `estimate`, for Q2's
+reason — **it fails before the label budget is spent.**
 
 ---
 

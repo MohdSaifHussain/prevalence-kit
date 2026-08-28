@@ -62,6 +62,13 @@ Rogan–Gladen can be checked against neither — `svy` has no misclassification
 `survey` has no Rogan–Gladen — so it is validated against the published worked results in
 Lang & Reiczigel (2014) instead. Recorded as obligation O-8.
 
+**Superseded in part by D-31, 2026-08-29. The paragraph above is left exactly as it was decided** —
+a dated decision is not rewritten to match what was learned later, or the log stops being evidence of
+what was known when. What changed: the premise *"Rogan–Gladen can be checked against neither"* was
+true of `survey` and `svy` and did not follow for the world. `epiR::epi.prev()` implements it
+(**S-1.10**), and the interval anchor is **S-1.6** Reiczigel et al. (2010), not S-1.5. Read D-3's
+consequence sentence as history and **D-31** as the standing rule.
+
 ---
 
 ## D-4 — Positioning: credit `svy` as the estimator layer; claim only governance
@@ -979,11 +986,116 @@ establish.
 
 ---
 
+## D-32 - A corrected bound outside [0, 1] is clamped, disclosed in the output, and kept raw in the ledger
+
+**Date:** 2026-08-29 · **Made in:** the director's Q6 ruling · **Ruled by:** director
+
+The Rogan-Gladen corrected interval is clamped to **[0, 1] at both ends**. The output **says** a bound
+was clamped. The **raw** bound is recorded in the ledger beside the clamped one.
+
+**How it was found.** Not by reasoning. By reading the D2.5 fixture before writing any interval code:
+`rare_event` -- `pos = 8, n = 4000, Se = 0.90, Sp = 0.999` -- has a corrected point estimate of
+`0.001112`, well inside [0, 1], so the estimator **accepts** it. Its witness interval is
+`[-0.0001514559, 0.0032669342]`. `epi.prev` prints the negative bound with no warning. The refusals
+built in D2.5 all key off the *point estimate*, so none of them fires here.
+
+**Alternatives not taken, and why each loses.**
+
+- **Refuse.** Rejected, and the reason is the tool's purpose rather than a preference. The point
+  estimate is defined, the upper bound is meaningful, and this is precisely the rare-event
+  measurement the tool exists to produce. In the director's words: **a tool that refuses
+  `pos = 8, n = 4000` at 0.11% prevalence has refused its own use case.**
+- **Print the negative bound**, as the witness does. Rejected: it is nonsense on its face, and **an
+  auditor who sees a negative prevalence will stop trusting the surrounding numbers -- correctly.**
+  Faithfulness to the witness is not a virtue when the witness is printing something no reader can
+  use.
+
+**Why clamping, in the two reasons that decided it.**
+
+1. **It is what this codebase already does.** `wilson()` has computed
+   `low = _fixed(max(0.0, centre - half))` since Phase 1. A negative lower bound on the *corrected*
+   interval would make the tool inconsistent with itself **in the one place a reader compares two of
+   its intervals side by side.**
+2. **It cannot reduce coverage.** True prevalence cannot be below zero, so `[0, U]` covers everything
+   `[-e, U]` covered. Clamping makes the interval very slightly **conservative**, which is the
+   direction this project already chose when it picked Clopper-Pearson over Wilson as the
+   conservative option.
+
+**Three binding conditions, as ruled.**
+
+1. **Both ends.** An upper bound above 1 is clamped for the same reason. The symmetric case will
+   arrive, and building one end now and the other later is how a pair drifts apart.
+2. **The output discloses it**, so a reader knows `[0, U]` is a **construction** and not a
+   **measurement**. The director's words: *a silently clamped bound is a small lie in the artifact an
+   outsider reads.*
+3. **The ledger carries the raw bound beside the clamped one**, so `verify` re-derives both and an
+   auditor can see what the arithmetic produced **before policy touched it**. Clamping is the only
+   place in this tool where a printed number is not the number the estimator computed; that fact is
+   therefore recorded rather than trusted to a docstring.
+
+**Recorded under T-2 because it is operator-visible.** An operator reading `[0, 0.003267]` sees a
+different artifact from one reading `[-0.000151, 0.003267]`, and the difference is a choice we made.
+
+**The cluster this belongs to, recorded now rather than rediscovered in Phase 3.** This is the
+**third** rare-event surprise of the phase: `fpr_exceeds_prevalence` (an ordinary-sounding specificity
+makes the correction *undefined*, not imprecise), the inverted interval below `Se + Sp = 1`, and now a
+negative lower bound in the *accept* region. **O-21 carries them to the README as one grouped fact** --
+*at the prevalence rates this tool is for, several ordinary intuitions fail, and here they are* --
+rather than as three scattered caveats. Ruled by the director: that framing is worth more than the
+three separate sentences.
+
+---
+
+## D-33 - A plan that pre-registers Wilson and supplies Se/Sp is refused, not quietly switched
+
+**Date:** 2026-08-29 · **Made in:** the director's Q7 ruling · **Ruled by:** director
+
+`CORRECTION_INTERVAL_UNSUPPORTED`, refused **at plan load**, before any data is touched.
+
+**The evidence that forced the question.** Across all nine positive-denominator fixture cases,
+`RG(ap_lower) == tp_lower` and `RG(ap_upper) == tp_upper` to every printed digit. So
+`epi.prev(..., method = "c-p")` builds the corrected interval by transforming a **Clopper-Pearson**
+interval on the apparent prevalence, endpoint by endpoint. **There is no Wilson-transformed corrected
+interval in the fixture, and therefore no pre-existing expected value for one** -- which R2.2 forbids
+us from shipping, inside the phase whose entire shape is R2.2.
+
+**Alternatives not taken.**
+
+- **Ship a Wilson-transformed corrected interval too.** Rejected: it would be the one estimator in
+  this phase with no witness, which is **Q1's argument exactly** and undoes section 2 in the same
+  phase that makes it.
+- **Clopper-Pearson only, noted in the docstring.** This was the builder's recommendation. **The
+  director ruled it right in its conclusion and too weak in its remedy.** Charter section 4 makes
+  Wilson **primary**. If an operator pre-registers Wilson, supplies Se/Sp, and receives a
+  Clopper-Pearson-based corrected interval, **the number they get is not the one their plan committed
+  to.** Silently substituting a method inside a pre-registered measurement is the class **V-1** and
+  **V-7** were both about. This is **D-20's reasoning applied to an interval instead of a threshold**:
+  a caveat in a docstring does not protect an operator who never reads it at the moment they need it.
+  Refusing removes the trap instead of describing it.
+- **Allow it with a loud note.** Rejected. A note is read once, at a moment the operator has already
+  decided. The plan hash **is** the commitment, and a commitment the tool routinely substitutes a
+  different method into is not a commitment.
+
+**Why at `plan` and not at `estimate`.** **Q2's reason:** it fails before the label budget is spent,
+and labels are the expensive resource in this whole tool. It is also the only place the refusal can be
+honest -- after `plan`, the hash has already recorded a commitment the tool cannot honour.
+
+**R8 at full strength in the fix text.** Not *what broke* but *which number has to change, and to
+what*: pre-register `interval: clopper_pearson` if you want the correction, or remove `sensitivity`
+and `specificity` and report an uncorrected prevalence. Two named remedies, both in the plan, which is
+the single artifact the operator opens -- **one artifact, so one code, under D-22.**
+
+**What this does not do.** It does not say a Wilson-based corrected interval is wrong or impossible.
+It says **we have no witness for one**, and D-31's boundary applies here too: adopting one later needs
+its own anchor first, not a flag.
+
+---
+
 ## Carried obligations opened by these decisions
 
 | # | Obligation | Owner | Opened by |
 |---|---|---|---|
-| O-8 | Rogan–Gladen cannot be cross-checked against either library. Validate against the published worked results in Lang & Reiczigel (2014). | Phase 2 | D-3 |
+| O-8 **(restated 2026-08-29 by D-31)** | ~~Rogan–Gladen cannot be cross-checked against either library. Validate against the published worked results in Lang & Reiczigel (2014).~~ **Both halves were wrong in our favour.** The witness is `epiR::epi.prev()` (**S-1.10**); the interval anchor is **S-1.6** Reiczigel et al. (2010) — Se/Sp *known*, our assumption — **not S-1.5**, which propagates uncertainty in *estimated* Se/Sp and is the wider method we deliberately do not implement. | Phase 2 | D-3, restated by **D-31** |
 | O-9 | Implement and test Fernet chunking for content larger than memory; assert the chunk boundary behaviour. | Phase 1 | D-9 |
 | O-10 | README must credit `svy` explicitly as the estimator layer. Assert by overclaim scanner. | Phase 3 | D-4 |
 | O-11 | Chunk-digest manifest bound into the ledger; `verify` discriminates tamper / truncate / reorder / substitute by distinct reason code. | Phase 1 | **D-14** |
