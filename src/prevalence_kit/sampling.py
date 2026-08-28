@@ -41,13 +41,13 @@ def draw_srs(frame: Iterable[str], *, seed: str, n: int) -> tuple[str, ...]:
     ids = sorted(set(frame))
     if not ids:
         raise Refusal(
-            Reason.EMPTY_SAMPLE,
+            Reason.FRAME_EMPTY,
             "The sampling frame is empty.",
             "Point the plan at a population file that has rows in it.",
         )
     if n > len(ids):
         raise Refusal(
-            Reason.EMPTY_SAMPLE,
+            Reason.FRAME_TOO_SMALL,
             f"The plan asks for {n} items but the frame holds {len(ids)}.",
             "Lower sample_size, or widen the population.",
         )

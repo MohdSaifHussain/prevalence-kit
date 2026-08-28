@@ -190,15 +190,20 @@ def test_draw_pinned_against_a_recorded_value() -> None:
 
 
 def test_empty_frame_refused() -> None:
+    """F-3. Three different operator problems, three different codes.
+
+    `EMPTY_SAMPLE` used to cover all of these plus a missing `sample_size` key.
+    One code for four situations tells an operator nothing about what to fix.
+    """
     with pytest.raises(Refusal) as exc:
         draw_srs([], seed="s", n=1)
-    assert exc.value.reason is Reason.EMPTY_SAMPLE
+    assert exc.value.reason is Reason.FRAME_EMPTY
 
 
 def test_sample_larger_than_frame_refused() -> None:
     with pytest.raises(Refusal) as exc:
         draw_srs(["a", "b"], seed="s", n=5)
-    assert exc.value.reason is Reason.EMPTY_SAMPLE
+    assert exc.value.reason is Reason.FRAME_TOO_SMALL
 
 
 # ----------------------------------------------------------------- estimators

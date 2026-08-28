@@ -232,11 +232,32 @@ def _verify_seals(ws, by_step, checks) -> None:  # type: ignore[no-untyped-def]
             "labels.json does not match the digest in the ledger.",
             "Labels were changed after they were ingested.",
         )
+    # F-6: `do_ingest` enforces a one-to-one match at write time, but `verify`
+    # trusted that it had. G4 claims verify re-derives rather than trusts, and
+    # here it trusted. A run whose ledger is internally consistent but whose
+    # labels belong to a different sample used to pass.
+    sample = ws.read_json("sample.json")
+    drawn = {str(i) for i in sample["item_ids"]}
+    if set(labels) != drawn:
+        raise Refusal(
+            Reason.LABELS_UNMATCHED,
+            f"The record holds {len(labels)} labels for a sample of {len(drawn)} items, "
+            f"and they are not the same items.",
+            "These labels are not for this sample. Do not publish this number.",
+        )
+
     store = ws.store()
     seals = entry.body["seals"]
     assert isinstance(seals, list)
     for record in seals:
         store.verify_item(Manifest.from_record(record))
+    checks.append(
+        Check(
+            "labels",
+            True,
+            f"{len(labels)} labels, matching the drawn sample one-to-one",
+        )
+    )
     checks.append(
         Check(
             "sealed content",

@@ -232,3 +232,31 @@ def test_verify_without_the_key_refuses_by_name(run: Workspace, plan_path: Path)
     with pytest.raises(Refusal) as exc:
         verify_run(run, plan_path)
     assert exc.value.reason is Reason.KEY_MISSING
+
+
+def test_labels_for_a_different_sample_are_refused(run: Workspace, plan_path: Path) -> None:
+    """F-6. `verify` used to trust that ingest had checked this.
+
+    `do_ingest` enforces a one-to-one match at write time. `verify` checked
+    labels.json against its ledger digest and stopped there -- so a run whose
+    ledger is internally consistent but whose labels belong to a different
+    sample passed. G4 claims verify re-derives rather than trusts; here it
+    trusted.
+
+    Both files are digest-protected, so this is built by hand with every link
+    honestly recomputed.
+    """
+    labels = json.loads((run.root / "labels.json").read_text(encoding="utf-8"))
+    swapped = {f"not-the-sample-{i}": v for i, v in enumerate(labels.values())}
+    (run.root / "labels.json").write_text(
+        json.dumps(swapped, sort_keys=True, ensure_ascii=False, separators=(",", ":")),
+        encoding="utf-8",
+        newline="\n",
+    )
+    records = ledger_records(run)
+    records[2]["body"]["labels_digest"] = digest(swapped)
+    rechain(run, records)
+
+    with pytest.raises(Refusal) as exc:
+        verify_run(run, plan_path)
+    assert exc.value.reason is Reason.LABELS_UNMATCHED

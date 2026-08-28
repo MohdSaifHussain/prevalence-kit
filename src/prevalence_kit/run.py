@@ -142,13 +142,23 @@ def do_sample(ws: Workspace, plan: Plan, frame_path: Path) -> tuple[str, ...]:
     ids = _read_frame(frame_path)
     drawn = draw_srs(ids, seed=plan.seed, n=plan.sample_size)
 
-    frame_digest = ws.write_json("frame.json", sorted(set(ids)))
-    record = sample_record(plan.plan_hash, plan.seed, len(set(ids)), drawn)
+    # V-7: a frame is a set of units, so de-duplicating is correct -- but doing it
+    # silently is not. For a prevalence tool this is the denominator. Both counts
+    # go in the record, so a reader can see the input differed from what was used.
+    unique = sorted(set(ids))
+    frame_digest = ws.write_json("frame.json", unique)
+    record = sample_record(plan.plan_hash, plan.seed, len(unique), drawn)
     sample_digest = ws.write_json("sample.json", record)
 
     ws.ledger.append(
         "sample",
-        {"frame_digest": frame_digest, "sample_digest": sample_digest, "n": len(drawn)},
+        {
+            "frame_digest": frame_digest,
+            "sample_digest": sample_digest,
+            "frame_rows_read": len(ids),
+            "frame_unique_ids": len(unique),
+            "n": len(drawn),
+        },
     )
     return drawn
 
@@ -198,7 +208,14 @@ def do_estimate(ws: Workspace, plan: Plan) -> Interval:
 
 
 def _estimate_from(plan: Plan, labels: dict[str, str]) -> Interval:
-    positives = sum(1 for raw in labels.values() if plan.estimand.is_positive(raw))
+    positives = 0
+    for item_id, raw in labels.items():
+        try:
+            positives += 1 if plan.estimand.is_positive(raw) else 0
+        except Refusal as exc:
+            # Re-raised with the item id so the operator can find the row. The
+            # label value is a label, not content, so naming it leaks nothing.
+            raise Refusal(exc.reason, f"Item {item_id}: {exc.detail}", exc.fix) from exc
     return wilson(positives, len(labels))
 
 
@@ -213,10 +230,14 @@ def _read_frame(path: Path) -> list[str]:
             "Point the plan's `population` at a file with one item id per line, "
             "or a CSV with item_id.",
         )
+    # Both readers strip. They used to disagree, so " item-1" was two distinct
+    # population members from a CSV and one from a text file. V-7.
     if path.suffix.lower() == ".csv":
         with path.open(newline="", encoding="utf-8") as fh:
-            return [r["item_id"] for r in csv.DictReader(fh)]
-    return [line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+            rows = [str(r["item_id"]).strip() for r in csv.DictReader(fh)]
+    else:
+        rows = [line.strip() for line in path.read_text(encoding="utf-8").splitlines()]
+    return [r for r in rows if r]
 
 
 def _read_labels(path: Path, label_field: str) -> dict[str, tuple[str, str]]:
@@ -235,8 +256,22 @@ def _read_labels(path: Path, label_field: str) -> dict[str, tuple[str, str]]:
             if line.strip()
         ]
     else:
-        with path.open(newline="", encoding="utf-8") as fh, _wide_csv_fields():
-            records = list(csv.DictReader(fh))
+        try:
+            with path.open(newline="", encoding="utf-8") as fh, _wide_csv_fields():
+                records = list(csv.DictReader(fh))
+        except csv.Error as exc:
+            # V-11. D-19 moved this cliff from 128 KiB to 64 MiB; it did not remove
+            # it. A field past the ceiling raised the identical bare `_csv.Error`
+            # that D-19 was opened to get rid of, 512x further out. Same class as
+            # F-1: a real input producing a library traceback instead of a refusal.
+            raise Refusal(
+                Reason.CONTENT_TOO_LARGE,
+                f"A field in {path.name} is larger than this tool will read "
+                f"({_CSV_FIELD_LIMIT:,} bytes).",
+                "Split the oversized row, or store that item's content in a separate "
+                "file and reference it. The limit is deliberate: it stops a runaway "
+                "file exhausting memory.",
+            ) from exc
 
     for r in records:
         if "item_id" not in r or label_field not in r:

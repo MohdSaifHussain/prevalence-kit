@@ -20,8 +20,17 @@ import yaml
 from .canonical import JSONObject, digest
 from .errors import Reason, Refusal
 
-REQUIRED = ("estimand", "population", "design", "labels", "seed")
+REQUIRED = ("estimand", "population", "design", "sample_size", "labels", "seed")
 SUPPORTED_DESIGNS = frozenset({"srs"})  # Phase 2 adds "stratified".
+SUPPORTED_COMPARISONS = frozenset({"equals", "at_least"})
+
+
+def _as_number(text: str) -> float | None:
+    """The number this text denotes, or None if it does not denote one."""
+    try:
+        return float(text)
+    except ValueError:
+        return None
 
 
 @dataclass(frozen=True, slots=True)
@@ -35,13 +44,33 @@ class Estimand:
 
     description: str
     label_field: str
-    positive_when: str  # "equals" | "at_least"
+    positive_when: str  # "equals" | "at_least"; validated at load
     threshold: str  # decimal string; see canonical.py on why not a float
 
     def is_positive(self, raw: str) -> bool:
+        """Is this label value positive under the pre-registered estimand?
+
+        `equals` is **exact string identity** after stripping surrounding
+        whitespace, and it exists for categorical labels ("violating",
+        "not_violating"). A numeric threshold under `equals` is refused at load,
+        because it is a trap: threshold `1` against a label of `1.0` would count
+        as negative and the tool would print a wrong number with no refusal. V-8.
+
+        `at_least` is numeric, and a label that is not a number is a refusal, not
+        a traceback. Real label columns contain "unclear", "n/a" and blanks. F-1.
+        """
         if self.positive_when == "equals":
             return raw.strip() == self.threshold
-        return float(raw) >= float(self.threshold)
+        try:
+            return float(raw) >= float(self.threshold)
+        except ValueError as exc:
+            raise Refusal(
+                Reason.LABEL_NOT_NUMERIC,
+                f"Label value {raw.strip()!r} is not a number, and the estimand compares "
+                f"numerically (`positive_when: at_least`).",
+                "Either clean the label column, or use `positive_when: equals` with a "
+                "categorical threshold.",
+            ) from exc
 
 
 @dataclass(frozen=True, slots=True)
@@ -103,12 +132,17 @@ class Plan:
                 f"Use one of: {', '.join(sorted(SUPPORTED_DESIGNS))}.",
             )
 
-        try:
-            n = int(raw.get("sample_size", 0))
-        except (TypeError, ValueError) as exc:
+        # F-3: sample_size is in REQUIRED, so its absence is a missing field rather
+        # than an empty sample wearing the wrong code. And a fractional size is
+        # refused rather than silently truncated -- 40.7 used to become 40.
+        size = raw["sample_size"]
+        if isinstance(size, bool) or not isinstance(size, int):
             raise Refusal(
-                Reason.PLAN_INVALID, "sample_size must be a whole number.", "Fix it."
-            ) from exc
+                Reason.PLAN_INVALID,
+                f"sample_size is {size!r}. It must be a whole number.",
+                "Write it as an integer. A fraction of an item cannot be sampled.",
+            )
+        n = size
         if n <= 0:
             raise Refusal(
                 Reason.EMPTY_SAMPLE,
@@ -127,12 +161,45 @@ class Plan:
                 "A threshold is required even for binary labels; say `positive_when: equals`.",
             )
 
+        # V-3: an unrecognised comparison used to fall through to `at_least`, so a
+        # typo silently changed what was being measured -- and the wrong meaning is
+        # what got hashed and sealed as the commitment.
+        comparison = str(est.get("positive_when", "at_least")).strip().lower()
+        if comparison not in SUPPORTED_COMPARISONS:
+            raise Refusal(
+                Reason.PLAN_INVALID,
+                f"positive_when is {comparison!r}, which this tool does not understand.",
+                f"Use one of: {', '.join(sorted(SUPPORTED_COMPARISONS))}.",
+            )
+
+        # V-4 and V-8: the threshold is validated here, not at estimate time. A
+        # pre-registration that accepts a meaningless estimand is not a
+        # pre-registration -- the operator would get a hash, believe they had
+        # committed, and find out at the end that the commitment meant nothing.
+        threshold = str(est["threshold"]).strip()
+        numeric = _as_number(threshold)
+        if comparison == "at_least" and numeric is None:
+            raise Refusal(
+                Reason.PLAN_THRESHOLD_INVALID,
+                f"threshold {threshold!r} is not a number, but positive_when is `at_least`.",
+                "Give a numeric threshold, or use `positive_when: equals` for categorical labels.",
+            )
+        if comparison == "equals" and numeric is not None:
+            raise Refusal(
+                Reason.PLAN_THRESHOLD_INVALID,
+                f"threshold {threshold!r} is a number, but positive_when is `equals`, "
+                f"which compares text exactly.",
+                "Use `positive_when: at_least` for numeric labels. Under `equals` a label "
+                "of '1.0' would not match a threshold of '1', and the number would be "
+                "quietly wrong.",
+            )
+
         return cls(
             estimand=Estimand(
                 description=str(est["description"]),
                 label_field=str(est["label_field"]),
-                positive_when=str(est.get("positive_when", "at_least")).strip().lower(),
-                threshold=str(est["threshold"]).strip(),
+                positive_when=comparison,
+                threshold=threshold,
             ),
             population=str(raw["population"]),
             design=design,

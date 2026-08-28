@@ -101,23 +101,40 @@ def test_stale_chunks_do_not_survive_a_reseal(tmp_path: Path, key: bytes) -> Non
 # --------------------------------------------------- F-2: chunk order past 4 digits
 
 
-def test_chunks_are_ordered_numerically(
-    tmp_path: Path, key: bytes, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Lexicographic order puts "10000.bin" before "9999.bin".
+def test_chunk_files_are_read_back_in_numeric_order(tmp_path: Path, key: bytes) -> None:
+    """The property under test is lexicographic-versus-numeric sorting.
 
-    At the real 64 KiB chunk size that is any item over 640 MB; a tiny chunk size
-    reaches the same boundary in a test that runs in a second. The symptom would
-    have been a tamper alarm on lawful data.
+    "10000.bin" sorts *before* "9999.bin" lexicographically. At the real 64 KiB
+    chunk size that boundary is any single item over 640 MB, and the symptom
+    would be a tamper alarm on lawful data.
+
+    **What this trades, stated rather than left for a reader to notice.** The
+    end-to-end version -- seal 10,050 real chunks, verify, unseal -- proved the
+    same property and took 112 seconds on every edit-run loop. This version
+    writes the files directly and asserts the read-back order, and the test below
+    pins the filename format they are written in. Together they cover the
+    property; separately, each covers half, and composing them is an inference
+    rather than a demonstration. That inference is the cost of a one-second test.
     """
-    monkeypatch.setattr(seal_mod, "CHUNK_BYTES", 1)
-    store = SealedStore(tmp_path / "sealed", key)
-    plaintext = bytes(i % 251 for i in range(10_050))
-    manifest = store.seal("big", plaintext)
+    item_dir = tmp_path / "sealed" / _safe_id("big")
+    item_dir.mkdir(parents=True)
+    for i in range(10_050):
+        (item_dir / f"{i:04d}.bin").write_bytes(str(i).encode())
 
-    assert manifest.chunk_count == 10_050
-    store.verify_item(manifest)
-    assert store.unseal(manifest) == plaintext
+    store = SealedStore(tmp_path / "sealed", key)
+    order = [int(t.decode()) for t in store._tokens("big")]
+    assert order == list(range(10_050))
+
+
+def test_chunk_filenames_use_the_format_the_reader_expects(tmp_path: Path, key: bytes) -> None:
+    """The other half of the split above: what `seal` actually writes."""
+    monkeypatch_free_store = SealedStore(tmp_path / "sealed", key)
+    manifest = monkeypatch_free_store.seal("item-1", b"content")
+    names = sorted(p.name for p in (tmp_path / "sealed" / _safe_id("item-1")).glob("*.bin"))
+
+    assert names == ["0000.bin"]
+    assert manifest.chunk_count == 1
+    assert all(seal_mod._chunk_index(Path(n)) == i for i, n in enumerate(names))
 
 
 # ----------------------------------------------------- V-5: the count is checked

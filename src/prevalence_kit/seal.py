@@ -181,12 +181,21 @@ class SealedStore:
         self.verify_structure(manifest)
 
     def verify_structure(self, manifest: Manifest) -> None:
-        """Sequence check only. Runs without the key.
+        """Sequence check only.
 
         Distinguishes truncation from reordering from substitution by comparing
         the ordered list first, then the multiset. Without the multiset step a
         reorder and a substitution both look like "the digest at position i is
         wrong", and one reason code for both would tell an operator nothing.
+
+        **This method needs no key** -- digests are taken over ciphertext, so
+        someone holding only the sealed store can call it directly and check that
+        the sequence is intact. **`verify_run` does not offer that as a mode**:
+        it needs the key for the plan and the estimate, and it refuses
+        `KEY_MISSING` before reaching here. The docstring used to claim the
+        keyless path as if `verify` provided it, which it does not. A keyless
+        audit mode is genuinely worth having and is proposed for Phase 2, not
+        smuggled in here. V-10.
         """
         observed = [digest_bytes(t) for t in self._tokens(manifest.item_id)]
         expected = list(manifest.chunk_digests)
