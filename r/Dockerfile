@@ -14,6 +14,31 @@ FROM rocker/r-ver@sha256:c3f39b365d1077fe24f8e9ab2742e352b6d3950897f51af1624a5bb
 RUN R -q -e 'install.packages(c("survey", "jsonlite")); \
              stopifnot(as.character(packageVersion("survey")) == "4.5")'
 
+# epiR is the Rogan-Gladen witness. O-8 said there was no library witness; that
+# was true of survey and svy, not of the world. Its intervals follow Reiczigel
+# et al. (2010) -- S-1.6, the paper matching our assumption that Se and Sp are
+# supplied and exact.
+#
+# What this witness does NOT establish: Jeno Reiczigel is a listed contributor
+# to epiR. It is the method author's own implementation of the method author's
+# own paper. It confirms we implement the method as its author does. It does not
+# independently confirm the method. Barnett Table 2B is a different kind of
+# evidence and this is not that.
+#
+# epiR pulls in `units`, which links against libudunits2 at load time. Without
+# it `library(epiR)` fails with a dyn.load error rather than a missing-package
+# error, which is a confusing way to find out.
+# epiR drags in the spatial stack (sf -> proj, gdal, geos) for functions we
+# never call. That is a lot of image for one estimator, and it is the price of
+# using the method author's own implementation as the witness rather than a
+# reimplementation of our own. Recorded rather than absorbed.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      libudunits2-dev libproj-dev libgdal-dev libgeos-dev \
+ && rm -rf /var/lib/apt/lists/*
+RUN R -q -e 'install.packages("epiR"); \
+             cat("epiR", as.character(packageVersion("epiR")), "\n")'
+
 WORKDIR /witness
 COPY barnett_table_2b.R /witness/barnett_table_2b.R
 COPY stratified_fixtures.R /witness/stratified_fixtures.R

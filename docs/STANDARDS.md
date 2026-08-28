@@ -72,6 +72,8 @@ so.** `docs/CORRECTIONS.md` C-22.
 | S-1.6 | Exact limits with an imperfect test (Phase 2 cross-check) | Reiczigel, J., Földi, J., Ózsvári, L., **Epidemiol. Infect.** | **2010**, DOI `10.1017/s0950268810000385` | never |
 | **S-1.7** | **Rounding a Neyman allocation to whole units** -- the method Q4 ruled | Wright, T., *A Simple Method of Exact Optimal Sample Allocation under Stratification with Any Mixed Constraint Patterns*, **U.S. Census Bureau**, Research Report Series (Statistics) **#2014-07** | Issued **21 August 2014**; fetched **2026-08-29** from `https://www.census.gov/content/dam/Census/library/working-papers/2014/adrm/rrs2014-07.pdf` (HTTP 200, 154,969 bytes, sha256 `0fdd5e7ce795552843678d0871cfeacdb46c470c9fc0aa2eb182b352c0b0f196`) | never -- fixed publication |
 | **S-1.8** | Why apportionment sources apply to survey allocation at all | Wright, T., *The Equivalence of Neyman Optimum Allocation for Sampling and Equal Proportions for Apportioning the U.S. House of Representatives*, **The American Statistician** | **2012**, 66(4), 217-224, DOI `10.1080/00031305.2012.733679` | never |
+| **S-1.10** | **The Rogan-Gladen witness.** O-8 said there was none; that was true of `survey` and `svy`, not of the world | R **`epiR`** (Stevenson et al.), `epi.prev()`. Intervals *"based on code provided by Reiczigel et al. (2010)"* -- S-1.6 | **2.0.92 in our image**, because the base image's CRAN snapshot is frozen at 2026-04-23. **2.0.96 is current on CRAN** (published 2026-08-03), outside the snapshot. `GPL (>= 2)`, which CRAN expands to `GPL-2 \| GPL-3` | **2026-11-29** |
+| S-1.11 *(context, never a method source for v1.0)* | A published alternative that answers where we refuse | Kopacka, I. & Fuchs, K., *Overcoming limitations of the Rogan-Gladen correction: a closed-form solution to a simplified Bayesian method for true prevalence estimation*, **Prev. Vet. Med.** | **2026**, vol 253, DOI `10.1016/j.prevetmed.2026.106891`. Verified live via Crossref 2026-08-29; full text not read. **NEXT queue, not v1.0** | **every phase close** |
 | **S-1.9** | The formal treatment of largest remainder and its paradoxes | Balinski, M.L. & Young, H.P., *The Quota Method of Apportionment*, **American Mathematical Monthly** | **1975**, 82(7), 701-730, DOI `10.1080/00029890.1975.11993911`. **Metadata verified live via Crossref 2026-08-29; the full text was not read.** See the note below | never |
 
 **Refusal conditions are mathematical consequences, not citations.** The Rogan–Gladen estimator is
@@ -159,6 +161,54 @@ sentence here is quoted from it, and the paradox above rests on our own computat
 first written from memory, `10.2307/2319793`, is a different paper entirely -- Bender and Goldman on
 Mobius inversion. Caught by fetching. C-8's class, and the reason S-1.9 is cited by verified metadata
 and nothing more.
+
+### S-1.10 -- what the epiR witness establishes, and what it does not
+
+**O-8's premise was wrong in our favour, and this is the second time this phase.** O-8 says
+Rogan-Gladen has no library witness. D-3 was right that neither `survey` nor `svy` implements it. It
+did not follow that nobody does. `epiR::epi.prev()` does, and it is on CRAN.
+
+**The narrowing, and it is the part that must not be lost.** Jeno Reiczigel is a **listed contributor
+to `epiR`**, and he is an author of both S-1.5 and S-1.6.
+
+> **Barnett Table 2B is a published table produced without reference to any implementation.**
+> Reproducing it tests our arithmetic against a number nobody in this chain computed.
+>
+> **`epiR` tests our arithmetic against the paper author's own code.** It confirms we implement the
+> method as its author implements it. **It does not independently confirm the method.**
+
+That is weaker than D2.1's anchor in a *specific* way, and naming the way is what stops the sentence
+being read as modesty. For fidelity to the paper it is arguably the best witness available. For
+independence it is not the same kind of evidence at all.
+
+*(Ian Kopacka and Klemens Fuchs are also listed contributors, which is why S-1.11's method ships in
+later `epiR` -- the authors' own package, not a third party adopting them.)*
+
+**The version our witness actually runs is 2.0.92, not 2.0.96.** The base image pins CRAN to the
+2026-04-23 snapshot, and 2.0.96 was published 2026-08-03 -- after it. Found by running the image
+rather than by reading CRAN, which is V-17's shape exactly, caught this time before it reached the
+register.
+
+**One consequence, because it changes a disclosure.** `epi.prev()` in **2.0.92 has no `tp.method`
+argument and no `simplified.bayes`** -- verified in the image. So S-1.11's method is in CRAN's current
+`epiR` and **not in our pinned witness**. Anything read from the 2.0.96 manual about
+`tp.method` describes a version we do not run.
+
+**Behaviour verified in 2.0.92 directly, not read from the 2.0.96 manual:**
+
+| Input | What `epi.prev` does |
+|---|---|
+| AP = 0, Sp = 0.99 | warns *"Apparent prevalence is less than (1 - Sp)"*, returns tp = **-0.011236** |
+| **AP = 0, Sp = 1.00** | **no warning.** tp = 0, CI `[0, 0.001024]` -- a perfectly good rare-event answer |
+| AP = 1, Se = 0.90 | warns *"Apparent prevalence greater than Se"*, returns tp = **1.112360** |
+| **AP = 1, Se = 1.00** | **no warning.** tp = 1 |
+| `pos=6, n=151, se=0.964, sp=0.927` | warns, returns tp = **-0.037334**, CI `[-0.065410, 0.012882]` |
+| Se + Sp = 1 exactly | tp = **-Inf** |
+| Se + Sp < 1 | tp = 6.6, and **the interval inverts**: lower 6.712724 above upper 6.459273 |
+
+**That last row is the argument for refusing.** `epiR` returns a number whose lower bound exceeds its
+upper bound. Our refusal is not a stylistic preference over a working alternative; it is declining to
+print something that is not an interval.
 
 ## S-2 — Validation targets
 

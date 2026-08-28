@@ -257,7 +257,7 @@ exists so that is a scheduled decision rather than a remembered intention.
 |---|---|---|
 | O-3 | Record R version, `survey` version and the exact call beside every fixture | Phase 0 |
 | O-4 | Cross-check against R `survey` (primary) and `svy` where the estimator is the same | D-18 |
-| O-8 | Rogan–Gladen has no library witness — validate against Lang & Reiczigel (2014) | D-3 |
+| O-8 *(restated 2026-08-29, D-31)* | ~~Rogan-Gladen has no library witness; validate against Lang & Reiczigel (2014).~~ **Both halves were wrong in our favour.** There is a witness -- `epiR::epi.prev()`, **S-1.10** -- and the interval matching our assumption that Se/Sp are supplied and exact is **S-1.6** Reiczigel et al. (2010), not S-1.5. S-1.5 is the wider method we do not implement; adopting it would be a plan-schema change | D-3, restated by **D-31** |
 | O-13 | Measure the `svy` Wilson divergence at small *n* | D-18 |
 | O-14 | Keyless structural audit mode | V-10 |
 | O-15 | Ledger schema version, **only if** an old run and an API-created run need different advice | D-25 |

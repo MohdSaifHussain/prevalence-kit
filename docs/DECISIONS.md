@@ -945,6 +945,40 @@ memory that pointed at an unrelated paper on Mobius inversion.
 
 ---
 
+## D-31 - The corrected interval is anchored on Reiczigel et al. (2010), not Lang & Reiczigel (2014)
+
+**Date:** 2026-08-29 - **Made in:** the director's Q5 ruling - **Ruled by:** director
+
+The Rogan-Gladen confidence interval is anchored on **S-1.6**, Reiczigel, Foldi & Ozsvari (2010).
+**S-1.5**, Lang & Reiczigel (2014), is recorded as the wider method we do **not** implement.
+
+**The charter settles it.** Section 8: *"v1.0 relies on sensitivity and specificity you provide. It
+does not estimate rater quality itself."*
+
+- **S-1.6 (2010)** assumes Se and Sp are **known**. That is our assumption.
+- **S-1.5 (2014)** propagates uncertainty in **estimated** Se and Sp.
+
+**Using the 2014 interval would model uncertainty this tool does not have** -- producing intervals
+wider than our own assumptions justify, and describing a method we do not implement. The director's
+words: *an overclaim wearing the costume of caution.*
+
+**Adopting S-1.5 later is a plan-schema change, not an estimator swap.** This is the part the
+builder's framing missed, and it is why the sentence is here. The operator would have to supply Se
+and Sp **with their own uncertainty** -- new plan fields, new validation, and a new pre-registration
+commitment, because the plan is hashed and its shape is the commitment. Nobody should later read
+S-1.5 as a drop-in upgrade.
+
+**It earns a line in the honest limits**, sharper than the one already there. The existing caveat
+says intervals do not account for rater quality. The specific version: **the corrected interval
+accounts for sampling uncertainty and for nothing else, including any uncertainty in the Se and Sp
+you supplied.**
+
+**O-8 restated** to name S-1.6. Its original wording -- that Rogan-Gladen has no library witness --
+was also wrong in our favour: `epiR` implements it. S-1.10, with what that witness does and does not
+establish.
+
+---
+
 ## Carried obligations opened by these decisions
 
 | # | Obligation | Owner | Opened by |

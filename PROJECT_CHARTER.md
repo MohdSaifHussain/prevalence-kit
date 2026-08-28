@@ -258,6 +258,11 @@ concrete finding that only FULL-tier ceremony would have produced.
   sampling frame, biased labels, or a dishonest plan.** It can only make them visible and permanent
   in the record.
 - v1.0 relies on sensitivity and specificity you provide. It does not estimate rater quality itself.
+- **The corrected interval treats the Se and Sp you supply as exact.** It accounts for sampling
+  uncertainty and for nothing else -- including any uncertainty in those two numbers. This is the
+  specific version of the caveat above, added 2026-08-29 under ruling Q5 / D-31. The method that
+  does propagate that uncertainty is Lang & Reiczigel (2014), S-1.5, and adopting it is a plan
+  schema change rather than an estimator swap.
 - **Interval guarantees are sampling-only.** They do not account for rater quality. This matches the
   caveat YouTube publishes for VVR: *"The confidence intervals do not take into account rater
   quality, which may impact our measurements."*
@@ -300,6 +305,7 @@ Every change to this charter after ratification gets a row here.
 
 | # | Date | Change | Ruled by | Verbatim ruling |
 |---|---|---|---|---|
+| A-1 | 2026-08-29 | **Honest limits gain one line** under ruling Q5 / D-31: the corrected interval treats supplied Se and Sp as exact. A limit added, never narrowed -- section 8's rule is intact. Wright's exact optimal allocation added to the NEXT queue the same day. | Director | Q5 ruling, this session |
 | A-0 | 2026-08-28 | **Charter ratified.** Seven Phase 0 rulings applied: R-1 (lean estimators, httpx rationale, dual cross-check, svy credited), R-2 (regulatory positioning inverted), R-3 (three citation fixes, ROOST conflict recorded unresolved), R-4 (Brown/Cai/DasGupta anchor; Wilson + Clopper-Pearson; Jeffreys dropped), R-5 (Fernet; Cobblestone rejected on soak time), R-6 (dev 3.14, floor 3.12), R-7 (pre-registered threshold estimand, multi-threshold sensitivity curve) | Director | `docs/RATIFICATION.md` — full text of all seven |
 
 ### Standing directions in force
