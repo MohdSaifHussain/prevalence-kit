@@ -5,7 +5,7 @@ Doctrine rule 14: a lesson that lives only in prose will not hold, so build the
 check. Rule 11: an obligation is tracked by name until discharged, and reported
 against the artifact rather than against the last report.
 
-Seven checks, each answering a question that has actually gone wrong here.
+Eight checks, each answering a question that has actually gone wrong here.
 (This sentence said "five" while six were listed, which is the count treadmill
 rule 14 names. Re-derive it from `CHECKS` if you touch this file.)
 
@@ -24,6 +24,13 @@ rule 14 names. Re-derive it from `CHECKS` if you touch this file.)
               (C-12: a report accurate about what it covered and misleading
               about what it omitted. This is the half that needs a machine,
               because running the tool cannot detect it.)
+
+  register    Which findings does the record discuss but the register omit?
+              (The other direction, and the one that was missing. V-12 through
+              V-15 were each named across three to nine documents while the
+              register held 22 rows and none of them these four -- and the
+              checker said "all accounted for". A register checker that
+              validates the rows present cannot detect the rows missing.)
 
   figures     Is any figure restated in prose without being derivable?
               (C-7: two gate numbers quoted that no command produces.)
@@ -61,6 +68,15 @@ ROOT = Path(__file__).resolve().parents[1]
 
 CITATION = re.compile(r"\b([DCO])-(\d{1,3})\b")
 FINDING_REF = re.compile(r"\b([FV])-(\d{1,2})\b")
+FINDING_ID = re.compile(r"\b([FVQ]-\d{1,2})\b")
+"""A finding identifier as the record writes it, anywhere in any document.
+
+Deliberately wider than `FINDING_REF`: it includes `Q-n`, and it captures the
+whole id rather than its parts, because `check_register` asks a set question --
+*is this one in the register?* -- not a parsing question. The contracts write
+their numbered questions as `Q1`, without the hyphen, so they do not collide
+with the register's `Q-1` and `Q-2`.
+"""
 PATH_LIKE = re.compile(r"(?<![\w./-])((?:src|tests|docs|tools)/[\w./-]+\.(?:py|md|toml|txt))")
 """A repository path. The lookbehind matters: without it `awesome-safety-tools/README.md`
 matched on its `tools/README.md` suffix and was reported as a missing file."""
@@ -261,6 +277,58 @@ def check_findings(root: Path) -> list[Problem]:
         elif status != "noted":
             problems.append(Problem("findings", ident, f"unknown status {status!r}"))
     return problems
+
+
+def check_register(root: Path) -> list[Problem]:
+    """Which findings does the record discuss that the register never admitted?
+
+    The other direction, and it is the one that was missing. `check_findings`
+    validates the rows that are *present*: is each closed, does its named test
+    exist? Nothing in that question can reveal a row that was never written.
+
+    **V-12, V-13, V-14 and V-15 were each discussed across three to nine
+    documents** -- V-12 in `SECURITY.md`, `docs/CORRECTIONS.md`,
+    `docs/DECISIONS.md` and both contracts; V-15 in `CLAUDE.md` and in this file,
+    which is the checker naming a finding the checker could not see -- while
+    `docs/FINDINGS.md` held 22 rows and none of them these four. `check_claims`
+    reported *"22 findings in the register, all accounted for"* for some weeks.
+    **That statement was true and worthless.** It answered *is everything here
+    consistent?* when the question was *is everything here?*
+
+    **Third instance of one shape**, and the shape is what earns this check:
+
+      V-15   `check_paths` read a fixed list of `src/` and `tests/` globs, so a
+             new document was silently uncovered.
+      C-23   the gate check read `gate.yml` with a regex, so it accepted a file
+             its real consumer cannot parse.
+      here   the findings check reconciled in one direction only.
+
+    **An instrument's coverage is defined by what it looks at, and what it looks
+    at is a choice someone made once.** Rule 11 says an obligation is tracked by
+    name until discharged; the register is that rule's instrument, and it had
+    holes it could not see.
+
+    Scanned by pattern, never by a named list -- V-15's own lesson, applied to
+    the check written because of V-15.
+    """
+    registered = {ident for ident, *_ in register_rows(root)}
+    named: dict[str, set[str]] = {}
+    for path in repo_files(root, *SCANNED):
+        for ident in FINDING_ID.findall(path.read_text(encoding="utf-8")):
+            named.setdefault(ident, set()).add(str(path.relative_to(root)).replace("\\", "/"))
+
+    return [
+        Problem(
+            "register",
+            ident,
+            f"named in {len(where)} file(s) but has no row in docs/FINDINGS.md "
+            f"({', '.join(sorted(where)[:3])}{', ...' if len(where) > 3 else ''})",
+        )
+        for ident, where in sorted(
+            named.items(), key=lambda kv: (kv[0][0], int(kv[0].split("-")[1]))
+        )
+        if ident not in registered
+    ]
 
 
 def check_fixtures(root: Path) -> list[Problem]:
@@ -473,6 +541,7 @@ CHECKS = {
     "paths": check_paths,
     "codes": check_codes,
     "findings": check_findings,
+    "register": check_register,
     "fixtures": check_fixtures,
     "figures": check_figures,
     "gate": check_gate,
@@ -517,6 +586,18 @@ def selftest() -> int:
             "docs/FINDINGS.md",
             "`test_a_non_numeric_label_is_refused_by_name`",
             "`test_that_was_never_written`",
+        ),
+        "register": (
+            # The plant is the defect exactly as it was: delete V-12's row and
+            # leave every other mention of it standing. V-12 is discussed in
+            # SECURITY.md, both contracts, CORRECTIONS.md, DECISIONS.md and a
+            # test docstring, and for some weeks the register did not hold it.
+            # A stand-in id nobody writes about would not reproduce that -- the
+            # point is a finding the record talks about at length.
+            "docs/FINDINGS.md",
+            "| V-12 | high | closed | "
+            "`test_the_tampered_plan_is_caught_without_the_flag` | D-24 |\n",
+            "",
         ),
         "figures": (
             "src/prevalence_kit/run.py",

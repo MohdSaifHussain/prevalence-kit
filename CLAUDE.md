@@ -110,9 +110,13 @@ confirms we implement the method as its author does. It does not independently c
    C-24's was printed on screen at the time.
 5. **End every report with what remains open, by name and severity.** C-12 is what happens otherwise.
 6. **A finding closed in one artifact can be open in another** — D-23.
-7. **An instrument that does not cover what it appears to.** Six instances: C-15, C-19, V-15, V-16,
-   C-23, and `check_codes` reading one contract when there were three. When you add or trust a
-   check, ask what it does **not** read.
+7. **An instrument that does not cover what it appears to.** **Seven instances:** C-15, C-19, V-15,
+   V-16, C-23, `check_codes` reading one contract when there were three, and **D-34 — the findings
+   check reconciled in one direction only.** V-12…V-15 were named across three to nine documents
+   each with no register row, while the checker printed *"22 findings, all accounted for."*
+   **True and worthless: it answered *is everything here consistent?* when the question was *is
+   everything here?*** When you add or trust a check, ask what it does **not** read — and ask it in
+   **both directions.**
 8. **Check an artifact the way its real consumer reads it.** Structured files — YAML, JSON, TOML,
    CSV, XML — get the **consumer's parser**, never a regex. That is how an unparseable `gate.yml`
    passed a green checker (**C-23**). **Markdown is the exception**, and the reason is the rule: its
@@ -129,10 +133,11 @@ confirms we implement the method as its author does. It does not independently c
 
 ## Where things stand
 
-**Phase 0** ratified. **Phase 1** closed at `d66d225`. **Phase 2 is in build**, Q1–Q5 ruled.
+**Phase 0** ratified. **Phase 1** closed at `d66d225`. **Phase 2 is in build**, **Q1–Q7 ruled.**
 
-**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. CI green, **401 tests** on
-CPython 3.12.14 / 3.13.15 / 3.14.7.
+**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **406 tests locally**, seven
+gate checks green. **CI last ran green at 401 tests** on CPython 3.12.14 / 3.13.15 / 3.14.7 — the
+five since are local until the next push, and the two figures are stated apart on purpose.
 
 ### Done
 
@@ -169,10 +174,28 @@ The point estimate is done; the interval is not. **O-8 discharges then, not now.
 
 Anchor is **S-1.6 Reiczigel et al. (2010)** — Se/Sp *known*, which is our assumption (D-31).
 **Not S-1.5 Lang & Reiczigel (2014)**, which propagates uncertainty in *estimated* Se/Sp; adopting
-it later is a **plan-schema change, not an estimator swap**.
+it later is a **plan-schema change, not an estimator swap**. The contract's D2.6 row cited S-1.5
+until 2026-08-29 and was amended before the build — **a ruling that has not reached the binding
+document is not binding.**
 
-Expect surprises: the witness returns an inverted interval where `Se + Sp < 1`, and the fixture
-records it.
+**The expected values already exist.** `r/fixtures/rogan_gladen.json` carries `tp_lower` / `tp_upper`,
+committed before any interval code. Measured across all nine positive-denominator cases:
+`RG(ap_lower) == tp_lower` and `RG(ap_upper) == tp_upper` to every printed digit — so
+`epi.prev(..., method = "c-p")` **transforms a Clopper-Pearson interval endpoint by endpoint.** D2.6
+composes D2.4 (7.1e-11 against base R) and D2.5, and introduces no third unwitnessed thing. *That is
+an observation about `epiR`, not a theorem about corrected intervals.*
+
+**Two rulings bind it. `Q6 / D-32`:** clamp to [0, 1] at **both** ends, **say so in the output**, and
+**keep the raw bound in the ledger** — a silently clamped bound is a small lie in the artifact an
+outsider reads. **`Q7 / D-33`:** Clopper-Pearson only, and a plan naming `interval: wilson` while
+supplying Se/Sp is **refused at plan load** with `CORRECTION_INTERVAL_UNSUPPORTED` — not silently
+switched, which would substitute a method inside a pre-registered measurement.
+
+**Three rare-event surprises now cluster in this phase**, and none was anticipated by reasoning —
+each came from the artifact. `fpr_exceeds_prevalence`; the inverted interval below `Se + Sp = 1`; and
+a **negative lower bound in the accept region** (`rare_event`, lower `-0.000151`, point estimate
+fine). **O-21 carries them to the README as one grouped fact**, not three scattered caveats: *at the
+prevalence rates this tool is for, several ordinary intuitions fail, and here they are.*
 
 ### Open, by name
 
@@ -182,6 +205,7 @@ records it.
 | **O-20** | `allocation_rounding` in the *hashed plan file*. Today it is a required API argument only | D2.8 |
 | **O-21** | The rare-event specificity fact must reach the README | Phase 3 |
 | **D2.11** | The witness image is rebuilt by hand; CI never runs it. Static half closed | Phase 2 |
-| **D2.14** | `check_claims` gaps: PDF paths, the CORRECTIONS counts table, the R artifacts | Phase 2 |
+| **D2.14** | `check_claims` gaps: PDF paths, the CORRECTIONS counts table (**document its semantics, do not guess them**), the R artifacts. **The register gap is closed — D-34, `check_register`** | Phase 2 |
+| **Charter §6.1** | Still says Rogan-Gladen *"has no witness … validated against Lang & Reiczigel (2014)"*. **D-31 says both halves are wrong.** The charter is ratified, so it needs an **amendment-log ruling (A-3)**, not a builder edit | **Director** |
 | **O-3, O-4, O-13, O-14, O-15** | Carried, untouched | Phase 2 |
 | **28 corrections open** | C-1 … C-26. Close under **T-1 (D2.12)**, each naming its commit | D2.12 |

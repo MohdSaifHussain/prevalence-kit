@@ -6,6 +6,15 @@ Every finding accepted in a review stop appears here with the test that closes i
 verifies that each named test **exists**, and reports any finding whose closing evidence is missing
 or unnamed.
 
+**It is now reconciled in both directions, and the second direction was missing for weeks.**
+`check_findings` validates the rows that are *here*. `check_register` — added 2026-08-29 — scans
+every document for `F-n` / `V-n` / `Q-n` and requires each one the record names to have a row.
+Without it, a finding discussed in nine files and absent from this table **passed the gate**:
+**V-12, V-13, V-14 and V-15 were exactly that**, while the checker printed *"22 findings in the
+register, all accounted for."* That sentence was true and worthless — it answered *is everything
+here consistent?* when the question was *is everything here?* The four rows are below, added with
+the check that would have demanded them.
+
 **Why this file exists.** Three times in Phase 1 a report was accurate about what it covered and
 misleading about what it left out — `docs/CORRECTIONS.md` C-12, C-13, and the recurrence one turn
 after C-12 was recorded. That class is not caught by running the thing; it is only caught by
@@ -47,6 +56,10 @@ the same wrong reason.
 | V-9 | low | closed | `test_the_sealed_plan_is_canonical_bytes` | — |
 | V-10 | low | closed | `test_verify_structure_docstring_does_not_promise_a_keyless_verify` | O-14 |
 | V-11 | medium | closed | `test_the_ceiling_is_named_not_a_traceback` | D-19 |
+| V-12 | high | closed | `test_the_tampered_plan_is_caught_without_the_flag` | D-24 |
+| V-13 | medium | closed | `test_the_recorded_plan_path_is_as_invoked` | C-19 |
+| V-14 | medium | ruled | `test_a_plan_without_a_source_path_records_none` | D-25 |
+| V-15 | medium | closed | `test_the_path_check_reads_documents_outside_src_and_tests` | D-23 |
 | V-16 | medium | closed | `test_ci_runs_every_check_the_gate_documents` | D-28 |
 | V-17 | medium | closed | `test_the_register_names_the_route_the_witness_used` | D-29 |
 | Q-1 | — | ruled | `test_svy_wilson_is_not_the_textbook_interval` | D-18 |

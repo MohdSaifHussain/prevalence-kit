@@ -1091,6 +1091,79 @@ its own anchor first, not a flag.
 
 ---
 
+## D-34 - The findings register is reconciled in both directions
+
+**Date:** 2026-08-29 · **Made in:** the director's item-4 ruling at the D2.6 handoff · **Ruled by:**
+director
+
+`tools/check_claims.py` gains an eighth check, **`register`**. It scans every document for `F-n`,
+`V-n` and `Q-n` and requires each identifier the record names to have a row in `docs/FINDINGS.md`.
+
+**What was wrong.** `check_findings` validates the rows that are **present**: is each closed, does
+its named test exist? **Nothing in that question can reveal a row that was never written.**
+
+**V-12, V-13, V-14 and V-15 had no rows.** Each is discussed across three to nine documents --
+V-12 in `SECURITY.md`, `docs/CORRECTIONS.md`, `docs/DECISIONS.md` and both contracts; **V-15 in
+`tools/check_claims.py` itself**, which is the checker citing a finding the checker could not see.
+The Phase 2 contract section 9 names V-12, V-13 and V-14 in its tier-attribution table. The register
+held 22 rows and none of them these four.
+
+And throughout, the checker printed:
+
+> `check_claims: reconciled. 22 findings in the register, all accounted for.`
+
+**The director's verdict, recorded as given: that statement is true and worthless.** A register
+checker that validates the rows present cannot detect the rows missing. **It answers "is everything
+here consistent?" when the question is "is everything here?"**
+
+**Third instance of one shape**, and naming the shape is why this is a decision rather than a patch:
+
+| | Instrument | What it did not look at |
+|---|---|---|
+| V-15 | `check_paths` | named its files, so a new document was silently uncovered |
+| C-23 | `check_gate` | read YAML with a regex, so it accepted a file its real consumer rejects |
+| **here** | `check_findings` | reconciled in one direction only |
+
+> **An instrument's coverage is defined by what it looks at, and what it looks at is a choice
+> someone made once.**
+
+**Why this outranked D2.14's other gaps**, as ruled. **Rule 11** says obligations are tracked by
+name until discharged, and **the register is that rule's instrument.** It had holes it could not see
+for some weeks. Everything recorded into it during that time was recorded into a register with known
+gaps -- so the fix comes **before** D2.6, not after, because otherwise D2.6's own findings land in
+the same place.
+
+**Both controls, and the negative one is the defect itself rather than a stand-in.** The selftest
+deletes **V-12's** row and leaves all ten of its other mentions standing, which is exactly the state
+this repository was in. `test_the_register_check_notices_a_finding_with_no_row` does the same in
+pytest; `test_every_finding_the_record_names_has_a_register_row` is the positive control. **The
+check was written before the four rows were added and fired on all four**, so it is known to catch
+the real thing and not only the plant.
+
+**One boundary, asserted rather than assumed.** The contracts number their questions `Q1` ... `Q7`,
+with no hyphen; the register's findings are hyphenated. If a contract ever spelled a numbered
+question the hyphenated way the two vocabularies would collide silently, so
+`test_the_contracts_numbered_questions_are_not_read_as_findings` pins the separation.
+
+**Alternative not taken: widen `check_findings` instead of adding a check.** Rejected. The two ask
+different questions -- *are these rows sound?* and *are these all the rows?* -- and a single check
+that answered both would report one failure for two unrelated causes, which is doctrine rule 5's
+undifferentiated refusal in a checker instead of a gate.
+
+**Alternative not taken: exempt the new tests' own fixtures.** The tests needed a broken path and a
+hyphenated question identifier as fixtures, and both were caught by the existing checks reading the
+test file. Adding them to `KNOWN_ABSENT` would have worked and would have **widened the exempted
+surface for everyone** to accommodate one file. The fixtures are assembled from parts instead, and
+each says why in a comment.
+
+**V-15's closing test was written here, not before.** It had none: the fix was the `SCANNED` pattern
+and the selftest plant. Registering it as `closed` required naming a test that fails without the fix,
+so `test_the_path_check_reads_documents_outside_src_and_tests` and its negative control now exist.
+**The register's own standard forced a missing test into existence**, which is the check earning its
+keep on the first use.
+
+---
+
 ## Carried obligations opened by these decisions
 
 | # | Obligation | Owner | Opened by |

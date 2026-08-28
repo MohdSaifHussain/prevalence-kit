@@ -389,3 +389,124 @@ def test_the_fixtures_record_an_unruled_question() -> None:
         f"expected exactly the known rounding-drift case, got {drifting}. "
         "If it has gone, the question above may have been resolved in code."
     )
+
+
+# --------------------------------------------------------------------- V-15
+
+
+def test_the_path_check_reads_documents_outside_src_and_tests() -> None:
+    """V-15. `check_paths` read a fixed list of `src/` and `tests/` globs.
+
+    So a document added later was silently uncovered: `CLAUDE.md` named
+    `docs/PHASE-1-REVIEW-STOP.md`, which lives under `docs/contracts/`, and the
+    check passed. No failure, no warning, just less coverage than the day
+    before.
+
+    The fix is a pattern rather than a list -- `SCANNED` -- and this is the
+    positive control for it. The negative control is below, and
+    `check_claims.py --selftest` plants a broken path in `CLAUDE.md`
+    specifically, because that plant would not have been seen at all before.
+
+    D-23's principle applied to the checker's own inputs: a check that names its
+    question generalises; a check that names a row does not.
+    """
+    module = _check_claims_module()
+    patterns = set(module.SCANNED)
+
+    assert "**/*.md" in patterns, f"Markdown outside src/ and tests/ is uncovered again: {patterns}"
+    root = Path(__file__).resolve().parents[1]
+    read = {p.name for p in module.repo_files(root, *module.SCANNED)}
+    assert {"CLAUDE.md", "SECURITY.md", "PROJECT_CHARTER.md"} <= read, sorted(read)
+
+
+def test_the_path_check_notices_a_bad_path_in_a_root_document(tmp_path: Path) -> None:
+    """The negative control. Reproduces V-15's own gap, not a stand-in.
+
+    The broken path goes in a root Markdown file -- the exact class of document
+    the old glob list did not read.
+    """
+    module = _check_claims_module()
+    # Assembled rather than written out: a literal here would be a real broken
+    # path inside a real document, and `check_paths` reads this file too.
+    absent = "docs/" + "no-such-document" + ".md"
+    (tmp_path / "CLAUDE.md").write_text(
+        f"# plant\n\nSee {absent}.\n", encoding="utf-8", newline="\n"
+    )
+
+    problems = module.check_paths(tmp_path)
+    assert [p for p in problems if absent in p.detail], [p.line() for p in problems]
+
+
+# ------------------------------------------------------- the register check
+
+
+def test_every_finding_the_record_names_has_a_register_row() -> None:
+    """The positive control for `check_register`, and the thing it exists for.
+
+    `check_findings` validates the rows that are present. It cannot see a row
+    that was never written, and for some weeks four were not: V-12, V-13, V-14
+    and V-15 were discussed across three to nine documents each -- V-12 in
+    `SECURITY.md`, V-15 in `tools/check_claims.py` itself -- while the register
+    held 22 rows and none of them these four.
+
+    `check_claims` reported "22 findings in the register, all accounted for"
+    the whole time. True, and worthless: it answered *is everything here
+    consistent?* when the question was *is everything here?*
+    """
+    root = Path(__file__).resolve().parents[1]
+    problems = _check_claims_module().check_register(root)
+    assert not problems, "\n".join(p.line() for p in problems)
+
+
+def test_the_register_check_notices_a_finding_with_no_row(tmp_path: Path) -> None:
+    """The negative control, and the plant is the defect as it actually was.
+
+    Delete V-12's register row and leave every other mention of it standing.
+    That is precisely the state this repository was in: a finding the record
+    discusses at length, absent from the register that exists to track it.
+
+    A made-up identifier nobody writes about would pass this test and prove
+    nothing -- the check has to fire on a finding the record really does carry.
+    """
+    module = _check_claims_module()
+    root = Path(__file__).resolve().parents[1]
+
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    register = (root / "docs" / "FINDINGS.md").read_text(encoding="utf-8")
+    row = "| V-12 | high | closed | `test_the_tampered_plan_is_caught_without_the_flag` | D-24 |\n"
+    assert row in register, "V-12's row is not where this test expects it"
+    (docs / "FINDINGS.md").write_text(register.replace(row, "", 1), encoding="utf-8", newline="\n")
+    (tmp_path / "SECURITY.md").write_text(
+        "A clean verify on a tampered plan (V-12).\n", encoding="utf-8", newline="\n"
+    )
+
+    problems = module.check_register(tmp_path)
+    assert [p for p in problems if p.where == "V-12"], [p.line() for p in problems]
+
+
+def test_the_contracts_numbered_questions_are_not_read_as_findings() -> None:
+    """A boundary the check depends on, asserted rather than assumed.
+
+    The contracts number their questions `Q1` ... `Q7`, without a hyphen. The
+    register's findings use the hyphenated form. If a contract ever spelled a
+    numbered question the hyphenated way, `check_register` would demand a
+    register row for it and the two vocabularies would have collided silently.
+
+    So the separation is pinned here. If this fails, the fix is the contract's
+    spelling or the regex, and someone has to choose deliberately.
+
+    (This docstring spells no hyphenated identifier of its own, for the same
+    reason the test above assembles its path: the checker reads this file.)
+    """
+    root = Path(__file__).resolve().parents[1]
+    module = _check_claims_module()
+    registered = {ident for ident, *_ in module.register_rows(root)}
+
+    for path in sorted((root / "docs" / "contracts").glob("*.md")):
+        for ident in module.FINDING_ID.findall(path.read_text(encoding="utf-8")):
+            if ident.startswith("Q-"):
+                assert ident in registered, (
+                    f"{path.name} writes {ident}, which reads as a register finding. "
+                    "Numbered questions are spelled Q5, without the hyphen."
+                )
