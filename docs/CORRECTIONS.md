@@ -17,11 +17,11 @@ neither the director nor the AI can quietly absorb the other's.
 | Chat reviewer (draft author) | 3 | 0 | **3** |
 | Research report (passed through unverified) | 2 | 0 | **2** |
 | Stale-at-draft-time, queued but built on anyway | 1 | 0 | **1** |
-| **Builder (Claude Code)** | **17** | **0** | **17** |
+| **Builder (Claude Code)** | **18** | **0** | **18** |
 | Reviewer instrument | **1** | 0 | **2** (1 noted) |
 | Director | 0 | 0 | 0 |
 | Tool artifact (noted, not a defect) | - | - | **1** |
-| **Total** | **24** | **0** | **25** |
+| **Total** | **25** | **0** | **26** |
 
 C-1 … C-6 are Phase 0: defects in the chat-drafted vision, all caught before any code, none reaching
 an artifact. **C-7 … C-13 are Phase 1, and all seven are mine.** Five were caught by the director's
@@ -550,6 +550,32 @@ pinned *what* to fetch and never *how*, and the how is what broke. `docs/STANDAR
 work from memory.* If a source cannot be fetched, say so, say what was tried, and say what came
 back. The director decides. Never fill it in from memory. Never quietly drop it. That is doctrine
 rule 7 -- claims at the width of the evidence -- applied to fetching rather than to the claim.
+
+---
+
+## C-23 - The new gate check passed a workflow GitHub could not read
+
+| | |
+|---|---|
+| **Claimed** | All seven gate checks green at `95b4a88`, including the new `gate` check that reconciles `CLAUDE.md` against `.github/workflows/gate.yml`. |
+| **Actually** | The workflow was **not valid YAML**. I had written `- name: mypy (config: src + tests)` unquoted. The `: ` inside the brackets makes YAML read a nested mapping, so the whole file failed to parse. Run `33205536300` died with *"This run likely failed because of a workflow file issue"* -- no jobs ran at all. |
+| **Direction** | Against the check I had just written to stop this class of thing. |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | CI, one push later. Not by the local gate, which was green. |
+| **Severity** | Low in effect -- one red run, fixed in minutes, nothing shipped. Medium in kind, and the kind is the point. |
+| **Replaced by** | `check_gate` now parses the workflow with `yaml.safe_load` instead of a regex, and reports `is not valid YAML` when it cannot. Two controls: `test_the_gate_check_reads_the_workflow_the_way_github_does` and `test_the_real_workflow_is_valid_yaml`. |
+| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+
+**Why this is worth an entry.** My check read the workflow with a regular expression. A regular
+expression will happily read a file that YAML rejects. So **the checker accepted an artifact the
+real consumer refuses**, and reported green.
+
+That is the same shape as V-16, which I had just fixed, and the same shape as C-19 before it: an
+instrument that looks like it covers something and does not. Third instance in one session.
+
+**The rule it produces:** *check an artifact the way its real consumer reads it.* GitHub parses that
+file as YAML. So must we. A checker that agrees with a looser reader than the one that matters is
+not checking the same thing.
 
 ---
 

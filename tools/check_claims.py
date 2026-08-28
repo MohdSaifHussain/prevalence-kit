@@ -303,11 +303,38 @@ NUMBER_WORD = {
     "ten": 10,
 }
 
-CI_RUN = re.compile(r"^\s+run:[ \t]+(?!\|)(.+?)\s*$", re.MULTILINE)
-"""A single-line `run:` step. The `|` block form is a script, not a gate check."""
-
 GATE_TOOLS = ("ruff ", "mypy", "pytest", "tools/check_claims.py")
 """Prefixes that mark a CI step as one of the gate's checks rather than setup."""
+
+
+def ci_run_steps(workflow: Path) -> tuple[set[str], str | None]:
+    """Every single-line `run:` in the workflow, and a parse error if there is one.
+
+    Parsed, not pattern-matched. The first version read the file with a regex,
+    so it read a workflow GitHub could not: an unquoted `name: mypy (config: src
+    + tests)` is a nested mapping in YAML, the whole file failed to parse, and
+    run 33205536300 died with "a workflow file issue" while all seven local
+    checks were green. A checker that accepts what the real consumer rejects is
+    not checking the same artifact.
+
+    Multi-line `run:` blocks are scripts, not gate checks, and are skipped.
+    """
+    import yaml
+
+    try:
+        parsed = yaml.safe_load(workflow.read_text(encoding="utf-8"))
+    except yaml.YAMLError as exc:
+        return set(), str(exc).replace("\n", " ")
+    if not isinstance(parsed, dict):
+        return set(), "workflow does not parse to a mapping"
+
+    steps: set[str] = set()
+    for job in (parsed.get("jobs") or {}).values():
+        for step in (job or {}).get("steps") or []:
+            command = step.get("run") if isinstance(step, dict) else None
+            if isinstance(command, str) and "\n" not in command.strip():
+                steps.add(_normalise_command(command))
+    return steps, None
 
 
 def _normalise_command(cmd: str) -> str:
@@ -342,7 +369,10 @@ def check_gate(root: Path) -> list[Problem]:
         return [Problem("gate", "CLAUDE.md", "no machine-readable gate block found")]
 
     documented = [_normalise_command(ln) for ln in block.group(1).splitlines() if ln.strip()]
-    executed = {_normalise_command(c) for c in CI_RUN.findall(workflow.read_text(encoding="utf-8"))}
+    executed, parse_error = ci_run_steps(workflow)
+    if parse_error:
+        # No point comparing lists against a file GitHub will refuse to read.
+        return [Problem("gate", ".github/workflows/gate.yml", f"is not valid YAML: {parse_error}")]
 
     # The heading's number word is itself a restated figure. C-7's class.
     stated = GATE_COUNT.search(claude_text)

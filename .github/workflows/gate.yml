@@ -46,7 +46,9 @@ jobs:
       - name: mypy --strict src
         run: mypy --strict src
 
-      - name: mypy (config: src + tests)
+        # Quoted: an unquoted "config: src" is a nested mapping to YAML, and the
+        # whole workflow stops parsing. Run 33205536300 died on exactly that.
+      - name: "mypy (config: src + tests)"
         # V-16. CI ran the strict half over src/ and stopped there, so the
         # eleven test files were never type-checked on the remote: 12 files
         # against the config form's 23. The gate on the desk was stronger than

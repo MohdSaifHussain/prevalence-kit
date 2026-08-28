@@ -240,3 +240,40 @@ def test_the_gate_check_notices_a_step_ci_stops_running(tmp_path: Path) -> None:
 
     problems = module.check_gate(tmp_path)
     assert [p for p in problems if "`mypy`" in p.detail], [p.line() for p in problems]
+
+
+def test_the_gate_check_reads_the_workflow_the_way_github_does(tmp_path: Path) -> None:
+    """The second negative control, and it is a defect that actually shipped.
+
+    The first version of this check read `gate.yml` with a regex, so it accepted
+    a workflow GitHub rejects. An unquoted `name: mypy (config: src + tests)` is
+    a nested mapping in YAML: the whole file fails to parse. Run 33205536300 died
+    with "a workflow file issue" while all seven local checks were green.
+
+    A checker that accepts what the real consumer rejects is not checking the
+    same artifact.
+    """
+    module = _check_claims_module()
+    root = Path(__file__).resolve().parents[1]
+
+    workflow = tmp_path / ".github" / "workflows"
+    workflow.mkdir(parents=True)
+    (workflow / "gate.yml").write_text(
+        "      - name: mypy (config: src + tests)\n        run: mypy\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    (tmp_path / "CLAUDE.md").write_text(
+        (root / "CLAUDE.md").read_text(encoding="utf-8"), encoding="utf-8", newline="\n"
+    )
+
+    problems = module.check_gate(tmp_path)
+    assert [p for p in problems if "not valid YAML" in p.detail], [p.line() for p in problems]
+
+
+def test_the_real_workflow_is_valid_yaml() -> None:
+    """The positive control for the pair above."""
+    module = _check_claims_module()
+    root = Path(__file__).resolve().parents[1]
+    _, parse_error = module.ci_run_steps(root / ".github" / "workflows" / "gate.yml")
+    assert parse_error is None, parse_error
