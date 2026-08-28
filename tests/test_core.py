@@ -228,6 +228,40 @@ def test_wilson_endpoints_satisfy_the_score_equation(positives: int, n: int) -> 
         assert score == pytest.approx(z, abs=1e-6)
 
 
+def _wilson_by_quadratic(k: int, n: int, conf: float = 0.95) -> tuple[float, float]:
+    """Endpoints as the two roots of (p_hat - p0)^2 = z^2 p0 (1-p0) / n.
+
+    Adapted from the reviewer's independent witness. Deliberately a different
+    arithmetic path from the shipped `centre +/- half`: it forms the quadratic and
+    solves it in the numerically-stable form, computing the root that does not
+    cancel and recovering the other from the product of roots.
+
+    Why this earns its place when the score-equation test already exists: I wrote
+    the implementation and its tests from one understanding, so where that
+    understanding is wrong it is wrong in both. This check cannot agree with the
+    implementation for the same wrong reason, which is the only kind that counts.
+    """
+    z = NormalDist().inv_cdf(1 - (1 - conf) / 2)
+    p_hat = k / n
+    a = 1.0 + z * z / n
+    b = -(2.0 * p_hat + z * z / n)
+    c = p_hat * p_hat
+    root = sqrt(max(b * b - 4 * a * c, 0.0))
+    q = -0.5 * (b + (root if b >= 0 else -root))
+    r1, r2 = q / a, (c / q if q != 0 else 0.0)
+    return (min(r1, r2), max(r1, r2))
+
+
+@pytest.mark.parametrize("n", [1, 2, 5, 10, 40, 97, 100, 1000, 12345])
+def test_wilson_agrees_with_an_independent_solver(n: int) -> None:
+    """Second witness, across the edges: n = 1, n = 2, k = 0, k = n."""
+    for k in sorted({0, 1, 2, n // 3, n // 2, n - 1, n} & set(range(n + 1))):
+        shipped = wilson(k, n)
+        low, high = _wilson_by_quadratic(k, n)
+        assert float(shipped.low) == pytest.approx(low, abs=1e-9), f"low at k={k}, n={n}"
+        assert float(shipped.high) == pytest.approx(high, abs=1e-9), f"high at k={k}, n={n}"
+
+
 @pytest.mark.parametrize(
     ("positives", "n", "low", "high"),
     [

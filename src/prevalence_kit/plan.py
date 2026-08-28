@@ -6,7 +6,7 @@ that hash is the first link in the ledger chain.
 
 That ordering is the whole point. A plan hashed after the data is seen is a
 description; a plan hashed before is a commitment. Requirement R1, proven by
-tests/test_plan.py::test_hash_does_not_need_the_data.
+tests/test_core.py::test_hash_does_not_need_the_data.
 """
 
 from __future__ import annotations

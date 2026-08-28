@@ -15,7 +15,7 @@ requirements rather than preferences:
     "SHA-256 the seed and the id, sort, take n" is reimplementable in any
     language in a few lines. A Mersenne Twister draw sequence is not.
 
-docs/DECISIONS.md D-17.
+docs/DECISIONS.md D-16.
 """
 
 from __future__ import annotations

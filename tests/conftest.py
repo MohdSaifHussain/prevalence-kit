@@ -19,9 +19,17 @@ from prevalence_kit.plan import Plan
 from prevalence_kit.run import Workspace, do_estimate, do_ingest, do_plan, do_sample
 
 FRAME_SIZE = 200
-POSITIVES = 9  # true prevalence 9/40 in the drawn sample is not fixed; see test_verify
+POSITIVES = 9
 
-PLAN_YAML = {
+BIG_ITEM_INDEX = 0
+"""One sampled item gets deliberately large content, so it seals into several
+chunks. Without it every item is one chunk, an intra-item reorder is not
+expressible, and exit check E9c cannot test what the contract says it tests --
+which is exactly how F-4 stayed green while being wrong."""
+
+BIG_ITEM_CHUNKS = 4
+
+PLAN_YAML: dict[str, Any] = {
     "estimand": {
         "description": "Comments scored toxic by at least half of annotators",
         "label_field": "toxicity",
@@ -64,21 +72,42 @@ def frame_path(tmp_path: Path) -> Path:
 
 
 def write_labels(tmp_path: Path, drawn: list[str], *, positives: int) -> Path:
-    """Label the drawn sample. The first `positives` items are over threshold."""
+    """Label the drawn sample. The first `positives` items are over threshold.
+
+    One item carries content large enough to span several chunks. See
+    BIG_ITEM_INDEX.
+    """
+    from prevalence_kit.seal import CHUNK_BYTES
+
     path = tmp_path / "labels.csv"
+    big = "X" * (CHUNK_BYTES * (BIG_ITEM_CHUNKS - 1) + 17)
     with path.open("w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=["item_id", "toxicity", "content"])
         w.writeheader()
         for i, item_id in enumerate(drawn):
+            # A sentinel, so a leak test has something unmistakable to grep for.
+            content = f"SENTINEL-CONTENT-{item_id}-do-not-print"
+            if i == BIG_ITEM_INDEX:
+                content += big
             w.writerow(
                 {
                     "item_id": item_id,
                     "toxicity": "0.90" if i < positives else "0.10",
-                    # A sentinel, so a leak test has something unmistakable to grep for.
-                    "content": f"SENTINEL-CONTENT-{item_id}-do-not-print",
+                    "content": content,
                 }
             )
     return path
+
+
+def big_item_chunks(ws: Workspace) -> list[Path]:
+    """The chunk files of the deliberately multi-chunk item, in index order."""
+    from prevalence_kit.seal import _chunk_index
+
+    drawn: list[str] = list(ws.read_json("sample.json")["item_ids"])
+    from prevalence_kit.seal import _safe_id
+
+    item_dir = ws.root / "sealed" / _safe_id(drawn[BIG_ITEM_INDEX])
+    return sorted(item_dir.glob("*.bin"), key=_chunk_index)
 
 
 @pytest.fixture

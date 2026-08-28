@@ -18,7 +18,7 @@ from prevalence_kit.plan import Plan
 from prevalence_kit.run import Workspace
 from prevalence_kit.seal import _safe_id
 from prevalence_kit.verify import verify_run
-from tests.conftest import PLAN_YAML, POSITIVES, rewrite_ledger_line
+from tests.conftest import PLAN_YAML, POSITIVES, big_item_chunks, rewrite_ledger_line
 
 # ------------------------------------------------------------ positive control
 
@@ -134,24 +134,55 @@ def test_tampered_sealed_chunk(run: Workspace, plan_path: Path) -> None:
 
 
 def test_dropped_chunk(run: Workspace, plan_path: Path) -> None:
-    """E9b."""
-    next((run.root / "sealed").rglob("*.bin")).unlink()
+    """E9b. Drops the final chunk of the multi-chunk item."""
+    big_item_chunks(run)[-1].unlink()
 
     with pytest.raises(Refusal) as exc:
         verify_run(run, plan_path)
     assert exc.value.reason is Reason.SEAL_TRUNCATED
 
 
-def test_swapped_chunks_between_items(run: Workspace, plan_path: Path) -> None:
-    """E9c at run level. Both chunks authenticate; neither belongs where it sits."""
-    a, b = sorted((run.root / "sealed").rglob("*.bin"))[:2]
-    a_bytes, b_bytes = a.read_bytes(), b.read_bytes()
-    a.write_bytes(b_bytes)
-    b.write_bytes(a_bytes)
+def test_swapped_chunks_within_one_item(run: Workspace, plan_path: Path) -> None:
+    """E9c at run level.
+
+    This is what F-4 was about. Every fixture item used to be a single chunk, so
+    an intra-item reorder was not expressible and this test asserted
+    MANIFEST_MISMATCH while the contract said REORDERED -- green test, wrong
+    document. The fixture now seals one deliberately multi-chunk item, so the
+    check tests what the contract says it tests.
+
+    Every chunk still authenticates. Only the order is wrong.
+    """
+    chunks = big_item_chunks(run)
+    assert len(chunks) >= 2, "the fixture must contain a multi-chunk item"
+    first, second = chunks[0], chunks[1]
+    first_bytes, second_bytes = first.read_bytes(), second.read_bytes()
+    first.write_bytes(second_bytes)
+    second.write_bytes(first_bytes)
 
     with pytest.raises(Refusal) as exc:
         verify_run(run, plan_path)
-    # Single-chunk items, so a cross-item swap is a substitution, not a reorder.
+    assert exc.value.reason is Reason.SEAL_REORDERED
+
+
+def test_swapped_chunks_between_items(run: Workspace, plan_path: Path) -> None:
+    """A chunk from another item authenticates but does not belong here.
+
+    Distinct from the reorder above, and it must stay distinct -- one code for
+    both would tell an operator nothing about what happened.
+    """
+    a, b = (
+        big_item_chunks(run)[0],
+        next(
+            p
+            for p in (run.root / "sealed").rglob("*.bin")
+            if p.parent != big_item_chunks(run)[0].parent
+        ),
+    )
+    a.write_bytes(b.read_bytes())
+
+    with pytest.raises(Refusal) as exc:
+        verify_run(run, plan_path)
     assert exc.value.reason is Reason.SEAL_MANIFEST_MISMATCH
 
 

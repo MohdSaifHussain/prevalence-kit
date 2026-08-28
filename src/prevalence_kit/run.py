@@ -20,11 +20,13 @@ from __future__ import annotations
 
 import csv
 import json
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .canonical import JSONValue, digest, digest_bytes
+from .canonical import JSONValue, canonical, digest, digest_bytes
 from .errors import Reason, Refusal
 from .estimators import Interval, wilson
 from .ledger import Ledger
@@ -33,6 +35,10 @@ from .sampling import draw_srs, sample_record
 from .seal import Manifest, SealedStore
 
 PLAN_ITEM = "__plan__"
+
+_CSV_FIELD_LIMIT = 64 * 1024 * 1024
+"""Largest single CSV field accepted, 64 MiB. Not unbounded -- a runaway file
+should refuse rather than exhaust memory."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,15 +53,28 @@ class Workspace:
     def key_path(self) -> Path:
         return self.root / "seal.key"
 
-    def store(self, *, need_key: bool = True) -> SealedStore:
-        key = self.key_path.read_bytes() if self.key_path.exists() else None
-        if key is None and need_key:
+    def key(self) -> bytes:
+        """The one place the sealing key is read.
+
+        Every path goes through here. `verify` used to read the key file directly
+        and died with a raw FileNotFoundError, which is why F-5's fix to
+        `store()` did not reach it. One reader, one refusal. V-6.
+        """
+        if not self.key_path.exists():
             raise Refusal(
-                Reason.SEAL_TAMPERED,
+                Reason.KEY_MISSING,
                 f"No sealing key at {self.key_path}.",
                 "Without the key nothing can be unsealed. Restore it from wherever you kept it.",
             )
-        return SealedStore(self.root / "sealed", key)
+        return self.key_path.read_bytes()
+
+    def store(self) -> SealedStore:
+        return SealedStore(self.root / "sealed", self.key())
+
+    def plan_store(self) -> SealedStore:
+        """The plan's sealed copy. Write-once: a re-plan must never destroy the
+        copy of the plan that was originally committed to. Layer 4 of V-1."""
+        return SealedStore(self.root / "plan.sealed", self.key(), write_once=True)
 
     def read_json(self, name: str) -> Any:
         path = self.root / name
@@ -89,12 +108,23 @@ def do_plan(ws: Workspace, plan: Plan) -> str:
     is moved or deleted (D-15).
     """
     ws.root.mkdir(parents=True, exist_ok=True)
+
+    # Layer 1: a workspace holds exactly one measurement. Refusing here is
+    # prevention; `verify` refuses independently (Layer 2), because an auditor
+    # may be handed a record this code never wrote.
+    if ws.ledger.read_raw():
+        raise Refusal(
+            Reason.RUN_ALREADY_OPEN,
+            f"{ws.root} already holds a measurement.",
+            "A new measurement is a new workspace. Re-registering a plan over an "
+            "existing run is how a number gets chosen after the results are seen.",
+        )
+
     if not ws.key_path.exists():
         ws.key_path.write_bytes(SealedStore.new_key())
 
     plan_hash = plan.plan_hash
-    sealed = SealedStore(ws.root / "plan.sealed", ws.key_path.read_bytes())
-    manifest = sealed.seal(PLAN_ITEM, json.dumps(plan.as_record(), sort_keys=True).encode("utf-8"))
+    manifest = ws.plan_store().seal(PLAN_ITEM, canonical(plan.as_record()))
 
     ws.ledger.append(
         "plan",
@@ -205,7 +235,7 @@ def _read_labels(path: Path, label_field: str) -> dict[str, tuple[str, str]]:
             if line.strip()
         ]
     else:
-        with path.open(newline="", encoding="utf-8") as fh:
+        with path.open(newline="", encoding="utf-8") as fh, _wide_csv_fields():
             records = list(csv.DictReader(fh))
 
     for r in records:
@@ -217,6 +247,27 @@ def _read_labels(path: Path, label_field: str) -> dict[str, tuple[str, str]]:
             )
         rows[str(r["item_id"])] = (str(r[label_field]), str(r.get("content", "")))
     return rows
+
+
+@contextmanager
+def _wide_csv_fields() -> Iterator[None]:
+    """Let a CSV field hold a whole piece of content.
+
+    `csv` caps a single field at 128 KiB and raises a bare `_csv.Error` past it.
+    Trust & Safety content routinely exceeds that -- a long post, a transcript, a
+    thread -- and this tool chunks content precisely so size is not a limit. A
+    library default is not a reason to refuse an operator's data, and a raw
+    `_csv.Error` is not a refusal.
+
+    Restored afterwards: this is process-global state and this tool does not get
+    to leave it changed for whatever else is running.
+    """
+    previous = csv.field_size_limit()
+    csv.field_size_limit(_CSV_FIELD_LIMIT)
+    try:
+        yield
+    finally:
+        csv.field_size_limit(previous)
 
 
 def content_digest_of(text: str) -> str:
