@@ -16,5 +16,9 @@ RUN R -q -e 'install.packages(c("survey", "jsonlite")); \
 
 WORKDIR /witness
 COPY barnett_table_2b.R /witness/barnett_table_2b.R
+COPY stratified_fixtures.R /witness/stratified_fixtures.R
 
-ENTRYPOINT ["Rscript", "/witness/barnett_table_2b.R"]
+# Default is the anchor. D2.2 is run by naming its script:
+#   docker run ... <image> /witness/stratified_fixtures.R
+ENTRYPOINT ["Rscript"]
+CMD ["/witness/barnett_table_2b.R"]

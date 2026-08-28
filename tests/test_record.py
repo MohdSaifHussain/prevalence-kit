@@ -15,6 +15,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 from types import ModuleType
+from typing import Any
 
 import pytest
 
@@ -320,3 +321,90 @@ def test_the_route_check_notices_an_unrecorded_route(tmp_path: Path) -> None:
     register = "S-2.1 pins survey 4.5 from CRAN and names no mirror.\n"
     route = "https://p3m.dev/cran/__linux__/noble/2026-04-23"
     assert route not in register
+
+
+# ---------------------------------------------------------------------- D2.2
+
+
+def _fixture(name: str) -> dict[str, Any]:
+    import json
+
+    root = Path(__file__).resolve().parents[1]
+    parsed: dict[str, Any] = json.loads(
+        (root / "r" / "fixtures" / name).read_text(encoding="utf-8")
+    )
+    return parsed
+
+
+def test_every_fixture_uses_the_call_barnett_validated() -> None:
+    """The director's D2.2 condition, made checkable instead of promised.
+
+    D2.1 validated exactly one invocation against Barnett's published Table 2B:
+
+        svydesign(ids = ~1, strata = ~stratum, weights = ~w, data = sample_rows)
+
+    with no fpc. The anchor covers the call it tested and no other. If a later
+    deliverable needs a different design -- an fpc, clusters, a different
+    variance form -- Barnett does not cover it and it needs its own anchor
+    recorded before it generates anything.
+
+    Nothing stops that drift except this test.
+    """
+    anchor = _fixture("barnett_table_2b.json")
+    stratified = _fixture("stratified.json")
+
+    validated = anchor["exact_call"]
+    assert validated == ("svydesign(ids = ~1, strata = ~stratum, weights = ~w, data = sample_rows)")
+    assert stratified["validated_call"] == validated
+
+    for entry in stratified["allocation_fixtures"]:
+        assert "fpc" not in str(entry), "an fpc appeared in an allocation fixture"
+    for entry in stratified["estimation_fixtures"]:
+        assert entry["call"] == validated, f"{entry['label']} used a call Barnett did not validate"
+
+
+def test_no_estimator_exists_yet() -> None:
+    """D2.1 and D2.2 produce fixtures and no estimator. R2.2's ordering.
+
+    The fixture has to be committed before the estimator that reproduces it,
+    because a test cannot agree with an implementation for the same wrong reason
+    when the expected value predates the implementation. This asserts the half a
+    git log cannot: that there is nothing to have reproduced them yet.
+
+    Delete this test when D2.3 lands. It is scaffolding with a stated end.
+    """
+    root = Path(__file__).resolve().parents[1]
+    src = root / "src" / "prevalence_kit"
+    assert not list(src.glob("stratified*.py"))
+    assert not list(src.glob("neyman*.py"))
+    estimators = (src / "estimators.py").read_text(encoding="utf-8")
+    assert "def stratified" not in estimators
+    assert "neyman" not in estimators.lower()
+
+
+def test_the_fixtures_record_an_unruled_question() -> None:
+    """Rounded Neyman allocation does not always sum to n. Found by D2.2.
+
+    `rare_event_neyman_5000` asks for 5000 and its rounded allocation sums to
+    4999. Barnett's case sums exactly, so D2.1 never met this.
+
+    The estimator cannot decide alone -- handing the remainder to a stratum
+    rewrites a pre-registered design, which is V-1's class. Pinned as unruled so
+    it cannot be quietly resolved in code.
+    """
+    stratified = _fixture("stratified.json")
+    question = stratified["open_question"]
+    assert question["status"].startswith("UNRULED")
+
+    drifting = []
+    for entry in stratified["allocation_fixtures"]:
+        allocation = entry["result"]["allocation"]
+        if not isinstance(allocation, list):
+            allocation = [allocation]
+        if sum(allocation) != entry["n_total"]:
+            drifting.append(entry["label"])
+
+    assert drifting == ["rare_event_neyman_5000"], (
+        f"expected exactly the known rounding-drift case, got {drifting}. "
+        "If it has gone, the question above may have been resolved in code."
+    )

@@ -1,0 +1,172 @@
+{
+  "what": "R survey fixtures for stratified estimation and Neyman allocation",
+  "deliverable": "D2.2",
+  "produced_by": "r/stratified_fixtures.R",
+  "generated_before_any_estimator": true,
+  "ordering_note": "R2.2: every estimator in D2.3 is written against these numbers, which existed first. A test cannot agree with an implementation for the same wrong reason when the expected value predates the implementation.",
+  "validated_call": "svydesign(ids = ~1, strata = ~stratum, weights = ~w, data = sample_rows)",
+  "call_provenance": "This exact call was validated against Barnett Table 2B in D2.1 (r/barnett_table_2b.R). No fixture here uses any other design. A different design is not covered by that anchor.",
+  "environment": {
+    "image_digest": "sha256:c3f39b365d1077fe24f8e9ab2742e352b6d3950897f51af1624a5bb5550c21c0",
+    "r_version": "R version 4.5.3 (2026-03-11)",
+    "survey_version": "4.5",
+    "cran_snapshot": "https://p3m.dev/cran/__linux__/noble/2026-04-23"
+  },
+  "standards": {
+    "allocation": "S-1.2 Neyman (1934); S-1.3 Cochran 3rd ed.; reproduction anchor S-2.3",
+    "variance": "with replacement, no finite-population correction (S-2.3)",
+    "estimation": "S-2.1 R survey 4.5"
+  },
+  "open_question": {
+    "id": "Q4 (proposed)",
+    "title": "Rounded Neyman allocation does not always sum to n",
+    "found_by": "D2.2 fixture generation, 2026-08-29",
+    "evidence": "rare_event_neyman_5000: raw 3844.9/883.9/270.2 rounds to 3845/884/270, which sums to 4999 against a requested 5000. Barnett's case sums exactly, so D2.1 did not surface this.",
+    "why_it_needs_a_ruling": "The estimator cannot decide alone. Handing the remainder to a stratum changes a pre-registered design after the operator wrote it, which is V-1's class. Refusing costs an operator a usable plan over one unit. Reporting the sample at its true size is honest but silently delivers less than was asked.",
+    "status": "UNRULED -- no code until the director rules"
+  },
+  "allocation_fixtures": [
+    {
+      "label": "barnett_neyman_4000",
+      "note": "The D2.1 anchor, carried forward as an allocation fixture. Reproduces Barnett Table 2B exactly.",
+      "method": "neyman",
+      "strata": ["lowest_risk", "low_risk", "middle_risk", "high_risk", "no_score"],
+      "W_h": [0.8, 0.1, 0.05, 0.01, 0.04],
+      "p_h": [0.0005, 0.005, 0.01, 0.05, 0.0025],
+      "n_total": 4000,
+      "result": {
+        "raw": [2098.4952375109679, 827.63365408896232, 583.75310173251557, 255.73396040354118, 234.38404626401342],
+        "allocation": [2098, 828, 584, 256, 234]
+      }
+    },
+    {
+      "label": "barnett_proportional_4000",
+      "note": "Same frame, proportional allocation. The contrast that shows what Neyman buys: it moves sample into the high-variance strata.",
+      "method": "proportional",
+      "strata": ["lowest_risk", "low_risk", "middle_risk", "high_risk", "no_score"],
+      "W_h": [0.8, 0.1, 0.05, 0.01, 0.04],
+      "p_h": [0.0005, 0.005, 0.01, 0.05, 0.0025],
+      "n_total": 4000,
+      "result": {
+        "raw": [3200, 400, 200, 40, 160],
+        "allocation": [3200, 400, 200, 40, 160]
+      }
+    },
+    {
+      "label": "two_stratum_neyman_1000",
+      "note": "The smallest case worth pinning. Hand-checkable.",
+      "method": "neyman",
+      "strata": ["low", "high"],
+      "W_h": [0.9, 0.1],
+      "p_h": [0.001, 0.2],
+      "n_total": 1000,
+      "result": {
+        "raw": [415.5999611892816, 584.40003881071834],
+        "allocation": [416, 584]
+      }
+    },
+    {
+      "label": "rare_event_neyman_5000",
+      "note": "The regime this tool exists for. Every stratum rate below 1%, which is where the interval choice in S-1.1 matters most.",
+      "method": "neyman",
+      "strata": ["bulk", "flagged", "appealed"],
+      "W_h": [0.95, 0.04, 0.01],
+      "p_h": [0.0002, 0.006, 0.008999999999999999],
+      "n_total": 5000,
+      "result": {
+        "raw": [3845.4103578986151, 884.25257088950093, 270.33707121188434],
+        "allocation": [3845, 884, 270]
+      }
+    }
+  ],
+  "q2_floor_case": {
+    "note": "Neyman allocates fewer than 2 units to stratum 2. Zero within-stratum degrees of freedom, so its variance contribution is undefined. ALLOCATION_TOO_THIN refuses here.",
+    "W_h": [0.98, 0.02],
+    "p_h": [0.05, 0.0001],
+    "n_total": 300,
+    "raw": [299.71935959700255, 0.2806404029974065],
+    "allocation": [300, 0]
+  },
+  "estimation_fixtures": [
+    {
+      "label": "barnett_design",
+      "note": "Barnett's allocation, with the nearest whole number of positives to each rate.",
+      "call": "svydesign(ids = ~1, strata = ~stratum, weights = ~w, data = sample_rows)",
+      "strata": ["lowest_risk", "low_risk", "middle_risk", "high_risk", "no_score"],
+      "W_h": [0.8, 0.1, 0.05, 0.01, 0.04],
+      "n_h": [2098, 828, 584, 256, 234],
+      "k_h": [1, 4, 6, 13, 1],
+      "p_hat_h": [0.0004766444232602478, 0.004830917874396135, 0.01027397260273973, 0.05078125, 0.004273504273504274],
+      "n_total": 4000,
+      "estimate": 0.00205685862712497,
+      "se": 0.0005433798399276388,
+      "ci_lower_95": 0.000991853710941658,
+      "ci_upper_95": 0.003121863543308281,
+      "df": 3995
+    },
+    {
+      "label": "two_stratum_balanced",
+      "note": "Small and hand-checkable. Both strata well inside the interval's comfort zone.",
+      "call": "svydesign(ids = ~1, strata = ~stratum, weights = ~w, data = sample_rows)",
+      "strata": ["low", "high"],
+      "W_h": [0.9, 0.1],
+      "n_h": [500, 500],
+      "k_h": [25, 100],
+      "p_hat_h": [0.05, 0.2],
+      "n_total": 1000,
+      "estimate": 0.065,
+      "se": 0.008961619342645858,
+      "ci_lower_95": 0.04743554884525661,
+      "ci_upper_95": 0.0825644511547434,
+      "df": 998
+    },
+    {
+      "label": "rare_event",
+      "note": "Low prevalence throughout -- the regime the intervals were chosen for.",
+      "call": "svydesign(ids = ~1, strata = ~stratum, weights = ~w, data = sample_rows)",
+      "strata": ["bulk", "flagged", "appealed"],
+      "W_h": [0.95, 0.04, 0.01],
+      "n_h": [3000, 1500, 500],
+      "k_h": [3, 12, 7],
+      "p_hat_h": [0.001, 0.008, 0.014],
+      "n_total": 5000,
+      "estimate": 0.00141,
+      "se": 0.0005584530037327809,
+      "ci_lower_95": 0.0003154522256255375,
+      "ci_upper_95": 0.002504547774374463,
+      "df": 4997
+    },
+    {
+      "label": "one_stratum_zero_positives",
+      "note": "A stratum with no positives at all. Its within-stratum variance is zero, so it contributes nothing to the SE -- which is correct and surprising, and is why this is pinned.",
+      "call": "svydesign(ids = ~1, strata = ~stratum, weights = ~w, data = sample_rows)",
+      "strata": ["clean", "dirty"],
+      "W_h": [0.7, 0.3],
+      "n_h": [400, 200],
+      "k_h": [0, 18],
+      "p_hat_h": [0, 0.09],
+      "n_total": 600,
+      "estimate": 0.027,
+      "se": 0.0060860661354462,
+      "ci_lower_95": 0.01507152956699658,
+      "ci_upper_95": 0.03892847043300342,
+      "df": 598
+    },
+    {
+      "label": "minimum_viable_stratum",
+      "note": "Two units in one stratum -- exactly Q2's floor. One unit would leave its variance undefined; two is the smallest that works.",
+      "call": "svydesign(ids = ~1, strata = ~stratum, weights = ~w, data = sample_rows)",
+      "strata": ["bulk", "tiny"],
+      "W_h": [0.99, 0.01],
+      "n_h": [998, 2],
+      "k_h": [40, 1],
+      "p_hat_h": [0.04008016032064128, 0.5],
+      "n_total": 1000,
+      "estimate": 0.04467935871743487,
+      "se": 0.007926006457044077,
+      "ci_lower_95": 0.02914467152039657,
+      "ci_upper_95": 0.06021404591447317,
+      "df": 998
+    }
+  ]
+}
