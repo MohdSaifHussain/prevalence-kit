@@ -178,20 +178,35 @@ The sealing cipher is **Fernet** (`cryptography` 50.0.1): AES-128-CBC with PKCS7
 HMAC-SHA256 authentication, IVs from `os.urandom()`. The official documentation states its
 limitation plainly: *"Fernet is ideal for encrypting data that easily fits in memory."*
 
-**We answer that by chunking**, and the honest consequences are:
+**We answer that by chunking, plus an ordered chunk-digest manifest bound into the ledger**
+(decision D-14). The honest position, narrowed to what is actually true:
 
-- Each chunk is an independently authenticated Fernet token. Tampering with any chunk is
-  detected, but it is detected **per chunk**, not across the whole item.
+**Detected:**
+
+- Tampering with any chunk — Fernet authentication fails → `SEAL_TAMPERED`
+- **Truncation** — chunks dropped from the end → `SEAL_TRUNCATED`
+- **Reordering** — chunks swapped → `SEAL_REORDERED`
+- **Substitution** — a chunk replaced with a validly-sealed chunk from elsewhere →
+  `SEAL_MANIFEST_MISMATCH`
+
+Fernet authenticates each chunk individually; the **manifest and count**, bound into the ledger
+entry, authenticate the sequence. Order and completeness tampering is **detected at `verify`**,
+with a distinct reason code per failure mode.
+
+**Still not protected:**
+
 - **Chunk count and chunk sizes leak an approximate plaintext length.** Sealing hides content,
-  not size. An observer with the sealed store can tell a long item from a short one.
-- Chunk **ordering and completeness** are protected by the ledger hash chain, not by Fernet
-  itself. A reordered or truncated chunk sequence is caught by `verify`, not by decryption.
+  not size. An observer with the sealed store can tell a long item from a short one. This is a
+  real limit and it is not fixable by the manifest.
 
 **Why Fernet and not a streaming AEAD.** `cryptography` 50.0.0 (2026-07-31) added Cobblestone-128,
 a streaming authenticated cipher that would remove the size limit natively and bind ciphertext to
 a context string. It was **considered and rejected on soak time**: four weeks old at the decision
 date, and a tool about auditability anchors on reviewed, aged primitives. If context binding is
 later needed, it is achievable via AES-GCM AAD. Full reasoning: `docs/DECISIONS.md` D-9.
+
+**Having declined the specification that solves whole-message integrity, we carry that obligation
+ourselves.** The manifest above is the cost of that choice, paid rather than deferred. D-14.
 
 ### 3.8 It is not a moderation or enforcement system
 

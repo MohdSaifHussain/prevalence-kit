@@ -256,6 +256,72 @@ is stable in the literal sense.
 
 ---
 
+---
+
+## D-14 — Sealed chunks carry an ordered digest manifest, bound into the ledger
+
+**Date:** 2026-08-28 · **Made in:** Phase 1 contract approval, director's binding addition ·
+**Ruled by:** director
+
+Every seal record carries an **ordered chunk-digest manifest** and a **total chunk count**. The
+manifest is bound into the ledger entry for that ingest step. `verify` checks it.
+
+**Reason, as ruled.** SECURITY §3.7 stated a limit — Fernet authenticates per chunk, not across the
+whole item — and stating a limit is not answering it. Chunk **truncation** and chunk **reordering**
+become detectable defects with named reason codes rather than acknowledged weaknesses.
+
+**Cross-reference to D-9, and it is the point of this entry.** We declined Cobblestone-128, which
+implements the C2SP chunked-encryption specification and solves whole-message integrity natively.
+**Having declined the spec that solves this, we carry the obligation ourselves.** D-14 is the cost
+of D-9, paid rather than deferred.
+
+**How the three failure modes are told apart.** The manifest is an ordered list of chunk digests
+plus a count. On `verify`:
+
+| Observation | Reason code |
+|---|---|
+| A chunk fails Fernet authentication | `SEAL_TAMPERED` |
+| Chunk count is less than the manifest count | `SEAL_TRUNCATED` |
+| Count matches, order differs, but the **multiset** of digests still matches the manifest | `SEAL_REORDERED` |
+| Count matches and a digest is absent from the manifest multiset | `SEAL_MANIFEST_MISMATCH` |
+
+The multiset comparison is what discriminates a reorder from a substitution. Without it, both look
+like "digest at position *i* is wrong", and a single reason code covering both would be exactly the
+undifferentiated refusal doctrine rule 5 forbids.
+
+**What this does not fix.** Chunk count and chunk sizes still leak approximate plaintext length.
+Sealing hides content, not size. That limit stays in SECURITY §3.7, narrowed to what is actually
+true.
+
+---
+
+## D-15 — The plan is checked twice: sealed copy, and the working file if it still exists
+
+**Date:** 2026-08-28 · **Made in:** answering the director's E2-complement question ·
+**Reason: builder's finding, surfaced pre-build**
+
+At genesis, `plan` does two things: it hashes the canonicalised plan, and it **seals a copy of the
+plan into the store**. `verify` then performs two independent checks:
+
+| Check | Runs when | Fails with |
+|---|---|---|
+| (a) The sealed plan copy's digest matches the genesis hash in the ledger | **always** | `PLAN_HASH_MISMATCH` |
+| (b) The working plan file on disk re-canonicalises to the genesis hash | only if the file still exists | `PLAN_HASH_MISMATCH` |
+
+**Why both are needed, and this is the finding.** Check (b) alone cannot survive E6 — the exit check
+that deletes the original inputs and requires `verify` to reproduce from the sealed record alone. If
+the plan lives only on disk, then the plan is *not* reproducible from the sealed record, and R5 is
+false. Check (a) alone cannot catch a post-ingest edit to the working file, because the sealed copy
+is immutable and would keep verifying while the file the operator is actually reading has changed.
+
+**A missing working plan file is not a failure.** Check (b) is skipped and `verify` reports it
+skipped, in words, in its output. Silence there would let an operator believe both checks ran.
+
+**Alternative not taken.** Re-hashing only the on-disk plan — simpler, and it was the drafted
+behaviour implied by exit check E8. Rejected: it makes R5 unprovable.
+
+---
+
 ## Carried obligations opened by these decisions
 
 | # | Obligation | Owner | Opened by |
@@ -263,3 +329,5 @@ is stable in the literal sense.
 | O-8 | Rogan–Gladen cannot be cross-checked against either library. Validate against the published worked results in Lang & Reiczigel (2014). | Phase 2 | D-3 |
 | O-9 | Implement and test Fernet chunking for content larger than memory; assert the chunk boundary behaviour. | Phase 1 | D-9 |
 | O-10 | README must credit `svy` explicitly as the estimator layer. Assert by overclaim scanner. | Phase 3 | D-4 |
+| O-11 | Chunk-digest manifest bound into the ledger; `verify` discriminates tamper / truncate / reorder / substitute by distinct reason code. | Phase 1 | **D-14** |
+| O-12 | `verify` states in words when the on-disk plan check was skipped because the file is absent. | Phase 1 | **D-15** |

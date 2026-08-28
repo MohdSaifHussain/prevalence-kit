@@ -1,7 +1,7 @@
 # Phase 1 contract — the proof slice
 
-**Status: PROPOSED. Not approved.**
-Building starts when the director approves this contract. Not before.
+**Status: APPROVED — 28 August 2026, with one binding addition (D-14) ruled in.**
+Building is authorised. The addition and the E2-complement answer are marked ▸ **AMENDED** below.
 
 | | |
 |---|---|
@@ -39,6 +39,7 @@ Each names the top standard it must follow, from `docs/STANDARDS.md`.
 | D1.2 | **Pre-registration hash.** The plan is canonicalised and hashed **before any data file is opened**. The hash is the chain's genesis block. | S-5.3 (SHA-256, FIPS 180-4 — to be pinned, O-1) |
 | D1.3 | **Hash-chained ledger.** Append-only. Every step links to the previous. Each entry records step, timestamp, inputs by digest, outputs by digest. | S-5.3 · Charter §5.5 |
 | D1.4 | **Sealed store.** Fernet, chunked. Encrypt on ingest. Safe preview only — length, digest, harm flags. Explicit, logged unseal. | S-5.1 · D-9 · SECURITY §3.7 |
+| D1.4b ▸ **AMENDED** | **Ordered chunk-digest manifest + total chunk count**, bound into the ledger entry for the ingest step. `verify` checks it. Truncation, reordering and substitution become detectable defects with distinct reason codes. | **D-14** · SECURITY §3.7 |
 | D1.5 | **`sample` — simple random sampling.** Deterministic under a recorded seed. Same seed, same sample, byte-identical, asserted. | Charter §4 `sample` |
 | D1.6 | **`estimate` — Wilson interval.** Point estimate and 95% interval for a proportion. | **S-1.1** Brown, Cai & DasGupta (2001), DOI `10.1214/ss/1009213286` |
 | D1.7 | **`verify` — the whole chain.** Re-check plan hash, sample determinism, ledger integrity, and reproduce the estimate from the sealed record alone. | Charter §5.5 |
@@ -51,6 +52,7 @@ Each names the top standard it must follow, from `docs/STANDARDS.md`.
 | D1.14 | **Tripwire check script.** TW-1, TW-2, TW-3 — all three are scriptable. | Discharges **O-2** · `docs/TRIPWIRES.md` |
 | D1.15 | **Package scaffolding.** `pyproject.toml`, hash-locked dependencies, ruff, mypy strict, pytest, CI on 3.12 / 3.13 / 3.14. | **S-6** · D-10 |
 | D1.16 | **Synthetic fixture generator.** Reproducible, seeded, with a known true proportion. | — |
+| D1.17 ▸ **AMENDED** | **Sealed copy of the plan**, so `verify` can check the plan without the working file, plus the on-disk re-hash when the file is present. | **D-15** |
 
 ## 3. Requirements
 
@@ -81,6 +83,20 @@ says nothing about the other. `mypy` in strict mode.
 asserts its presence and that it carries the charter's §8 limits verbatim, including the
 sampling-only interval caveat.
 
+**R9 ▸ AMENDED — the chunk sequence is authenticated, not just each chunk.** Fernet authenticates
+chunks individually. The **manifest and count**, bound into the ledger, authenticate the sequence.
+`verify` must discriminate four distinct failure modes by reason code, not collapse them into one.
+The discriminator is a **multiset** comparison: if the count matches, the order differs, and the
+multiset of digests still matches the manifest, that is a reorder; if a digest is absent from the
+multiset, that is a substitution. Without the multiset step both look like "digest at position *i*
+is wrong", and one code covering both is exactly the undifferentiated refusal doctrine rule 5
+forbids. *(D-14.)*
+
+**R10 ▸ AMENDED — the plan is checked twice, and a skipped check is stated out loud.** `verify`
+checks the sealed plan copy against the genesis hash **always**, and the working plan file on disk
+**when it exists**. When the on-disk check is skipped because the file is absent, `verify` says so
+in words in its output. Silence would let an operator believe both checks ran. *(D-15.)*
+
 **R8 — Plain English.** Error messages and report text follow the charter's writing rule. Every
 refusal message says what went wrong and what to do about it.
 
@@ -93,11 +109,14 @@ Each gets a distinct reason code, a negative control, and a positive control.
 | `PLAN_HASH_MISMATCH` | The plan changed after the chain started |
 | `LEDGER_BROKEN` | A ledger link does not match its predecessor's digest |
 | `SEAL_TAMPERED` | A sealed chunk fails Fernet authentication |
-| `SEAL_INCOMPLETE` | Chunk sequence is reordered, truncated, or missing (caught by the ledger, per SECURITY §3.7) |
+| `SEAL_TRUNCATED` ▸ **AMENDED** | Fewer chunks present than the manifest count |
+| `SEAL_REORDERED` ▸ **AMENDED** | Count matches, order differs, digest multiset still matches the manifest |
+| `SEAL_MANIFEST_MISMATCH` ▸ **AMENDED** | A chunk digest is absent from the manifest multiset — substitution |
 | `SEED_MISSING` | The plan has no recorded seed, so the sample could not be redrawn |
 | `ESTIMATE_MISMATCH` | `verify` recomputes a different estimate than the one recorded |
 | `LABELS_UNMATCHED` | Labels do not correspond one-to-one with the drawn sample |
 | `EMPTY_SAMPLE` | n = 0 — no interval is defined |
+| `PLAN_MISSING` ▸ **AMENDED** | The sealed plan copy is absent, so check (a) of D-15 cannot run. *(A missing **working** plan file is not a failure — see R10.)* |
 
 ## 5. Out of scope for Phase 1
 
@@ -149,8 +168,12 @@ Expected results are stated **in advance**, including exit codes.
 | E5 | `verify` | **Exit 0.** Prints each link checked. |
 | E6 | Delete the original input file, rerun `verify` | **Exit 0.** Proves R5 — it reproduces from the sealed record alone. |
 | E7 | Edit one byte in the ledger, rerun `verify` | **Non-zero exit. Reason code `LEDGER_BROKEN`.** Not a stack trace. |
-| E8 | Edit one label in the plan, rerun `verify` | **Non-zero exit. Reason code `PLAN_HASH_MISMATCH`.** |
+| E8 ▸ **CORRECTED** | Edit **any field in the plan file** — the estimand, the seed, the population — then rerun `verify` | **Non-zero exit. Reason code `PLAN_HASH_MISMATCH`.** *(The drafted wording said "edit one label in the plan". Plans contain no labels. Builder's drafting defect, corrected.)* |
+| E8b ▸ **AMENDED** | Run the **full chain through ingest and estimate first**, and only **then** edit the plan file. Rerun `verify`. | **Non-zero exit. Reason code `PLAN_HASH_MISMATCH`.** Post-ingest edits are covered — see §7b. |
+| E8c ▸ **AMENDED** | Delete the working plan file, rerun `verify` | **Exit 0**, and the output **says in words** that the on-disk plan check was skipped. Proves R10. |
 | E9 | Edit one byte in a sealed chunk, rerun `verify` | **Non-zero exit. Reason code `SEAL_TAMPERED`.** |
+| E9b ▸ **AMENDED** | **Drop the final chunk** of a sealed item, rerun `verify` | **Non-zero exit. Reason code `SEAL_TRUNCATED`.** |
+| E9c ▸ **AMENDED** | **Swap two chunks** of a sealed item, rerun `verify` | **Non-zero exit. Reason code `SEAL_REORDERED`.** Distinct from E9 and E9b. |
 | E10 | `grep -ri "<sentinel string>"` across every output artifact | **No matches.** Proves R4. |
 | E11 | `pytest -q` | All pass. Every refusal has both controls. |
 | E12 | `ruff check . && ruff format --check . && mypy --strict src` | All clean. Both ruff halves. |
@@ -158,8 +181,36 @@ Expected results are stated **in advance**, including exit codes.
 | E14 | Run `tools/check_claims.py --selftest` | Passes, and demonstrates it catches a planted mismatch. |
 | E15 | Run the tripwire script | Reports TW-1/2/3 against the 2026-08-28 baselines. |
 
-**E7, E8, E9 and E13 are the ones that matter most.** They are the phase's real product: gates that
-demonstrably refuse, for named and distinct reasons.
+**E7, E8, E9, E9b, E9c and E13 are the ones that matter most.** They are the phase's real product:
+gates that demonstrably refuse, for named and **distinct** reasons. E9, E9b and E9c must produce
+**three different reason codes** — if any two collapse into one, the gate has not been built.
+
+---
+
+## 7b. E2 complement — are post-ingest plan edits covered by E8?
+
+**Asked by the director at approval. Answer: yes, and here is why — plus one thing that was not
+covered until D-15.**
+
+The genesis hash is fixed when `plan` runs. `verify` recomputes the plan hash and compares. **The
+timing of an edit does not change the mechanism** — an edit before ingest, after ingest, or after
+the report is emitted all produce the same recomputed-hash mismatch and the same reason code. So
+E8 covers post-ingest edits, and **E8b pins that with an actual check.**
+
+*The director's instruction was "if yes, state it in the contract". E8b is added beyond that
+instruction, and this note flags it as the builder's choice so it can be struck. The reason is
+doctrine rule 14: a lesson that lives only in prose will not hold. "Timing does not matter" is a
+claim about behaviour, and a claim about behaviour should be a test.*
+
+**What answering this turned up, and it is a real finding.** Re-hashing only the on-disk plan — the
+behaviour the drafted E8 implied — **cannot survive E6**, the check that deletes the original inputs
+and requires `verify` to reproduce from the sealed record alone. If the plan exists only on disk,
+the plan is not part of the sealed record and **R5 is false**. Conversely, checking only a sealed
+copy would keep verifying while the file the operator actually reads has been edited.
+
+Hence **D-15: check both.** The sealed copy always; the working file when it exists; and say so
+when the second is skipped. This changed D1.2 and D1.7 before any code was written, which is what
+the question was worth.
 
 ## 8. Tier re-ask — a named deliverable of this phase
 
@@ -186,6 +237,8 @@ running.
 | O-2 | Build the tripwire check script | Phase 0 |
 | O-7 | Build the claim-search checker with a selftest | Phase 0 |
 | O-9 | Implement and test Fernet chunking; assert chunk-boundary behaviour | D-9 |
+| O-11 ▸ **AMENDED** | Chunk-digest manifest bound into the ledger; four distinct reason codes | **D-14** |
+| O-12 ▸ **AMENDED** | `verify` states in words when the on-disk plan check was skipped | **D-15** |
 | — | Document concretely where the sealing key lives, for SECURITY §3.1 | Phase 0 |
 
 Each is reported at close as **discharged**, or as **unmet with a named blocker**. A partial counted
@@ -207,7 +260,20 @@ as a pass is how an obligation quietly stops constraining anything.
 
 ## Approval
 
-- [ ] Director approves this contract
-- [ ] Numbered questions, if any, ruled
+- [x] Director approves this contract — **28 August 2026**
+- [x] Binding addition ruled in — chunk-digest manifest, E9b, E9c, SECURITY §3.7 narrowed → **D-14**
+- [x] E2 complement answered — §7b, and it produced **D-15**
+- [x] Review stop placement, E13 httpx guard-proof, tier re-ask — approved as drafted
 
-**No code is written until the first box is ticked.**
+**Director's addition, verbatim:**
+
+> §3.7's per-chunk authentication limit must be answered structurally, not only stated.
+> Requirement: each seal record carries an ordered chunk-digest manifest + total chunk count; the
+> manifest is bound into the ledger entry; verify checks it. Chunk truncation and chunk reordering
+> become detectable defects with named reason codes. Add exit checks: E9b (drop final chunk -> named
+> reason, nonzero exit), E9c (swap two chunks -> named reason, nonzero exit). SECURITY.md §3.7
+> narrows accordingly: size leaks (stated limit); order/count tampering is DETECTED at verify.
+> Record as a decision with the Cobblestone rejection (D-9) cross-referenced: having declined the
+> spec that solves this, we carry the obligation ourselves.
+
+**Build authorised 2026-08-28.**
