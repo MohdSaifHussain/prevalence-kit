@@ -134,6 +134,9 @@ breaches it is a deviation to be recorded, not absorbed.
 - `emit-dsa` — an emitter shaped to the 2024/2835 Annex I template
 - Beta-Binomial upper bounds for very low prevalence
 - Label-quality gates as a fuller module (kappa / alpha)
+- **Per-stratum sensitivity/specificity for Rogan–Gladen** — deferred by name, Phase 2 Q1. The
+  corrected variance under stratification has **no published anchor** in `docs/STANDARDS.md`, so
+  nothing could witness it. It needs its own anchor before it can be built.
 - **eval-bridge** — explicitly gated. No code before a dedicated prior-art sweep of Inspect AI,
   promptfoo, LangSmith, Braintrust, W&B Weave, Arize Phoenix and OpenAI evals. That seam is crowded
   and the gap is unverified.

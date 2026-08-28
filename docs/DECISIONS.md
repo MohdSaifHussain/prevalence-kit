@@ -724,6 +724,32 @@ right -- and that was luck, not design. `docs/CORRECTIONS.md` V-14.
 
 ---
 
+---
+
+## D-26 - The Docker pin stands; a reversal was issued and withdrawn
+
+**Date:** 2026-08-29 - **Made in:** the director's Phase 2 approval - **Ruled by:** director
+
+The R witness runs in a **digest-pinned image**:
+`rocker/r-ver@sha256:c3f39b365d1077fe24f8e9ab2742e352b6d3950897f51af1624a5bb5550c21c0`
+(tag `4.5.3`, pushed 2026-06-24). `docs/STANDARDS.md` S-2.1a.
+
+**Recorded because a reader of the register should not later find a ruling that contradicts it with
+no trace of how it resolved.** After the pin was committed, the director was asked why not install R
+locally. With the choice still open the reviewer said local was fine and simpler, and it does clear
+the same bar: recorded versions, committed script, committed fixture, regenerable by a stranger.
+That reversal reached the builder after the work was done, and **the director withdrew it.**
+
+**Two reasons, in the director's order.** Reversing verified, committed work to reach an equally good
+outcome is churn. And the digest pin is the more reproducible of the two: a local install means *it
+worked on my machine*, which is the claim this project exists to stop making.
+
+**Why a digest and not a tag.** `rocker/r-ver:4.5` and `:4.5.3` resolve to the same image today.
+`4.5` is a moving pointer and will not tomorrow. **A truncated digest is not a pin either - it is a
+prefix**, the same class as `_safe_id` in F-7, so the full 64 hex characters are in the register.
+
+---
+
 ## Carried obligations opened by these decisions
 
 | # | Obligation | Owner | Opened by |

@@ -1,7 +1,7 @@
 # Phase 2 contract — the honest-statistics layer
 
-**Status: PROPOSED. Not approved.**
-Building starts when the director approves this contract. Not before.
+**Status: APPROVED — 29 August 2026. Q1, Q2 and Q3 ruled.**
+Code begins after the push and the CI report. See O-16 and O-17 in §10.
 
 | | |
 |---|---|
@@ -95,7 +95,7 @@ Each names the top standard it must follow.
 | D2.10 | Measure how far `svy`'s design-based Wilson diverges from the textbook interval at small *n* | **O-13** |
 | D2.11 | CI wiring: fixtures in the gate, R image pinned by digest | S-6 toolchain |
 | **D2.12** | **T-1.** Close every discharged correction, each naming the commit that discharged it | Tier trim, ruled 2026-08-29 |
-| **D2.13** | **T-2.** Apply the decision-entry rule to the log, and state it in `docs/DECISIONS.md` | Tier trim, ruled 2026-08-29 |
+| **D2.13** | **T-2.** Apply the decision-entry rule to the log, and state it in `docs/DECISIONS.md`. **The rule governs choices the builder makes alone. A question put to the director and ruled is recorded because it was ruled, whatever its operator visibility.** Without that line, Q3 — same CLI, same codes, invisible to an operator — would be suppressed by the first rule written to shrink the log, which is the one thing it must never do. | Tier trim, ruled 2026-08-29 |
 | D2.14 | Extend `check_claims` to the new artifacts (fixtures directory, R script) | D-23's stated limit |
 | D2.15 | Discharge or restate O-3, O-14, O-15 | rule 11 |
 
@@ -160,6 +160,7 @@ Each gets a distinct code, both controls, and a message that says what to do.
 | `STRATUM_EMPTY` | A stratum is defined but contains no frame units |
 | `ALLOCATION_IMPOSSIBLE` | Neyman allocation cannot be satisfied — e.g. a stratum's allocation exceeds its size |
 | `STRATA_UNDEFINED` | `design: stratified` with no strata definition |
+| `ALLOCATION_TOO_THIN` | Neyman allocated fewer than 2 units to a stratum — zero within-stratum degrees of freedom, so its variance contribution is undefined. Q2 |
 
 *Under D-22, `STRATUM_UNSAMPLED` and `STRATUM_EMPTY` are separate because they send the operator to
 different artifacts: the sample, versus the frame.*
@@ -254,6 +255,9 @@ exists so that is a scheduled decision rather than a remembered intention.
 | O-13 | Measure the `svy` Wilson divergence at small *n* | D-18 |
 | O-14 | Keyless structural audit mode | V-10 |
 | O-15 | Ledger schema version, **only if** an old run and an API-created run need different advice | D-25 |
+| **O-16** | **R2's cross-version determinism is asserted only by CI, and CI has never run.** All 222 tests have run on Python 3.14.0 alone. Blocker: no remote. | Phase 1 close |
+| **O-17** | **`.github/workflows/gate.yml` has never executed** — verified by reading, in a project whose doctrine says a gate that has only ever passed is a decoration. Blocker: no remote. | Phase 1 close |
+| **O-18** | **Decide whether `OJ_L_202402835_EN_TXT.pdf` ships in a public repository**, with the EUR-Lex reuse terms **checked rather than assumed**, and the option of a version-locked URL plus its recorded sha256 instead. | Phase 3 |
 
 Each reported at close as **discharged**, or **unmet with a named blocker**.
 
@@ -278,10 +282,13 @@ differs by stratum — a high-risk stratum may be reviewed more carefully than a
 | B | Optional per-stratum, falling back to the global pair | More faithful; more surface, more refusals, more to validate — and **no published anchor** for the stratified-corrected variance. |
 | C | Per-stratum required when stratified | Most faithful, least usable: an operator who cannot produce five Se/Sp pairs cannot use the correction at all. |
 
-**Recommendation: A.** B's variance propagation under stratification has no anchor in this project's
-standards register, and R2.3 would have nothing to check it against. Adding an estimator we cannot
-witness would undo §2's whole argument. Record B in NEXT with the note that it needs its own
-anchor first.
+**RULED: A.** The director's grounds are the charter's own §5.4 -- a method that cannot be
+validated against an authoritative reference does not ship. Per-stratum corrected variance has no
+anchor in the register, so R2.3 would have nothing to check it against. Adding an estimator we
+cannot witness would undo §2's argument in the same phase that makes it.
+
+**B goes into the NEXT queue by name**, so it is visible as deferred rather than absent. *An option
+nobody wrote down is not deferred; it is forgotten.* It needs its own published anchor first.
 
 ### Q2 — Does `sample` refuse or warn when Neyman allocation gives a stratum fewer than 2 units?
 
@@ -295,9 +302,17 @@ understated.
 | B | Allocate a floor of 2 per stratum automatically and record the adjustment | Silently changes the design the operator pre-registered. |
 | C | Allow it, and refuse at `estimate` time | The operator has already paid for the labels. |
 
-**Recommendation: A.** It fails before money is spent, and B changes a pre-registered design
-silently — the exact thing V-1 was about. Barnett's five-stratum example allocates 234 to its
-smallest, so the realistic case is unaffected.
+**RULED: A**, with the statistical reason **in the operator message, not only in the code.**
+
+> A stratum allocated one unit has **zero degrees of freedom within that stratum**, so its variance
+> contribution is undefined. That is why two is the floor.
+
+An operator told *"stratum 3 was allocated 1 unit; a stratum needs at least 2 for its variance to be
+defined"* can fix the plan. One told only that it was refused will guess. New code
+`ALLOCATION_TOO_THIN`, both controls, naming the stratum and its allocation.
+
+It fails before the label budget is spent, and labels are the expensive resource in this whole tool.
+Auto-flooring silently rewrites a pre-registered design, which is V-1's class exactly.
 
 ### Q3 — Does Phase 2 keep SRS working unchanged, or fold it into the stratified path as a one-stratum case?
 
@@ -306,14 +321,27 @@ smallest, so the realistic case is unaffected.
 | **A** | **Keep SRS as its own path.** Stratified is separate code. | Phase 1's 222 tests keep testing what they tested. Some duplication between the two estimators. |
 | B | SRS becomes "stratified with one stratum" | Less code, one path to validate. **Every Phase 1 SRS test now exercises a rewritten path**, so a Phase 1 guarantee could regress without any test changing — the C-15 class, at the scale of the whole estimator. |
 
-**Recommendation: A.** B is more elegant and quietly re-opens a closed phase's guarantees. If the
-duplication becomes real, unify it in Phase 3 when both paths have external witnesses.
+**RULED: A.** The director looked for a third option before agreeing, and found one worth
+recording.
+
+**Alternative not taken:** fold, *but pin the current path's byte output as recorded values first*,
+so a fixture proves equivalence rather than the tests assuming it. The codebase already has that
+pattern in `test_draw_pinned_against_a_recorded_value`. It turns a risk judgment into a checkable
+condition, which is rule 14.
+
+Still ruled separate: the elegance is worth less than the phase boundary, and Phase 2 is already the
+largest phase in this build.
+
+**The condition under which this answer changes, stated now rather than reconstructed later: if a
+bug is ever fixed in one path and not the other, that is the day to revisit.**
 
 ---
 
 ## Approval
 
-- [ ] Director approves this contract
-- [ ] Q1, Q2, Q3 ruled
+- [x] Director approves this contract — **29 August 2026**
+- [x] Q1, Q2 and Q3 ruled
+- [ ] **Blocking: the push and the CI report.** O-16 and O-17 are unmet with a named blocker, and
+      R2's cross-version determinism is currently *assumed*. Phase 2 code begins after CI has run.
 
-**No code is written until the first box is ticked.**
+**Approved. Code begins after the push, in the next session.**
