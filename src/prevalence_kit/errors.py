@@ -16,7 +16,8 @@ class Reason(StrEnum):
     """Why the tool refused. Stable identifiers; message text may be reworded."""
 
     PLAN_HASH_MISMATCH = "PLAN_HASH_MISMATCH"
-    PLAN_MISSING = "PLAN_MISSING"
+    PLAN_FILE_MISSING = "PLAN_FILE_MISSING"
+    PLAN_SEAL_MISSING = "PLAN_SEAL_MISSING"
     PLAN_INVALID = "PLAN_INVALID"
     LEDGER_BROKEN = "LEDGER_BROKEN"
     SEAL_TAMPERED = "SEAL_TAMPERED"

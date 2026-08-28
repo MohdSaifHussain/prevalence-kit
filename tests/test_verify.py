@@ -272,3 +272,92 @@ def test_refusal_messages_carry_no_content(run: Workspace, plan_path: Path) -> N
     with pytest.raises(Refusal) as exc:
         verify_run(run, plan_path)
     assert "SENTINEL" not in exc.value.report()
+
+
+# ------------------------------ PLAN_FILE_MISSING / PLAN_SEAL_MISSING, D2.7
+#
+# Two raise sites, two artifacts. Until 2026-08-29 they shared one code,
+# `PLAN_MISSING`, and neither had a control. Found by D2.7's opening inventory
+# and confirmed by mutation: swapping the code at either site left all 418 tests
+# passing. Phase 1's outcome recorded "23 reason codes, each with both controls"
+# and R3 as met. That was false for this code. C-27.
+#
+# Q8 / D-35 then split it, because D-22 counts artifacts and these are two: the
+# plan file the operator named, and the sealed copy inside the run.
+
+
+def test_a_missing_plan_file_is_refused_by_name(tmp_path: Path) -> None:
+    """`PLAN_FILE_MISSING` -- the operator names a plan that is not there.
+
+    The artifact is the path they typed on the command line, and the remedy is to
+    fix the path or write a plan. **Nothing about the run directory is wrong**,
+    which is the whole reason this is not the same code as the one below.
+    """
+    with pytest.raises(Refusal) as caught:
+        Plan.load(tmp_path / "no-such-plan.yaml")
+
+    assert caught.value.reason is Reason.PLAN_FILE_MISSING
+    assert "no-such-plan.yaml" in caught.value.detail, "the operator must see which path failed"
+
+
+def test_a_plan_that_is_there_loads(plan_path: Path) -> None:
+    """The positive control for the pair above.
+
+    A gate that refuses everything proves nothing, and `Plan.load` is the gate
+    every CLI verb goes through.
+    """
+    assert Plan.load(plan_path).plan_hash
+
+
+def test_a_missing_sealed_plan_copy_is_refused_by_name(run: Workspace, plan_path: Path) -> None:
+    """`PLAN_SEAL_MISSING` -- the sealed copy is gone from the run directory.
+
+    A different artifact from the test above and a different remedy -- restore the
+    run, not the path. `verify` translates the seal store's `SEAL_TRUNCATED` here
+    because at this point the missing thing is not a chunk, it is the plan.
+
+    **D-15 check (a) is what this protects.** Without the sealed copy the plan
+    cannot be checked at all, so `verify` must say that rather than skip quietly
+    and still exit 0 -- which is V-12's shape.
+    """
+    sealed = run.root / "plan.sealed"
+    assert sealed.is_dir(), "this test expects the sealed plan store where do_plan puts it"
+    removed = 0
+    for chunk in sorted(sealed.rglob("*")):
+        if chunk.is_file():
+            chunk.unlink()
+            removed += 1
+    assert removed, "nothing was removed, so the test would pass without testing anything"
+
+    with pytest.raises(Refusal) as caught:
+        list(verify_run(run, plan_path))
+
+    assert caught.value.reason is Reason.PLAN_SEAL_MISSING
+    assert "Restore the run" in caught.value.fix
+
+
+def test_the_two_missing_plan_codes_send_the_operator_to_different_places() -> None:
+    """Q8 / D-35, pinned so the split cannot quietly collapse back into one code.
+
+    D-22's rule is to count the artifacts an operator must open, not the
+    situations. These are two: the plan file the operator named, and the sealed
+    copy inside the run. Two remedies too -- fix the path, or restore the run.
+
+    **The operator-facing defect this closed was concrete.** Under the single
+    `PLAN_MISSING`, someone who mistyped a path got a code whose contract
+    description told them to restore their run directory. That is worse than an
+    undifferentiated refusal: it sends them to the wrong artifact with
+    confidence.
+    """
+    root = Path(__file__).resolve().parents[1] / "src" / "prevalence_kit"
+    plan_src = (root / "plan.py").read_text(encoding="utf-8")
+    verify_src = (root / "verify.py").read_text(encoding="utf-8")
+
+    assert "Reason.PLAN_FILE_MISSING" in plan_src
+    assert "write a plan first" in plan_src, "the file code must send the operator to the path"
+
+    assert "Reason.PLAN_SEAL_MISSING" in verify_src
+    assert "Restore the run directory" in verify_src, "the seal code must send them to the run"
+
+    assert "Reason.PLAN_SEAL_MISSING" not in plan_src
+    assert "Reason.PLAN_FILE_MISSING" not in verify_src

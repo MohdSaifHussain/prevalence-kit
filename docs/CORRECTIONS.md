@@ -17,11 +17,11 @@ neither the director nor the AI can quietly absorb the other's.
 | Chat reviewer (draft author) | 3 | 0 | **3** |
 | Research report (passed through unverified) | 2 | 0 | **2** |
 | Stale-at-draft-time, queued but built on anyway | 1 | 0 | **1** |
-| **Builder (Claude Code)** | **20** | **0** | **20** |
+| **Builder (Claude Code)** | **22** | **0** | **22** |
 | Reviewer instrument | **2** | 0 | **3** (1 noted) |
 | Director | 0 | 0 | 0 |
 | Tool artifact (noted, not a defect) | - | - | **1** |
-| **Total** | **28** | **0** | **29** |
+| **Total** | **30** | **0** | **31** |
 
 C-1 … C-6 are Phase 0: defects in the chat-drafted vision, all caught before any code, none reaching
 an artifact. **C-7 … C-13 are Phase 1, and all seven are mine.** Five were caught by the director's
@@ -708,6 +708,71 @@ and read codepoints. That is what settled this, twice, independently.
 
 ---
 
+## C-27 - "23 reason codes, each with both controls" was false for one of the 23
+
+| | |
+|---|---|
+| **Claimed** | `docs/contracts/PHASE-1-CONTRACT.md` §10: *"D1.11 \| Refusal gates \| 23 reason codes, each with both controls"*, and in the same section *"R3 met -- every gate has both controls."* |
+| **Actually** | **`PLAN_MISSING` had no control at either of its two raise sites.** Proved by mutation, not by reading: swapping `Reason.PLAN_MISSING` for an unrelated code in `plan.py`, and separately in `verify.py`, left **all 418 tests passing** both times. Nothing in the suite could tell the difference. |
+| **Direction** | Against the artifact. The refusal itself works -- both sites were confirmed to fire by execution. What was false is the claim that something proved it. |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | **D2.7's opening inventory**, then confirmed by a **31-code mutation sweep** -- every reason code swapped at every raise site, the suite run against each. Two codes survived. |
+| **Severity** | **Medium.** Doctrine rule 5 exists because *refusals that cannot be counted by cause make the refusal metric meaningless*, and this is a count that included one nobody could count. It is worse than a missing test in one specific way: **`PLAN_MISSING` at the `verify` site is what protects D-15 check (a)**, the check that makes R5 -- an outsider can verify from the sealed record alone -- provable rather than aspirational. |
+| **Replaced by** | Four tests in `tests/test_verify.py`: a negative control per site, a positive control, and one pinning that the two sites send the operator to different artifacts. Re-verified by mutation: both sites now fail the suite when their code is swapped. And **`check_controls`**, the ninth check, so the class cannot recur silently. |
+| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+
+**This is a defect against Phase 1's own stated exit criterion, not a limit of Phase 1, and doctrine
+rule 9 requires saying which.** Phase 1 did not promise "most codes have controls" and then get held
+to a higher bar later. It promised **each**, in a numbered count, and closed on it. The claim was
+wrong when it was written.
+
+**Phase 1 is not reopened.** The record is corrected here, and the fix lands in Phase 2 under D2.7,
+whose contract row already reads *"and any further undefined case found."* The closed phase's
+outcome section keeps its original sentence with a pointer to this entry -- **a dated reading is
+never rewritten**, and the outcome is the most dated reading in the repository.
+
+**Why no instrument caught it for a phase and a half.** `check_codes` reconciles the `Reason` enum
+against the contracts in both directions, so every code is documented and every documented code
+exists. **It looks like the reason-code checker and it never asks whether a code fires.** That is
+D-34's shape, one week later, in the checker that most looks like it already asked. The count "23
+reason codes" was itself derived by that checker -- so the number was machine-checked and the
+property it was quoted to support was not.
+
+**The instrument that found this was itself wrong first, and that is worth keeping.** The first draft
+of `check_controls` reported three codes, including `RUN_NOT_FOUND`. The mutation sweep contradicted
+it: swapping `RUN_NOT_FOUND` **did** fail a test, which asserts the CLI's stderr string
+`REFUSED [RUN_NOT_FOUND]` rather than the enum member. The checker was reading string literals only
+when they were the whole code name. **Ground truth corrected the new instrument before the new
+instrument entered the record** -- which is the only reason a false finding against `RUN_NOT_FOUND`
+is not in this table.
+
+---
+
+## C-28 - "20 accepted, 20 closed" rode on a machine-checked reconciliation
+
+| | |
+|---|---|
+| **Claimed** | `docs/contracts/PHASE-1-CONTRACT.md` §10: *"**20 accepted, 20 closed**, each with named closing evidence in `docs/FINDINGS.md`, reconciled against the code by `tools/check_claims.py`."* |
+| **Actually** | Wrong in two ways. **The register held 20 rows, but only 18 were findings.** Q-1 was `ruled` and Q-2 is `noted` and permanently unclosable -- the same file says so in a section titled *"Q-2 is deliberately unclosable"*. So "20 closed" contradicts its own register. **And four accepted findings had no row at all**: V-12, V-13, V-14 and V-15. The register now holds 24 findings, not 20. |
+| **Direction** | Against the artifact, twice. Both errors made the phase look tidier than it was. |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | Searching for the class C-27 named, on the director's instruction to go looking. |
+| **Severity** | **Medium.** The count was wrong, and the sentence made the wrongness hard to see. |
+| **Replaced by** | The four missing rows, added under D-34. The register is now reconciled in both directions by `check_register`. |
+| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+
+**This is the second instance of the class C-27 named, and it is why that class has its own rule.**
+The sentence ends with *"reconciled against the code by `tools/check_claims.py`"*. That is true. The
+checker did reconcile -- the 20 rows that were there. The numbers in front of it were written by
+hand and neither was right.
+
+A reader has no way to see where the checking stops.
+
+**Phase 1 stays closed and its outcome keeps its sentence.** A dated reading is not rewritten. The
+correction lives here.
+
+---
+
 ## Classes, tracked separately from the count
 
 A correction gets a C-number when it reached a commit. A **class** keeps its own tally, because a
@@ -750,6 +815,24 @@ more carefully, but a changed artifact where the mistake is no longer available.
 director re-deriving all six rows of a table, and TW-5 contradicting its own author on its first
 run.
 
+### A checked figure carrying an unchecked claim
+
+The number is machine-derived. The property beside it is not. The sentence reads as one verified
+statement, and nothing in it says where the checking stops.
+
+**This is worse than an unchecked claim on its own.** An unchecked claim invites scrutiny. A
+half-checked one deflects it, because the part a reader can verify is right.
+
+| # | Where | The checked half | The unchecked half |
+|---|---|---|---|
+| 1 | **C-27** | "23 reason codes" -- counted from `Reason` by `check_claims` | "each with both controls" -- false for `PLAN_MISSING`, at both its raise sites |
+| 2 | **C-28** | "reconciled against the code by `tools/check_claims.py`" -- it did reconcile | "20 accepted, 20 closed" -- 18 were closed, and four accepted findings had no row |
+
+**The rule: when a checked figure sits in a sentence with an unchecked property, either check the
+property or split the sentence.**
+
+Both instances were in Phase 1's closed outcome, written in the same section, on the same day.
+
 ### An instrument that does not cover what it appears to
 
 | # | Where | What was not covered |
@@ -759,6 +842,8 @@ run.
 | 3 | V-15 | `check_paths` read a fixed list of globs, so a new document was silently uncovered |
 | 4 | V-16 | CI ran six of the gate's seven checks. No test file was type-checked on the remote |
 | 5 | C-23 | `check_gate` read `gate.yml` with a regex, so it passed a file GitHub cannot parse |
+| 6 | **D-34** | `check_findings` validated the rows present and could not see a row missing. V-12..V-15 were named across three to nine documents each with no register row, while the checker reported "22 findings, all accounted for" |
+| 7 | **C-27** | `check_codes` reconciles `Reason` against the contracts both ways, so it looks like the reason-code checker. **It never asks whether a code fires.** `PLAN_MISSING` had no control at either raise site for a phase and a half, and the "23 reason codes" count was derived by that same checker |
 
 **The rule this class produced** is in `CLAUDE.md` beside the others.
 

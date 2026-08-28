@@ -1183,6 +1183,81 @@ row easier to add.
 
 ---
 
+## D-35 - PLAN_MISSING splits into two codes
+
+**Date:** 2026-08-29 · **Made in:** the director's Q8 ruling · **Ruled by:** director
+
+`PLAN_MISSING` becomes `PLAN_FILE_MISSING` and `PLAN_SEAL_MISSING`.
+
+**Why.** D-22 says count the artifacts an operator must open. There are two here:
+
+| Code | Artifact | Fix |
+|---|---|---|
+| `PLAN_FILE_MISSING` | the plan file the operator named | correct the path, or write a plan |
+| `PLAN_SEAL_MISSING` | the sealed copy inside the run | restore the run directory |
+
+The two fix texts already differed. That was the sign the code should have split earlier.
+
+**The operator-facing harm was real.** Under one code, someone who mistyped a path got a message
+telling them to restore their run directory. That is worse than a vague refusal. It sends them to
+the wrong file, confidently.
+
+**How it was found.** D2.7 began by asking which refusals actually fire. A mutation sweep swapped
+each of 31 codes at every raise site and ran the suite each time. `PLAN_MISSING` survived at both
+sites: nothing could tell. Fixing the missing control meant writing a test per site, and writing
+them showed the two sites were not the same thing.
+
+**Alternative not taken: leave it as one code.** The argument was that it changes a Phase 1 code and
+moves a count. The director rejected both halves. Phase 1 did not meet its criterion here, which is
+what C-27 records, and finishing an unmet criterion forward is not reopening a satisfied phase.
+Counts are machine-derived; C-7's lesson is not to quote a stale count, not to keep counts still.
+
+**Phase 1's contract is not edited.** It is a dated document and still names `PLAN_MISSING`, which
+is what Phase 1 shipped. The Phase 2 contract records the supersession, and `check_codes` reads it
+from there. Same handling as F8.
+
+---
+
+## D-36 - ALLOCATION_ROUNDING_UNDECLARED is deferred, not struck
+
+**Date:** 2026-08-29 · **Made in:** the director's Q9 ruling · **Ruled by:** director
+
+The code stays. It is marked `PENDING-CONTROL` against D2.8 and exempt from the controls check
+until then.
+
+**The builder proposed striking it and was wrong about the precedent.**
+
+`CORRECTION_DEGENERATE` was struck because its spec was wrong. Building it as written would have
+refused the most common honest result in rare-event work. The row described behaviour we must never
+have.
+
+`ALLOCATION_ROUNDING_UNDECLARED` is the opposite case. Its spec is right. Section 6 describes what
+D2.8 will build: a stratified plan with no `allocation_rounding` field is refused at load. The plan
+schema cannot express that yet, so the code exists today only on a defensive branch that no valid
+`Rounding` value reaches.
+
+A wrong row and an unbuilt row are not the same thing, and only one of them should be deleted.
+
+**Striking and re-adding it next deliverable is churn**, and it loses the contract's promise in
+between. Deferring keeps the promise visible and marked unbuilt, which is the true state.
+
+**Why a new marker rather than PENDING.** `PENDING` means the contract promises a code that
+`Reason` does not have. `check_codes` fires when such a code appears, which is how that marker
+expires without anyone remembering to remove it. It has fired that way twice.
+
+This code already exists. Reusing `PENDING` would have meant relaxing a rule that has caught real
+drift, to fit one row. So `PENDING-CONTROL` is a separate marker, read only by the controls check.
+Raised with the director as a one-line deviation from condition 2 of the ruling, whose wording
+assumed the code was absent.
+
+**The exemption expires by machinery, not by a date.** The defensive branch becomes reachable only
+if `Rounding` gains a second member. `test_the_rounding_enum_still_has_exactly_one_member` fails the
+day it does, and the deferral has to be looked at again.
+
+**The branch stays**, with a comment saying when it becomes live.
+
+---
+
 ## Carried obligations opened by these decisions
 
 | # | Obligation | Owner | Opened by |

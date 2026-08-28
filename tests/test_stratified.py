@@ -437,3 +437,23 @@ def test_the_optimality_search_can_find_a_gap() -> None:
     # Reported in variance, but an operator reads a standard error, which moves
     # by roughly half as much. Both figures are in docs/STANDARDS.md S-1.7.
     assert ((1 + gap) ** 0.5 - 1) == pytest.approx(0.00365120, rel=1e-3)
+
+
+def test_the_rounding_enum_still_has_exactly_one_member() -> None:
+    """D-36's expiry, as machinery rather than a date.
+
+    `ALLOCATION_ROUNDING_UNDECLARED` is exempt from the controls check because it
+    cannot fire: `stratified.allocate` raises it only if `rounding` is not
+    `LARGEST_REMAINDER`, and that is the only member `Rounding` has.
+
+    The day a second member is added, the branch becomes reachable and the
+    exemption stops being honest. This test fails then, so someone has to look at
+    the deferral again instead of the marker quietly outliving its reason.
+    """
+    from prevalence_kit.stratified import Rounding
+
+    assert [r.name for r in Rounding] == ["LARGEST_REMAINDER"], (
+        "Rounding gained a member, so ALLOCATION_ROUNDING_UNDECLARED can now fire. "
+        "Remove its PENDING-CONTROL marker from the Phase 2 contract and give it "
+        "both controls."
+    )

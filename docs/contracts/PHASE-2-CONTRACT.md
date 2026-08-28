@@ -172,7 +172,10 @@ Each gets a distinct code, both controls, and a message that says what to do.
 | `ALLOCATION_IMPOSSIBLE` | Neyman allocation cannot be satisfied — e.g. a stratum's allocation exceeds its size |
 | `STRATA_UNDEFINED` | `design: stratified` with no strata definition |
 | `ALLOCATION_TOO_THIN` | Neyman allocated fewer than 2 units to a stratum — zero within-stratum degrees of freedom, so its variance contribution is undefined. Q2. **Checked after rounding, not before** — D-30 condition 4 |
-| `ALLOCATION_ROUNDING_UNDECLARED` | `design: stratified` with no `allocation_rounding` field. The rounding rule is a commitment the operator makes, so it cannot be defaulted. **Q4 / D-30 condition 1** |
+| `ALLOCATION_ROUNDING_UNDECLARED` ▸ **AMENDED** — **PENDING-CONTROL** until **D2.8** | `design: stratified` with no `allocation_rounding` field. The rounding rule is a commitment the operator makes, so it cannot be defaulted. **Q4 / D-30 condition 1.** **The specification is right and not yet built** (**Q9** / D-36): the plan schema cannot express the condition until D2.8, so today's raise site is a defensive branch that no valid `Rounding` reaches. Marked PENDING rather than struck — striking would lose the contract's promise in between, and `check_codes` expires the marker by machinery when D2.8 lands |
+| `PLAN_FILE_MISSING` ▸ **AMENDED** *(**Q8** / D-35, 2026-08-29)* | The plan file the operator named is not there. **Artifact: the path they typed.** Remedy: fix the path, or write a plan |
+| `PLAN_SEAL_MISSING` ▸ **AMENDED** *(**Q8** / D-35, 2026-08-29)* | The **sealed copy** of the plan is absent from the run. **Artifact: the run directory.** Remedy: restore the run. This is what protects **D-15 check (a)**, the check that makes R5 provable rather than aspirational |
+| ~~`PLAN_MISSING`~~ **SUPERSEDED** *(2026-08-29, **Q8** / D-35)* | Phase 1's single code for both situations above. **It had no control at either raise site** — C-27 — and D-22 says two artifacts means two codes. An operator who mistyped a path got a message telling them to restore their run directory: **worse than an undifferentiated refusal, because it sends them to the wrong artifact with confidence.** `docs/contracts/PHASE-1-CONTRACT.md` §4 still names it and **is not edited** — a contract is a dated document. `check_codes` reads the supersession from this row |
 | `CORRECTION_INTERVAL_UNSUPPORTED` ▸ **AMENDED** *(added 2026-08-29, **Q7**)* | The plan pre-registers `interval: wilson` **and** supplies `sensitivity`/`specificity`. A Wilson-transformed corrected interval has no pre-existing expected value, so R2.2 forbids shipping one — and silently handing back a Clopper-Pearson-based interval instead would substitute a method inside a pre-registered measurement, which is V-1's and V-7's class. **Refused at plan load, before any data is touched.** Built in **D2.6** |
 
 *Under D-22, `STRATUM_UNSAMPLED` and `STRATUM_EMPTY` are separate because they send the operator to
@@ -205,7 +208,7 @@ was wrong in the other.
 `CORRECTION_UNDEFINED` and `CORRECTION_OUT_OF_RANGE`, and D-22's test decides them -- the first sends
 the operator to the Se/Sp pair, the second to the relationship between the plan and the sample.
 
-**32 reason codes in total**, across Phase 1's 23 and this phase's 9. Counted from `Reason` by
+**33 reason codes in total**, across Phase 1's 23 and this phase's 10. Counted from `Reason` by
 `tools/check_claims.py`, not maintained by hand -- the figure moved from the Phase 1 contract to here
 when Phase 2 added codes and the checker went on reading the closed phase's number.
 

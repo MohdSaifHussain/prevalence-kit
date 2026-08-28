@@ -110,25 +110,27 @@ confirms we implement the method as its author does. It does not independently c
    C-24's was printed on screen at the time.
 5. **End every report with what remains open, by name and severity.** C-12 is what happens otherwise.
 6. **A finding closed in one artifact can be open in another** — D-23.
-7. **An instrument that does not cover what it appears to.** **Seven instances:** C-15, C-19, V-15,
-   V-16, C-23, `check_codes` reading one contract when there were three, and **D-34 — the findings
-   check reconciled in one direction only.** V-12…V-15 were named across three to nine documents
-   each with no register row, while the checker printed *"22 findings, all accounted for."*
-   **True and worthless: it answered *is everything here consistent?* when the question was *is
-   everything here?*** When you add or trust a check, ask what it does **not** read — and ask it in
-   **both directions.**
-8. **Check an artifact the way its real consumer reads it.** Structured files — YAML, JSON, TOML,
+7. **A check covers less than it looks like it covers.** Eight times now: C-15, C-19, V-15, V-16,
+   C-23, `check_codes` reading one contract when there were three, D-34, and C-27. When you add or
+   trust a check, ask what it does **not** read. Ask in both directions: `check_findings` validated
+   every row that was there and could not see the four that were missing.
+8. **A checked number can carry an unchecked claim.** *"23 reason codes, each with both controls"*
+   looks like one verified sentence. A machine counted the 23. Nothing checked "each with both
+   controls", and it was false — C-27. Same shape in C-28. This is worse than a plain unchecked
+   claim, because the half you can verify makes you stop looking. **Check the property, or split
+   the sentence.**
+9. **Check an artifact the way its real consumer reads it.** Structured files — YAML, JSON, TOML,
    CSV, XML — get the **consumer's parser**, never a regex. That is how an unparseable `gate.yml`
    passed a green checker (**C-23**). **Markdown is the exception**, and the reason is the rule: its
    consumer is a human, who reads it loosely too.
-9. **"The guard did not object" is not "the guard looked."** Know what each check does *not* read,
-   and assert that scope rather than describe it.
-10. **A check with no artifact is a memory with a result attached.** The fixture verdict check ran
+10. **"The guard did not object" is not "the guard looked."** Know what each check does *not* read,
+    and assert that scope rather than describe it.
+11. **A check with no artifact is a memory with a result attached.** The fixture verdict check ran
     once as a `python -c`, was reported as "machine-checked", and left no trace. **The suite count
     not moving is what exposed it** — which is why the gate prints its own count.
-11. **The witness's documentation is not the witness. Only the pinned build is.** C-25: the manual
+12. **The witness's documentation is not the witness. Only the pinned build is.** C-25: the manual
     on CRAN described a version we do not run.
-12. **Never delete or overwrite the director's working directories.** `C:\Users\mohds\ts-sentry` is
+13. **Never delete or overwrite the director's working directories.** `C:\Users\mohds\ts-sentry` is
     read-only. **Never remove a Docker image** — they belong to the director's other projects.
 
 ## Where things stand

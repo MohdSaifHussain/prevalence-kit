@@ -5,7 +5,7 @@ Doctrine rule 14: a lesson that lives only in prose will not hold, so build the
 check. Rule 11: an obligation is tracked by name until discharged, and reported
 against the artifact rather than against the last report.
 
-Eight checks, each answering a question that has actually gone wrong here.
+Nine checks, each answering a question that has actually gone wrong here.
 (This sentence said "five" while six were listed, which is the count treadmill
 rule 14 names. Re-derive it from `CHECKS` if you touch this file.)
 
@@ -24,6 +24,14 @@ rule 14 names. Re-derive it from `CHECKS` if you touch this file.)
               (C-12: a report accurate about what it covered and misleading
               about what it omitted. This is the half that needs a machine,
               because running the tool cannot detect it.)
+
+  controls    Which refusals can nobody prove fire?
+              (Rule 5 wants a distinct reason code per failure mode, because
+              refusals that cannot be counted by cause are meaningless. Three
+              raise sites across PLAN_MISSING and ALLOCATION_ROUNDING_UNDECLARED
+              could have their code swapped for an unrelated one with all 418
+              tests still passing. `codes` cannot see this: it checks that a
+              code is documented, not that anything proves it fires.)
 
   register    Which findings does the record discuss but the register omit?
               (The other direction, and the one that was missing. V-12 through
@@ -207,6 +215,92 @@ def check_paths(root: Path) -> list[Problem]:
     return problems
 
 
+def pending_codes(root: Path) -> set[str]:
+    """Codes a contract promises before the deliverable that builds them lands.
+
+    Those are obligations, not defects, and the difference has to be visible:
+    a row marked PENDING is expected to be absent, and anything else is not.
+    Rule 11 -- tracked by name until discharged, never quietly dropped.
+
+    **Read by two checks, from one definition.** `check_codes` allows a PENDING
+    code to be missing from `Reason`; `check_controls` allows a PENDING code to
+    have no test. Two lists that must agree, with nothing making them agree, is
+    D-28's defect -- so there is one list.
+
+    **The exemption expires by machinery, not by memory.** `check_codes` fires on
+    a code still marked PENDING after it exists, and has done so twice. So a
+    deliverable that lands without the marker being removed fails the gate.
+    """
+    contract = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in sorted((root / "docs" / "contracts").glob("*-CONTRACT.md"))
+    )
+    return {
+        name
+        for line in contract.splitlines()
+        if "PENDING" in line and "PENDING-CONTROL" not in line
+        for name in re.findall(r"`([A-Z][A-Z_]{4,})`", line)
+    }
+
+
+def control_deferred_codes(root: Path) -> set[str]:
+    """Codes that exist and whose specified trigger the schema cannot yet express.
+
+    **A third state, and it needed its own name.** `PENDING` means *the
+    contract promises a code that `Reason` does not yet have*, and `check_codes`
+    fires when such a code turns up in `Reason` -- which is how the marker
+    expires by machinery rather than by memory. It has caught that twice.
+
+    `ALLOCATION_ROUNDING_UNDECLARED` is not that. **The code exists**, raised on
+    a defensive branch no valid `Rounding` reaches, and its specification --
+    *`design: stratified` with no `allocation_rounding` field* -- is right and
+    not yet buildable, because the plan schema gains that field in D2.8 (O-20).
+    Reusing `PENDING` for it would have required relaxing the rule that has
+    fired twice, to accommodate one row. Q9 / D-36.
+
+    **Its expiry is machinery, not a date.** The branch becomes reachable only
+    when `Rounding` gains a second member, and
+    `test_the_rounding_enum_still_has_exactly_one_member` fails the day it does.
+    """
+    contract = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in sorted((root / "docs" / "contracts").glob("*-CONTRACT.md"))
+    )
+    return {
+        name
+        for line in contract.splitlines()
+        if "PENDING-CONTROL" in line
+        for name in re.findall(r"`([A-Z][A-Z_]{4,})`", line)
+    }
+
+
+def superseded_codes(root: Path) -> set[str]:
+    """Codes a closed phase's contract names that a later phase replaced.
+
+    **A contract is a dated document and is not edited**, so the Phase 1 contract
+    goes on naming `PLAN_MISSING` forever -- correctly, because that is what
+    Phase 1 shipped. Q8 / D-35 split it into `PLAN_FILE_MISSING` and
+    `PLAN_SEAL_MISSING`, and the supersession is recorded in the **Phase 2**
+    contract, where the change was made.
+
+    Without this, the choice would be between editing a dated reading and
+    carrying a permanent gate failure. Neither is acceptable, and the mechanism
+    that resolves it is the same shape as PENDING: **a marker in the live
+    contract, read by the checker, so the exception is visible rather than
+    hard-coded.**
+    """
+    contract = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in sorted((root / "docs" / "contracts").glob("*-CONTRACT.md"))
+    )
+    return {
+        name
+        for line in contract.splitlines()
+        if "SUPERSEDED" in line
+        for name in re.findall(r"`([A-Z][A-Z_]{4,})`", line)
+    }
+
+
 def check_codes(root: Path) -> list[Problem]:
     """The contract and `Reason` must describe the same tool."""
     sys.path.insert(0, str(root / "src"))
@@ -225,16 +319,7 @@ def check_codes(root: Path) -> list[Problem]:
         in_code | set(re.findall(r"\| `([A-Z_]+)`", contract))
     )
 
-    # A contract in progress promises codes its deliverables have not built yet.
-    # Those are obligations, not defects, and the difference has to be visible:
-    # a row marked PENDING is expected to be absent, and anything else is not.
-    # Rule 11 -- tracked by name until discharged, never quietly dropped.
-    pending = {
-        name
-        for line in contract.splitlines()
-        if "PENDING" in line
-        for name in re.findall(r"`([A-Z][A-Z_]{4,})`", line)
-    }
+    pending = pending_codes(root)
 
     problems = [
         Problem(
@@ -242,7 +327,7 @@ def check_codes(root: Path) -> list[Problem]:
             "contracts",
             f"{name} is in a contract but not in Reason, and is not marked PENDING",
         )
-        for name in sorted(in_contract - in_code - pending)
+        for name in sorted(in_contract - in_code - pending - superseded_codes(root))
     ]
     problems += [
         Problem("codes", "errors.py", f"{name} exists but no contract names it")
@@ -277,6 +362,93 @@ def check_findings(root: Path) -> list[Problem]:
         elif status != "noted":
             problems.append(Problem("findings", ident, f"unknown status {status!r}"))
     return problems
+
+
+def asserted_codes(root: Path) -> set[str]:
+    """Reason codes a test actually names, by AST rather than by text search.
+
+    Three spellings count, because the suite legitimately uses all three:
+
+      `Reason.SOME_CODE`            direct reference
+      `"SOME_CODE"`                 fixture-driven, comparing `reason.name`
+      `"REFUSED [SOME_CODE]"`       the CLI surface, asserting stderr
+
+    **The third was missed by the first draft of this function and the check
+    reported a false positive**, on `RUN_NOT_FOUND`. The mutation sweep
+    contradicted it: swapping that code made a test fail, so the suite could tell
+    and the checker could not. **The instrument was wrong, not the suite.** So a
+    code now counts if it appears anywhere inside a string literal, not only as
+    the whole of one.
+
+    **Docstrings are excluded, and that is the point of reading the AST.** A code
+    discussed in prose is not a code under test. Widening to any string without
+    that exclusion would have made this check pass on documentation, which is the
+    failure it exists to catch.
+    """
+    found: set[str] = set()
+    codes: set[str] = set()
+    sys.path.insert(0, str(root / "src"))
+    from prevalence_kit.errors import Reason
+
+    codes = {r.name for r in Reason}
+
+    for path in repo_files(root, "tests/*.py"):
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        prose = {
+            id(ast.get_docstring(node, clean=False) and node.body[0].value)  # type: ignore[attr-defined]
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Module | ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef)
+        }
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.Attribute)
+                and isinstance(node.value, ast.Name)
+                and node.value.id == "Reason"
+            ):
+                found.add(node.attr)
+            elif (
+                isinstance(node, ast.Constant)
+                and isinstance(node.value, str)
+                and id(node) not in prose
+            ):
+                found |= {code for code in codes if code in node.value}
+    return found
+
+
+def check_controls(root: Path) -> list[Problem]:
+    """Which refusals can nobody prove fire?
+
+    Doctrine rule 5: every gate gets a negative control, a positive control, and
+    a **distinct reason code**. The distinct code is not decoration -- refusals
+    that cannot be counted by cause make the refusal metric meaningless. So a
+    code no test names is a refusal nobody has ever shown firing **for that
+    reason**, whatever else the suite exercises on the way past it.
+
+    **Found by D2.7's opening inventory, and confirmed by mutation rather than by
+    reading.** Swapping `Reason.PLAN_MISSING` for an unrelated code at either of
+    its two raise sites left all 418 tests passing. Same for
+    `ALLOCATION_ROUNDING_UNDECLARED`. Three raise sites, no test able to tell.
+
+    **`check_codes` looks like it covers this and does not.** It reconciles the
+    `Reason` enum against the contracts in both directions, so every code is
+    documented and every documented code exists. It says nothing about whether a
+    code can fire, or whether anything checks that it does. That is D-34's shape
+    again, in the checker that most looks like it already asked: **an
+    instrument's coverage is defined by what it looks at.**
+    """
+    sys.path.insert(0, str(root / "src"))
+    from prevalence_kit.errors import Reason
+
+    asserted = asserted_codes(root)
+    # Q9 / D-36. A code whose deliverable has not landed cannot have an
+    # operator-facing control yet, and striking it would lose the contract's
+    # promise in between. PENDING keeps the promise visible and unbuilt, which is
+    # the honest state -- and `check_codes` expires the marker by machinery.
+    deferred = pending_codes(root) | control_deferred_codes(root)
+    return [
+        Problem("controls", name, "no test names this reason code, so nothing proves it fires")
+        for name in sorted({r.name for r in Reason} - asserted - deferred)
+    ]
 
 
 def check_register(root: Path) -> list[Problem]:
@@ -492,6 +664,30 @@ def check_gate(root: Path) -> list[Problem]:
     return problems
 
 
+def current_phase(root: Path) -> int:
+    """The phase in progress: the highest-numbered contract that exists.
+
+    Deliberately this simple, and the reason is worth stating. The first version
+    tried to read a CLOSED marker out of each contract's status line. Phase 1's
+    closure is in its section 10, not its status line, so that version would have
+    called Phase 1 live and still returned the right answer -- by taking a max
+    over a test that never fired. **A check that gets the right answer for a
+    reason that does not hold is the thing rule 8 is about**, so it was replaced
+    rather than tuned.
+
+    A contract for phase N+1 is written only when phase N is done, so the newest
+    contract is the live phase. That is a real property of how this project
+    works, and if it ever stops being true this returns a wrong number loudly
+    instead of a right one by luck.
+    """
+    numbers = [
+        int(m.group(1))
+        for path in (root / "docs" / "contracts").glob("PHASE-*-CONTRACT.md")
+        if (m := re.search(r"PHASE-(\d)-CONTRACT", path.name))
+    ]
+    return max(numbers) if numbers else 0
+
+
 def check_figures(root: Path) -> list[Problem]:
     """Figures restated in prose must be derivable, not remembered.
 
@@ -520,6 +716,15 @@ def check_figures(root: Path) -> list[Problem]:
             re.compile(r"(\d+) findings in the register"),
             root / "docs" / "FINDINGS.md",
         ),
+        # The README's status line names the phase in progress. It said
+        # "Phase 1 of 4" for the whole of Phase 2, with eight checkers running
+        # over the repository every commit and none of them reading it. A phase
+        # number in prose is a live figure, which is what this check is for.
+        "readme phase": (
+            current_phase(root),
+            re.compile(r"Phase (\d) of 4 in progress"),
+            root / "README.md",
+        ),
     }
     for label, (actual, pattern, path) in claims.items():
         if not path.exists():
@@ -542,6 +747,7 @@ CHECKS = {
     "codes": check_codes,
     "findings": check_findings,
     "register": check_register,
+    "controls": check_controls,
     "fixtures": check_fixtures,
     "figures": check_figures,
     "gate": check_gate,
@@ -586,6 +792,15 @@ def selftest() -> int:
             "docs/FINDINGS.md",
             "`test_a_non_numeric_label_is_refused_by_name`",
             "`test_that_was_never_written`",
+        ),
+        "controls": (
+            # Plant: stop a test naming SEED_MISSING, which exactly one test
+            # names. The code goes on being raised in plan.py and goes on being
+            # documented in the contract, so `codes` stays green -- which is
+            # precisely the blind spot this check was added to cover.
+            "tests/test_core.py",
+            "Reason.SEED_MISSING",
+            "Reason.LEDGER_BROKEN",
         ),
         "register": (
             # The plant is the defect exactly as it was: delete V-12's row and
