@@ -148,6 +148,7 @@ five since are local until the next push, and the two figures are stated apart o
 | **D2.3** | `stratified.py` — Neyman, largest-remainder rounding, stratified estimator. Worst disagreement with `survey`: **9.5e-15** |
 | **D2.4** | Clopper-Pearson **from its definition** — binomial tail in log space, no incomplete beta anywhere. Witness: base R `binom.test`. **7.1e-11** |
 | **D2.5** | Rogan-Gladen point estimate, 11 cases from `epiR`. Two refusals, both controls |
+| **D2.6** | Rogan-Gladen **interval** — the corrected bounds are the apparent Clopper-Pearson bounds transformed endpoint by endpoint. Against `epiR`: **7.3e-13**. **O-8 discharged.** Clamped both ends (Q6/D-32), Clopper-Pearson only (Q7/D-33) |
 
 ### The Rogan-Gladen codes — two, not three
 
@@ -168,9 +169,18 @@ correction **undefined, not imprecise**. 0.2% apparent prevalence needs specific
 99% sounds excellent and produces five times more apparent positives from clean content than the
 whole sample held.
 
-### Next: D2.6 — Rogan-Gladen interval propagation
+### D2.6 — done. What it does and does not cover
 
-The point estimate is done; the interval is not. **O-8 discharges then, not now.**
+**O-8 is discharged.** The estimator is built and checked. **Three halves of Q6 and Q7 are not**, and
+they are named as **O-22** and **O-23** rather than left for the next session to discover:
+
+- **Q7 refuses at the API, not at the plan.** `interval_method` is keyword-only with no default, so
+  the substitution cannot become a constant in the source — but the plan has **no `interval` field
+  yet**, so exit check **F8d** cannot be performed. **O-22**, owned by D2.8. O-20's shape exactly.
+- **Q6's disclosure and raw bounds live on the estimate, not in an artifact.** `note` and
+  `low_raw` / `high_raw` / `clamped` exist and are tested. But **`run.py` still calls `wilson()`
+  alone** — no Phase 2 estimator is wired in — so nothing writes them to a ledger or renders them to
+  a report. That is the surface, deliberately after the review stop. **O-23.**
 
 Anchor is **S-1.6 Reiczigel et al. (2010)** — Se/Sp *known*, which is our assumption (D-31).
 **Not S-1.5 Lang & Reiczigel (2014)**, which propagates uncertainty in *estimated* Se/Sp; adopting
@@ -188,8 +198,11 @@ an observation about `epiR`, not a theorem about corrected intervals.*
 **Two rulings bind it. `Q6 / D-32`:** clamp to [0, 1] at **both** ends, **say so in the output**, and
 **keep the raw bound in the ledger** — a silently clamped bound is a small lie in the artifact an
 outsider reads. **`Q7 / D-33`:** Clopper-Pearson only, and a plan naming `interval: wilson` while
-supplying Se/Sp is **refused at plan load** with `CORRECTION_INTERVAL_UNSUPPORTED` — not silently
-switched, which would substitute a method inside a pre-registered measurement.
+supplying Se/Sp is **refused** with `CORRECTION_INTERVAL_UNSUPPORTED` — not silently switched, which
+would substitute a method inside a pre-registered measurement.
+
+**Next: D2.7 refusals, then D2.8–D2.9, then the review stop.** The stop falls after D2.9 and before
+anything renders these estimators.
 
 **Three rare-event surprises now cluster in this phase**, and none was anticipated by reasoning —
 each came from the artifact. `fpr_exceeds_prevalence`; the inverted interval below `Se + Sp = 1`; and
@@ -205,6 +218,7 @@ prevalence rates this tool is for, several ordinary intuitions fail, and here th
 | **O-20** | `allocation_rounding` in the *hashed plan file*. Today it is a required API argument only | D2.8 |
 | **O-21** | The rare-event specificity fact must reach the README | Phase 3 |
 | **D2.11** | The witness image is rebuilt by hand; CI never runs it. Static half closed | Phase 2 |
+| **O-22, O-23** | Q7's plan-load refusal and Q6's ledger + report disclosure. **D2.6 built the estimator half only** | D2.8, post-stop |
 | **D2.14** | `check_claims` gaps: PDF paths, the CORRECTIONS counts table (**document its semantics, do not guess them**), the R artifacts. **The register gap is closed — D-34, `check_register`** | Phase 2 |
 | **Charter §6.1** | Still says Rogan-Gladen *"has no witness … validated against Lang & Reiczigel (2014)"*. **D-31 says both halves are wrong.** The charter is ratified, so it needs an **amendment-log ruling (A-3)**, not a builder edit | **Director** |
 | **O-3, O-4, O-13, O-14, O-15** | Carried, untouched | Phase 2 |

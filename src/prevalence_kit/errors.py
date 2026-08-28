@@ -61,6 +61,7 @@ class Reason(StrEnum):
     # and the sample, each of which looks fine alone.
     CORRECTION_UNDEFINED = "CORRECTION_UNDEFINED"
     CORRECTION_OUT_OF_RANGE = "CORRECTION_OUT_OF_RANGE"
+    CORRECTION_INTERVAL_UNSUPPORTED = "CORRECTION_INTERVAL_UNSUPPORTED"
 
 
 class Refusal(Exception):

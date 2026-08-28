@@ -408,3 +408,202 @@ def _out_of_range_fix(apparent: float, sensitivity: float, specificity: float) -
         f"{sensitivity:.4%}. Either the sensitivity is understated or the sample "
         "is not from the population it was meant to describe."
     )
+
+
+CORRECTABLE_INTERVALS = frozenset({"clopper_pearson"})
+"""Interval methods the Rogan-Gladen correction may be built on.
+
+**One entry, and the reason it is a set rather than a constant is Q7.** The
+fixture witnesses `epi.prev(..., method = "c-p")` and nothing else, so a
+Wilson-transformed corrected interval has no pre-existing expected value --
+which R2.2 forbids shipping, inside the phase whose whole shape is R2.2.
+
+`wilson` is a real interval this package computes and is deliberately absent
+here. That is why `KNOWN_INTERVALS` exists separately: an operator who asks for
+Wilson has not made a typo, and the refusal must not tell them they have.
+"""
+
+KNOWN_INTERVALS = frozenset({"wilson", "clopper_pearson"})
+"""Every interval this package computes, correctable or not. See above."""
+
+
+@dataclass(frozen=True, slots=True)
+class CorrectedInterval:
+    """A Rogan-Gladen corrected prevalence with its interval, and what we did to it.
+
+    **`low` / `high` are what an operator reads. `low_raw` / `high_raw` are what
+    the arithmetic produced.** They differ only when a bound was clamped, and
+    `clamped` names which ends. All four reach the record, so `verify` re-derives
+    both and an auditor can see the interval before policy touched it. D-32.
+    """
+
+    method: str
+    point: str
+    low: str
+    high: str
+    low_raw: str
+    high_raw: str
+    clamped: tuple[str, ...]
+    apparent: Interval
+    sensitivity: str
+    specificity: str
+    confidence: str
+    n: int
+    positives: int
+
+    @property
+    def note(self) -> str:
+        """The disclosure, in the operator's numbers. Empty when nothing was clamped.
+
+        **It is produced here, not by the renderer.** A bound that was changed has
+        to explain itself in the same place the change happened, or the sentence
+        drifts from the arithmetic the first time someone edits the report.
+        """
+        if not self.clamped:
+            return ""
+        parts = []
+        if "low" in self.clamped:
+            parts.append(f"lower bound clamped to 0 from {self.low_raw}")
+        if "high" in self.clamped:
+            parts.append(f"upper bound clamped to 1 from {self.high_raw}")
+        return (
+            f"Interval {'; '.join(parts)}. A prevalence cannot lie outside [0, 1], so the "
+            "clamped interval covers everything the raw one covered and is very slightly "
+            "conservative. The raw bounds are in the record. That end of the interval is a "
+            "construction, not a measurement."
+        )
+
+    def as_record(self) -> JSONObject:
+        return {
+            "method": self.method,
+            "point": self.point,
+            "low": self.low,
+            "high": self.high,
+            "low_raw": self.low_raw,
+            "high_raw": self.high_raw,
+            "clamped": list(self.clamped),
+            "apparent": self.apparent.as_record(),
+            "sensitivity": self.sensitivity,
+            "specificity": self.specificity,
+            "confidence": self.confidence,
+            "n": self.n,
+            "positives": self.positives,
+        }
+
+
+def rogan_gladen_interval(
+    positives: int,
+    n: int,
+    sensitivity: float,
+    specificity: float,
+    *,
+    interval_method: str,
+    confidence: float = 0.95,
+) -> CorrectedInterval:
+    """A confidence interval for the Rogan-Gladen corrected prevalence.
+
+    **The construction, and it is the witness's construction rather than ours.**
+    Build the interval for the *apparent* prevalence, then push both endpoints
+    through the same correction the point estimate uses:
+
+        low  = RG(apparent_low)      high = RG(apparent_high)
+
+    Anchor: **S-1.6 Reiczigel, Foldi & Ozsvari (2010)**, which assumes Se and Sp
+    are **known** -- our assumption, D-31. **Not S-1.5 Lang & Reiczigel (2014)**,
+    which propagates uncertainty in *estimated* Se and Sp; adopting it would be a
+    plan-schema change, not an estimator swap.
+
+    **Why the endpoints may simply be transformed.** With `Se + Sp > 1` the
+    denominator is positive, so `RG` is strictly increasing in the apparent
+    prevalence. A monotone increasing map carries an interval to an interval and
+    keeps the order of its ends, so no sorting is needed and none is done. The
+    case where it would not hold -- `Se + Sp <= 1` -- never reaches here, because
+    `rogan_gladen()` refuses it first. Asserted, not assumed:
+    `test_the_transform_is_monotone_so_the_ends_keep_their_order`.
+
+    **This composes two things already witnessed separately** and introduces no
+    third unwitnessed one: `clopper_pearson()`, agreeing with base R's
+    `stats::binom.test` to 7.1e-11 across 23 cases (S-2.4), and `rogan_gladen()`,
+    checked against all eleven `epiR` cases. Measured across the nine
+    positive-denominator fixture rows, `RG(ap_lower) == tp_lower` and
+    `RG(ap_upper) == tp_upper` to every digit `epiR` printed.
+
+    **Stated at its own width:** endpoint transformation is what the witness
+    does. That is an observation about `epi.prev`, not a theorem about corrected
+    intervals in general.
+
+    **Bounds outside [0, 1] are clamped, and the clamp is disclosed.** Q6 / D-32.
+    A corrected *point* estimate outside [0, 1] is a refusal and always was; a
+    corrected *bound* outside it is not, because the point estimate can be
+    perfectly good while an end runs past the edge -- which is exactly the
+    rare-event case this tool exists for. At `pos = 8, n = 4000, Se = 0.90,
+    Sp = 0.999` the witness returns a lower bound of `-0.000151` beside a point
+    estimate of `0.001112`. Refusing there would refuse the tool's own use case;
+    printing a negative prevalence costs an auditor's trust in every number
+    beside it. So it is clamped, `note` says so, and `low_raw` keeps the
+    arithmetic.
+
+    **`interval_method` is required and has no default.** Q7 / D-33: a plan that
+    pre-registers Wilson and supplies Se/Sp is a plan this version cannot honour,
+    and the one thing it must never do is quietly hand back a different method
+    than the operator committed to. Defaulting the argument here would put that
+    substitution back in as a constant in the source. **D-30 condition 1's shape,
+    applied to a second commitment.**
+    """
+    if interval_method not in KNOWN_INTERVALS:
+        raise Refusal(
+            Reason.PLAN_INVALID,
+            f"{interval_method!r} is not an interval this tool computes.",
+            f"Use one of: {', '.join(sorted(KNOWN_INTERVALS))}.",
+        )
+    if interval_method not in CORRECTABLE_INTERVALS:
+        raise Refusal(
+            Reason.CORRECTION_INTERVAL_UNSUPPORTED,
+            f"This plan asks for the {interval_method} interval and also supplies a "
+            f"sensitivity and specificity. The Rogan-Gladen correction is only "
+            f"validated on the Clopper-Pearson interval here: the witness that "
+            f"produced our expected values, epiR 2.0.92, builds the corrected "
+            f"interval from a Clopper-Pearson one, and we have no external "
+            f"expected value for a {interval_method}-based corrected interval. "
+            f"Returning a Clopper-Pearson interval instead would give you a number "
+            f"your plan did not commit to.",
+            "Either pre-register interval: clopper_pearson to keep the correction, "
+            "or remove sensitivity and specificity and report an uncorrected "
+            f"{interval_method} interval. Both are honest; the plan has to say which.",
+        )
+
+    apparent = clopper_pearson(positives, n, confidence=confidence)
+
+    # The point estimate first: it owns both correction refusals, so an undefined
+    # or out-of-range correction fails here exactly as it does without an
+    # interval. One authority for the refusals, not two that can disagree.
+    point = rogan_gladen(positives / n, sensitivity, specificity)
+
+    denominator = sensitivity + specificity - 1.0
+    low_raw = (float(apparent.low) + specificity - 1.0) / denominator
+    high_raw = (float(apparent.high) + specificity - 1.0) / denominator
+
+    clamped: list[str] = []
+    low, high = low_raw, high_raw
+    if low < 0.0:
+        low = 0.0
+        clamped.append("low")
+    if high > 1.0:
+        high = 1.0
+        clamped.append("high")
+
+    return CorrectedInterval(
+        method="rogan-gladen/clopper-pearson",
+        point=point.corrected,
+        low=_fixed(low),
+        high=_fixed(high),
+        low_raw=_fixed(low_raw),
+        high_raw=_fixed(high_raw),
+        clamped=tuple(clamped),
+        apparent=apparent,
+        sensitivity=_fixed(sensitivity),
+        specificity=_fixed(specificity),
+        confidence=_fixed(confidence),
+        n=n,
+        positives=positives,
+    )
