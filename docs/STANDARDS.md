@@ -116,8 +116,10 @@ are due within two months of each period's end.
 | ID | Control | Source | Pin | Re-check |
 |---|---|---|---|---|
 | S-5.1 | Symmetric encryption at rest — **Fernet, chunked. Ruled R-5 / D-9.** | `cryptography` (PyCA), `Fernet` recipe | **50.0.1**, released **2026-08-25**; `Apache-2.0 OR BSD-3-Clause`; docs pinned at `https://cryptography.io/en/50.0.1/fernet/` | **2026-11-28** |
-| S-5.2 | Supply chain, provenance | OpenSSF / SLSA guidance as used in ts-sentry STEP-08 | *to pin in Phase 1 — carried obligation* | — |
-| S-5.3 | Hash chain | SHA-256, FIPS 180-4 | *to pin in Phase 1 — carried obligation* | — |
+| S-5.2 | Build provenance attestation | **SLSA v1.1** specification, `https://slsa.dev/spec/v1.1/levels` | fetched **2026-08-28**, HTTP 200 | **2027-02-28** |
+| S-5.2a | Provenance in CI | `actions/attest-build-provenance` | **v4.2.2**, released **2026-08-06** | **2026-11-28** |
+| S-5.2b | Supply-chain posture | OpenSSF `ossf/scorecard` | **v5.5.0**, released **2026-04-23** | **2026-11-28** |
+| S-5.3 | Hash chain and all digests | **SHA-256**, NIST **FIPS 180-4** (Secure Hash Standard) | `https://csrc.nist.gov/pubs/fips/180-4/upd1/final`, fetched **2026-08-28**, HTTP 200 | never — fixed publication |
 
 **S-5.1 ruled: Fernet**, on soak time, cross-project consistency with finding-bridge, and the
 availability of AES-GCM AAD binding if ever needed. **Cobblestone-128 considered and rejected** — it
@@ -197,15 +199,15 @@ Tracked by name until discharged. Each is owned by a named phase.
 
 | # | Obligation | Owner | Status |
 |---|---|---|---|
-| O-1 | Pin S-5.2 (OpenSSF/SLSA) and S-5.3 (SHA-256 / FIPS 180-4) to exact documents | Phase 1 | open |
-| O-2 | Build the tripwire check script (TW-1, TW-2, TW-3 are all scriptable) | Phase 1 | open |
+| O-1 | Pin S-5.2 (OpenSSF/SLSA) and S-5.3 (SHA-256 / FIPS 180-4) to exact documents | Phase 1 | **discharged 2026-08-28** — S-5.2, S-5.2a, S-5.2b, S-5.3 above, each fetched live |
+| O-2 | Build the tripwire check script (TW-1, TW-2, TW-3 are all scriptable) | Phase 1 | **discharged 2026-08-28** — `tools/check_tripwires.py`, run live, all three not fired |
 | O-3 | Record R version, `survey` version and exact call alongside every fixture | Phase 2 | open |
 | O-4 | Cross-check `lean` estimators against `svy` **as well as** R `survey`, in a separate optional environment so the runtime tree stays network-free | Phase 2 | open |
 | O-5 | Re-derive the ts-sentry "1,230 tests" and finding-bridge "739 prompts" figures from those repositories before they appear in any README | Phase 3 | open |
 | O-6 | Confirm whether a ROOST `awesome-safety-tools` PR needs a new Measurement category | Phase 3 | open |
-| O-7 | Build a checker that searches for restated claims across files, per rule 14 | Phase 1 | open |
+| O-7 | Build a checker that searches for restated claims across files, per rule 14 | Phase 1 | **discharged 2026-08-28** — `tools/check_claims.py`, five checks, selftest proves each can fail |
 | O-8 | Rogan–Gladen has no library witness — validate against the worked results in Lang & Reiczigel (2014) | Phase 2 | open |
-| O-9 | Implement and test Fernet chunking above the in-memory limit; assert chunk-boundary behaviour | Phase 1 | open |
+| O-9 | Implement and test Fernet chunking above the in-memory limit; assert chunk-boundary behaviour | Phase 1 | **discharged 2026-08-28** — `test_chunking_is_exact_at_the_boundary` and the F-2 pair |
 | O-10 | README credits `svy` as the estimator layer; assert by overclaim scanner | Phase 3 | open |
 
 ## Re-check log

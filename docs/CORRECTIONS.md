@@ -17,9 +17,9 @@ neither the director nor the AI can quietly absorb the other's.
 | Chat reviewer (draft author) | 3 | 0 | **3** |
 | Research report (passed through unverified) | 2 | 0 | **2** |
 | Stale-at-draft-time, queued but built on anyway | 1 | 0 | **1** |
-| **Builder (Claude Code)** | **7** | **0** | **7** |
+| **Builder (Claude Code)** | **8** | **0** | **8** |
 | Director | 0 | 0 | 0 |
-| **Total** | **13** | **0** | **13** |
+| **Total** | **14** | **0** | **14** |
 
 C-1 … C-6 are Phase 0: defects in the chat-drafted vision, all caught before any code, none reaching
 an artifact. **C-7 … C-13 are Phase 1, and all seven are mine.** Five were caught by the director's
@@ -246,6 +246,31 @@ artifact that produces it, not in passing.
 | **Severity** | Medium. The same class as V-11 — a real, likely input producing a library traceback instead of a refusal — which the director named as a further reason F-1 should not have been deferred. |
 | **Replaced by** | F-1 fixed and widened to the plan-load layer per the ruling, with `LABEL_NOT_NUMERIC` at estimate time as the second net and `PLAN_THRESHOLD_INVALID` at load as the first |
 | **Status** | **OPEN** — closes at phase close |
+
+---
+
+---
+
+## C-14 - The docs/src ratio I used to answer "are we over-documenting?"
+
+| | |
+|---|---|
+| **Claimed** | Drift answer of 2026-08-28: a table with rows `src/` 1,607, `tests/` 1,853, **`docs/` 4,375**, and the conclusion *"Docs are 2.7x the source."* |
+| **Actually** | `docs/` is **3,531** lines. The 4,375 figure counted every markdown file in the repository - `docs/` plus the charter, README, SECURITY.md and `prevalence-kit-VISION.md`, which is the Phase 0 *input* the charter was drafted from, not record this build produced. The ratio is **2.20x** for `docs/` proper, 2.72x for all repo prose. |
+| **Direction** | Against the argument I was making. The number overstated the thing I was being asked about, by counting a 225-line document that predates the build. |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | The director, re-deriving all six figures in the table. Five matched; this one did not. |
+| **Severity** | Medium. The label said `docs/` in a table whose other two rows were literal directories, so the label was wrong even if the intent was "all prose in the repo" - and it landed in the one answer where the number *was* the argument. |
+| **Class** | Same as C-7: a number nobody re-derived. Third instance. |
+| **Replaced by** | `docs/` 3,531 lines, ratio **2.20x**; all repo prose 4,375, ratio 2.72x. Both stated with what they count. |
+| **Status** | **OPEN** - closes at phase close |
+
+**Note on the ceremony conclusion that rested on it.** The director rejected the "three review rounds
+is inflation" reading, on evidence: round one found seven defects and missed ten; round two's report
+omitted eight open findings. Rounds two and three were caused by defects in the *reporting*, not by
+the method asking for them. Had the first report been complete there would have been one round. So
+the remedy is not fewer rounds - it is `tools/check_claims.py`, which makes a report reconcilable
+against the artifact. Recorded here because the correction and the conclusion travelled together.
 
 ---
 

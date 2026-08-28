@@ -179,3 +179,30 @@ def test_the_six_seal_reason_codes_are_distinct() -> None:
         Reason.SEAL_ID_COLLISION,
     }
     assert len(codes) == 6
+
+
+# ------------------------------------------------- O-9: chunk boundary behaviour
+
+
+@pytest.mark.parametrize("size", [0, 1, 63, 64, 65, 127, 128, 129, 192])
+def test_chunking_is_exact_at_the_boundary(
+    tmp_path: Path, key: bytes, monkeypatch: pytest.MonkeyPatch, size: int
+) -> None:
+    """O-9. Off-by-one at a chunk boundary is the classic way chunking goes wrong.
+
+    A 64-byte chunk size walks every case around two boundaries in a second:
+    empty, one under, exactly on, one over. Empty is included deliberately -- a
+    zero-length item must still seal to something, or an item with no content
+    would have no manifest to check.
+    """
+    monkeypatch.setattr(seal_mod, "CHUNK_BYTES", 64)
+    store = SealedStore(tmp_path / "sealed", key)
+    plaintext = bytes(i % 251 for i in range(size))
+
+    manifest = store.seal("item", plaintext)
+    expected = max(1, -(-size // 64))  # ceiling division; empty still gets one chunk
+
+    assert manifest.chunk_count == expected
+    assert manifest.plaintext_bytes == size
+    store.verify_item(manifest)
+    assert store.unseal(manifest) == plaintext

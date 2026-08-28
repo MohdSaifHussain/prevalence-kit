@@ -37,8 +37,12 @@ from .seal import Manifest, SealedStore
 PLAN_ITEM = "__plan__"
 
 _CSV_FIELD_LIMIT = 64 * 1024 * 1024
-"""Largest single CSV field accepted, 64 MiB. Not unbounded -- a runaway file
-should refuse rather than exhaust memory."""
+"""Largest single CSV field accepted: exactly 67,108,864 bytes (64 MiB).
+
+Not unbounded -- a runaway file should refuse rather than exhaust memory. The
+figure is restated here in bytes so `tools/check_claims.py` can compare the prose
+against the constant; rule 8 wants a checkable limit defended by machinery rather
+than by a decision record."""
 
 
 @dataclass(frozen=True, slots=True)

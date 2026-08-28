@@ -1,0 +1,343 @@
+#!/usr/bin/env python
+"""Reconcile what the record claims against what the repository contains.
+
+Doctrine rule 14: a lesson that lives only in prose will not hold, so build the
+check. Rule 11: an obligation is tracked by name until discharged, and reported
+against the artifact rather than against the last report.
+
+Five checks, each answering a question that has actually gone wrong here:
+
+  citations   Does every D-nn / C-nn / O-nn / F-n / V-n reference resolve?
+              (C-8: the code cited a D-17 that did not exist, and a
+              tests/test_plan.py that did not exist.)
+
+  paths       Does every repository path named in the source exist?
+              (Same defect, other half.)
+
+  codes       Do the contract's reason codes and `Reason` agree, both ways?
+              (A code in one and not the other means the contract is
+              describing a tool that is not this one.)
+
+  findings    Which accepted findings have no closing evidence?
+              (C-12: a report accurate about what it covered and misleading
+              about what it omitted. This is the half that needs a machine,
+              because running the tool cannot detect it.)
+
+  figures     Is any figure restated in prose without being derivable?
+              (C-7: two gate numbers quoted that no command produces.)
+
+Exit 0 when everything reconciles, 1 otherwise. `--selftest` proves each check
+can fail, because a check that has only ever passed is a decoration.
+"""
+
+from __future__ import annotations
+
+import argparse
+import ast
+import re
+import sys
+from collections.abc import Iterable, Iterator
+from dataclasses import dataclass
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+CITATION = re.compile(r"\b([DCO])-(\d{1,3})\b")
+FINDING_REF = re.compile(r"\b([FV])-(\d{1,2})\b")
+PATH_LIKE = re.compile(r"`?((?:src|tests|docs|tools)/[\w./-]+\.(?:py|md|toml|txt))`?")
+
+
+@dataclass(frozen=True, slots=True)
+class Problem:
+    check: str
+    where: str
+    detail: str
+
+    def line(self) -> str:
+        return f"  [{self.check}] {self.where}: {self.detail}"
+
+
+# --------------------------------------------------------------------- inputs
+
+
+def repo_files(root: Path, *globs: str) -> Iterator[Path]:
+    for pattern in globs:
+        for path in sorted(root.glob(pattern)):
+            if ".venv" not in path.parts and "__pycache__" not in path.parts:
+                yield path
+
+
+def defined_ids(root: Path) -> dict[str, set[str]]:
+    """What the record actually defines, read from the record.
+
+    Obligations are spread across two files -- O-1..O-6 in STANDARDS.md, the rest
+    in DECISIONS.md -- so both are read. The first run of this checker flagged
+    O-4 as undefined for exactly that reason, which is the checker finding a real
+    thing about its own inputs.
+    """
+    decisions = (root / "docs" / "DECISIONS.md").read_text(encoding="utf-8")
+    corrections = (root / "docs" / "CORRECTIONS.md").read_text(encoding="utf-8")
+    standards = (root / "docs" / "STANDARDS.md").read_text(encoding="utf-8")
+    return {
+        "D": set(re.findall(r"^## (D-\d+)", decisions, re.M)),
+        "C": set(re.findall(r"^## (C-\d+)", corrections, re.M)),
+        # Obligations live in tables, not headings, and in two documents.
+        "O": set(re.findall(r"^\| (O-\d+) \|", decisions + standards, re.M)),
+    }
+
+
+def register_rows(root: Path) -> list[tuple[str, str, str, str]]:
+    """(id, severity, status, evidence) from docs/FINDINGS.md."""
+    text = (root / "docs" / "FINDINGS.md").read_text(encoding="utf-8")
+    rows: list[tuple[str, str, str, str]] = []
+    for line in text.splitlines():
+        m = re.match(r"^\| ([FVQ]-\d+) \| ([^|]+)\| ([^|]+)\| ([^|]+)\|", line)
+        if m:
+            rows.append(tuple(g.strip() for g in m.groups()))  # type: ignore[arg-type]
+    return rows
+
+
+def test_names(root: Path) -> set[str]:
+    names: set[str] = set()
+    for path in repo_files(root, "tests/*.py"):
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        names |= {n.name for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)}
+    return names
+
+
+# --------------------------------------------------------------------- checks
+
+
+def check_citations(root: Path) -> list[Problem]:
+    defined = defined_ids(root)
+    problems: list[Problem] = []
+    # `tools/` is excluded: this file contains deliberately broken citations as
+    # selftest fixtures, and a checker that flags its own test data is a checker
+    # someone switches off. Stated rather than left as a silent gap.
+    for path in repo_files(root, "src/**/*.py", "tests/*.py"):
+        text = path.read_text(encoding="utf-8")
+        for kind, number in CITATION.findall(text):
+            ident = f"{kind}-{int(number)}"
+            if ident not in defined[kind]:
+                problems.append(
+                    Problem("citations", f"{path.relative_to(root)}", f"{ident} is not defined")
+                )
+    return problems
+
+
+def check_paths(root: Path) -> list[Problem]:
+    problems: list[Problem] = []
+    for path in repo_files(root, "src/**/*.py", "tests/*.py"):
+        for named in PATH_LIKE.findall(path.read_text(encoding="utf-8")):
+            if not (root / named).exists():
+                problems.append(
+                    Problem("paths", f"{path.relative_to(root)}", f"{named} does not exist")
+                )
+    return problems
+
+
+def check_codes(root: Path) -> list[Problem]:
+    """The contract and `Reason` must describe the same tool."""
+    sys.path.insert(0, str(root / "src"))
+    from prevalence_kit.errors import Reason
+
+    in_code = {r.name for r in Reason}
+    contract = (root / "docs" / "contracts" / "PHASE-1-CONTRACT.md").read_text(encoding="utf-8")
+    in_contract = set(re.findall(r"`([A-Z][A-Z_]{4,})`", contract)) & (
+        in_code | set(re.findall(r"\| `([A-Z_]+)`", contract))
+    )
+    problems = [
+        Problem("codes", "contract §4", f"{name} is in the contract but not in Reason")
+        for name in sorted(in_contract - in_code)
+    ]
+    problems += [
+        Problem("codes", "errors.py", f"{name} exists but the contract never names it")
+        for name in sorted(in_code - in_contract)
+    ]
+    return problems
+
+
+def check_findings(root: Path) -> list[Problem]:
+    """Which accepted findings have no closing evidence?
+
+    Reconciled against the code, not against the last report. This is the check
+    that gives C-12's class a machine.
+    """
+    known = test_names(root)
+    problems: list[Problem] = []
+    for ident, _sev, status, evidence in register_rows(root):
+        clean = evidence.strip("`").strip()
+        if status == "open":
+            problems.append(Problem("findings", ident, "accepted and still open"))
+        elif status in {"closed", "ruled"}:
+            if not clean or clean in {"—", "-", "none"}:
+                problems.append(Problem("findings", ident, f"{status} with no evidence named"))
+            elif clean not in known:
+                problems.append(
+                    Problem("findings", ident, f"names test {clean!r}, which does not exist")
+                )
+        elif status != "noted":
+            problems.append(Problem("findings", ident, f"unknown status {status!r}"))
+    return problems
+
+
+def check_figures(root: Path) -> list[Problem]:
+    """Figures restated in prose must be derivable, not remembered.
+
+    Narrow on purpose: it checks the figures this build has already got wrong
+    rather than every number in every document. A checker that flags hundreds of
+    false positives gets switched off, and a switched-off checker defends nothing.
+    """
+    problems: list[Problem] = []
+    sys.path.insert(0, str(root / "src"))
+    from prevalence_kit.errors import Reason
+    from prevalence_kit.run import _CSV_FIELD_LIMIT
+
+    claims = {
+        "reason codes": (
+            len(list(Reason)),
+            re.compile(r"\*\*(\d+) reason codes"),
+            root / "docs" / "contracts" / "PHASE-1-CONTRACT.md",
+        ),
+        "csv ceiling": (
+            _CSV_FIELD_LIMIT,
+            re.compile(r"exactly (\d[\d,]*) bytes"),
+            root / "src" / "prevalence_kit" / "run.py",
+        ),
+        "findings in register": (
+            len(register_rows(root)),
+            re.compile(r"(\d+) findings in the register"),
+            root / "docs" / "FINDINGS.md",
+        ),
+    }
+    for label, (actual, pattern, path) in claims.items():
+        if not path.exists():
+            continue
+        for stated in pattern.findall(path.read_text(encoding="utf-8")):
+            if int(stated.replace(",", "")) != actual:
+                problems.append(
+                    Problem(
+                        "figures",
+                        f"{path.relative_to(root)}",
+                        f"{label}: states {stated}, artifact says {actual}",
+                    )
+                )
+    return problems
+
+
+CHECKS = {
+    "citations": check_citations,
+    "paths": check_paths,
+    "codes": check_codes,
+    "findings": check_findings,
+    "figures": check_figures,
+}
+
+
+def run(root: Path) -> list[Problem]:
+    problems: list[Problem] = []
+    for fn in CHECKS.values():
+        problems.extend(fn(root))
+    return problems
+
+
+# ------------------------------------------------------------------ selftest
+
+
+def selftest() -> int:
+    """Prove each check can fail. Plants one violation at a time in a copy.
+
+    Without this, a bug that made every check return an empty list would leave
+    the tool passing forever while checking nothing.
+    """
+    import shutil
+    import tempfile
+
+    plants: dict[str, tuple[str, str, str]] = {
+        "citations": ("src/prevalence_kit/errors.py", '"""Refusals.', '"""Refusals. See D-999.'),
+        "paths": (
+            "src/prevalence_kit/errors.py",
+            '"""Refusals.',
+            '"""Refusals. See tests/test_nonexistent.py.',
+        ),
+        "codes": (
+            "src/prevalence_kit/errors.py",
+            '    SEED_MISSING = "SEED_MISSING"',
+            '    SEED_MISSING = "SEED_MISSING"\n    UNDOCUMENTED_CODE = "UNDOCUMENTED_CODE"',
+        ),
+        "findings": (
+            "docs/FINDINGS.md",
+            "`test_a_non_numeric_label_is_refused_by_name`",
+            "`test_that_was_never_written`",
+        ),
+        "figures": (
+            "src/prevalence_kit/run.py",
+            "bytes. Not unbounded",
+            "bytes. Not unbounded",
+        ),
+    }
+
+    failures = 0
+    with tempfile.TemporaryDirectory() as tmp:
+        for name, (rel, old, new) in plants.items():
+            copy = Path(tmp) / name
+            shutil.copytree(
+                ROOT,
+                copy,
+                ignore=shutil.ignore_patterns(".venv", "__pycache__", ".git", "*.pdf"),
+            )
+            target = copy / rel
+            text = target.read_text(encoding="utf-8")
+            if name == "figures":
+                # Change the artifact, not the prose, so the two disagree.
+                text = text.replace("_CSV_FIELD_LIMIT = 64 * 1024 * 1024", "_CSV_FIELD_LIMIT = 123")
+            else:
+                assert old in text, f"selftest plant anchor missing for {name}"
+                text = text.replace(old, new, 1)
+            target.write_text(text, encoding="utf-8", newline="\n")
+
+            for mod in [m for m in sys.modules if m.startswith("prevalence_kit")]:
+                del sys.modules[mod]
+            sys.path.insert(0, str(copy / "src"))
+            caught = [p for p in CHECKS[name](copy) if p.check == name]
+            sys.path.pop(0)
+
+            status = "OK  " if caught else "FAIL"
+            if not caught:
+                failures += 1
+            print(f"  [{status}] {name}: planted a violation, checker found {len(caught)}")
+            if caught:
+                print(f"         {caught[0].detail}")
+
+    for mod in [m for m in sys.modules if m.startswith("prevalence_kit")]:
+        del sys.modules[mod]
+    print()
+    if failures:
+        print(f"SELFTEST FAILED: {failures} check(s) did not detect their planted violation.")
+        return 1
+    print(f"SELFTEST PASSED: all {len(plants)} checks detected their planted violation.")
+    return 0
+
+
+def main(argv: Iterable[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--selftest", action="store_true", help="prove each check can fail")
+    args = parser.parse_args(list(argv) if argv is not None else None)
+
+    if args.selftest:
+        return selftest()
+
+    problems = run(ROOT)
+    if not problems:
+        rows = register_rows(ROOT)
+        print(f"check_claims: reconciled. {len(rows)} findings in the register, all accounted for.")
+        return 0
+
+    print(f"check_claims: {len(problems)} problem(s).\n")
+    for problem in problems:
+        print(problem.line())
+    return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

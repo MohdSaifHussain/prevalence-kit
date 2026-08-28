@@ -107,6 +107,8 @@ Each gets a distinct reason code, a negative control, and a positive control.
 | Code | Fires when |
 |---|---|
 | `PLAN_HASH_MISMATCH` | The plan changed after the chain started |
+| `PLAN_INVALID` ▸ **AMENDED** | The plan is missing a required key, or a value is the wrong shape |
+| `PLAN_MISSING` ▸ **AMENDED** | The sealed copy of the plan is absent from the run |
 | `LEDGER_BROKEN` | A ledger link does not match its predecessor's digest |
 | `SEAL_TAMPERED` | A sealed chunk fails Fernet authentication |
 | `SEAL_TRUNCATED` ▸ **AMENDED** | Fewer chunks present than the manifest count |

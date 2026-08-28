@@ -194,8 +194,8 @@ class SealedStore:
         it needs the key for the plan and the estimate, and it refuses
         `KEY_MISSING` before reaching here. The docstring used to claim the
         keyless path as if `verify` provided it, which it does not. A keyless
-        audit mode is genuinely worth having and is proposed for Phase 2, not
-        smuggled in here. V-10.
+        audit mode is genuinely worth having and is carried as obligation O-14
+        for Phase 2, not smuggled in here. V-10.
         """
         observed = [digest_bytes(t) for t in self._tokens(manifest.item_id)]
         expected = list(manifest.chunk_digests)

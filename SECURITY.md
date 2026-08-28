@@ -129,10 +129,31 @@ unchanged into every later phase.
 
 ### 3.1 It does not protect the key
 
-Encryption at rest is only as good as the key handling. If the key sits next to the sealed data on
-the same disk, an attacker with disk access has both. **prevalence-kit does not solve key
-management.** It will document exactly where the key lives and what that means. Deciding whether
-that is good enough for your situation is your call, not the tool's.
+Encryption at rest is only as good as the key handling. **prevalence-kit does not solve key
+management.** Here is exactly what it does, so you can decide whether that is good enough for your
+situation. It is your call, not the tool's.
+
+**Where the key lives.** `plan` generates a Fernet key on the first step of a run and writes it to
+`<run>/seal.key`, in the same directory as the sealed content it protects. Nothing else creates,
+moves, rotates or deletes it. Every read goes through one function, `Workspace.key`, which refuses
+`KEY_MISSING` when the file is absent rather than raising a traceback.
+
+**What that means, plainly:**
+
+- **An attacker with read access to the run directory has both the ciphertext and the key.** Sealing
+  protects against a backup service, a synced folder, a colleague browsing a share, or content
+  rendering by accident. It does **not** protect against someone who can read the whole directory.
+- **`seal.key` must never be committed.** `.gitignore` excludes `*.key`. If you move a run
+  directory into version control, check that first.
+- **Lose the key and the content is gone.** The ledger, the labels, the estimate and `verify` all
+  still work -- they never need the plaintext -- but nothing can unseal the content again. That is
+  the design, not a bug: `verify` reproduces the number without ever decrypting content.
+- **There is no rotation.** `MultiFernet` supports it and this version does not use it. A run is a
+  single measurement with a single key.
+
+**If that is not good enough for you,** keep the run directory on an encrypted volume, or move
+`seal.key` to a separate location after the run and restore it only when you need to unseal. The
+tool will refuse by name when the key is absent, which makes that workflow safe to operate.
 
 ### 3.2 It does not protect against a compromised machine
 
