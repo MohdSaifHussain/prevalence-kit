@@ -213,8 +213,30 @@ Every ruling in this charter that can become a failing test becomes one.
    comparison runs in a separate optional test environment so the runtime dependency tree stays
    network-free. *(Ruling R-1, D-3.)*
 
-   **Rogan–Gladen has no witness** — neither library implements a misclassification correction. It is
-   validated against the published worked results in Lang & Reiczigel (2014) instead. Obligation O-8.
+   **Rogan–Gladen has a witness. It is a weaker kind than Barnett.** ▸ **AMENDED, A-3**
+
+   Neither R `survey` nor Python `svy` implements a misclassification correction. That part was
+   right, and it stays.
+
+   It did not follow that nobody does. `epiR` implements it. We run **version 2.0.92**, inside the
+   digest-pinned witness image. **S-1.10.**
+
+   The interval anchor is **Reiczigel, Földi & Ózsvári (2010)**, **S-1.6**. That paper assumes
+   sensitivity and specificity are known. That is what v1.0 does. The earlier text here named Lang &
+   Reiczigel (2014), **S-1.5**. That paper assumes both are *estimated* and carry their own
+   uncertainty. We do not model that. Adopting it later would change the plan schema, not just the
+   estimator. *(D-31.)*
+
+   **One narrowing, and it is not optional.** Jenő Reiczigel is a listed contributor to `epiR`. So
+   this is the method author's own code for the method author's own paper. It shows we implement the
+   method the way its author does. **It does not independently confirm the method.**
+
+   That is weaker than Barnett Table 2B, and weaker in a specific way. Barnett is a published table.
+   Nobody computed it from an implementation. Reproducing it tests our arithmetic against a number no
+   one in this chain produced. **Read the two kinds of evidence differently.**
+
+   Obligation O-8, **discharged 2026-08-29 by D2.6** — the interval reproduces every accepted `epiR`
+   case to 7.3e-13.
 2. **Reuse the strongest existing proof.** Port the ts-sentry stratified/Neyman code. Its validation
    target is Arnold Barnett's *YouTube's Violative View Rate Methodology: A Statistical Assessment*
    (MIT, September 2021), Table 2B. **This was re-derived independently during Phase 0 and matches
@@ -312,9 +334,47 @@ Every change to this charter after ratification gets a row here.
 
 | # | Date | Change | Ruled by | Verbatim ruling |
 |---|---|---|---|---|
+| A-3 | 2026-08-29 | **§6.1's Rogan–Gladen sentence amended.** Two claims in it were false and one was true. **True and kept:** neither `survey` nor `svy` implements a misclassification correction. **False:** that it followed there is no witness — `epiR` 2.0.92 implements it, S-1.10. **False:** that the anchor is Lang & Reiczigel (2014) — D-31 ruled S-1.6 Reiczigel et al. (2010). The narrowing travels with the amendment and is not optional. Found by a fresh session reading the record before building; the builder raised it and did **not** edit the ratified document. §6.1's numbered points are untouched | Director | **Verbatim below** |
 | A-2 | 2026-08-29 | **Honest limits gain a second line**: at rare-event prevalence an ordinary-sounding specificity makes the Rogan-Gladen correction undefined rather than imprecise. From the `fpr_exceeds_prevalence` case, found by the D2.5 fixture contradicting its own author's note. | Director | D2.5 review, this session |
 | A-1 | 2026-08-29 | **Honest limits gain one line** under ruling Q5 / D-31: the corrected interval treats supplied Se and Sp as exact. A limit added, never narrowed -- section 8's rule is intact. Wright's exact optimal allocation added to the NEXT queue the same day. | Director | Q5 ruling, this session |
 | A-0 | 2026-08-28 | **Charter ratified.** Seven Phase 0 rulings applied: R-1 (lean estimators, httpx rationale, dual cross-check, svy credited), R-2 (regulatory positioning inverted), R-3 (three citation fixes, ROOST conflict recorded unresolved), R-4 (Brown/Cai/DasGupta anchor; Wilson + Clopper-Pearson; Jeffreys dropped), R-5 (Fernet; Cobblestone rejected on soak time), R-6 (dev 3.14, floor 3.12), R-7 (pre-registered threshold estimand, multi-threshold sensitivity curve) | Director | `docs/RATIFICATION.md` — full text of all seven |
+
+### A-3, ruled 2026-08-29 — the director's words, verbatim
+
+Recorded in full because §6.1 is where a reader decides how much the whole validation section is
+worth, and a paraphrase of a ruling about evidence would be the wrong thing to keep.
+
+> **A-3, ruled 2026-08-29.** Charter §6.1's Rogan–Gladen sentence is amended. Two of its claims are
+> false and one is true and must survive the edit.
+>
+> **Still true:** neither R `survey` nor Python `svy` implements a misclassification correction. D-3
+> was right about the two libraries it named.
+>
+> **False:** that it followed from this that Rogan–Gladen has no witness. `epiR` 2.0.92 implements
+> it, and is pinned by digest as S-1.10. **The inference was wrong, not the observation.**
+>
+> **False:** that the anchor is Lang & Reiczigel (2014). D-31 ruled the anchor is Reiczigel, Földi &
+> Ózsvári (2010) — the paper whose assumption, Se and Sp known, matches what v1.0 does. Lang &
+> Reiczigel (2014) assumes Se and Sp are estimated with their own uncertainty, which this version
+> does not model, and adopting it later is a plan-schema change rather than an estimator swap.
+>
+> The narrowing travels with the amendment and is not optional: `epiR` is the method author's own
+> implementation — Reiczigel is a listed contributor. It confirms we implement the method as its
+> author does. It does not independently confirm the method. That is a different kind of evidence
+> from Barnett Table 2B, which is a published table computed without reference to any
+> implementation, and §6.1 is where a reader decides how much the whole validation section is worth.
+
+**Two instructions came with the ruling and are recorded because they shaped the edit.** Write it to
+the charter's own writing rule — plain English, short sentences. And **do not edit the surrounding
+numbered points**: §6.1 item 1's `survey` / `svy` cross-check language is unaffected, and reopening
+it invites drift.
+
+**How this reached a ruling at all.** A fresh session read the record against the rulings it encodes
+before writing any code, and found seven places where O-8's restatement had not landed. Five were the
+builder's to fix. **Two were in this ratified document, and the builder raised them rather than
+editing them** — amendments are the director's. The builder's first report undercounted the drift as
+"one place of four"; it was one place of seven, and the correction is what made this ruling cover the
+charter at all.
 
 ### Standing directions in force
 

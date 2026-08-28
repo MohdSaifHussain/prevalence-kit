@@ -1089,6 +1089,16 @@ the single artifact the operator opens -- **one artifact, so one code, under D-2
 It says **we have no witness for one**, and D-31's boundary applies here too: adopting one later needs
 its own anchor first, not a flag.
 
+**A region the witness cannot reach, recorded because it changes what the tests are.** Q6's clamp
+applies at both ends, but **no `epiR` row exercises the upper one**: every fixture case whose upper
+bound exceeds 1 also has a point estimate outside [0, 1], so it refuses before any interval is built.
+The upper-clamp case is therefore constructed by us — `pos = 95, n = 100, Se = 0.96, Sp = 0.99` — and
+its expected values are our arithmetic. **The witness does not clamp at all**, so every clamp test
+encodes a ruling rather than a witnessed fact, and the test file says so in its header. Dressing a
+policy as a witnessed fact is the exact overclaim §2 of the contract was built to prevent. **A
+witness that cannot reach a region is a different kind of gap from having no witness**, and this
+phase now has one of each.
+
 ---
 
 ## D-34 - The findings register is reconciled in both directions
@@ -1161,6 +1171,15 @@ and the selftest plant. Registering it as `closed` required naming a test that f
 so `test_the_path_check_reads_documents_outside_src_and_tests` and its negative control now exist.
 **The register's own standard forced a missing test into existence**, which is the check earning its
 keep on the first use.
+
+**That is the finding inside the finding, and it is why the standard is worded the way it is.**
+`docs/FINDINGS.md` does not say a closed row needs *evidence*. It says a closed row names **a test
+that fails without the fix**. A looser word — "evidence", "a reference", "where it was fixed" — would
+have accepted V-15's selftest plant and the row would have looked complete. The strict wording is
+what turned a bookkeeping exercise into a missing test. **A checker that improves the thing it checks
+rather than only reporting on it is rare**, and it happened here because the standard was written to
+demand an artifact rather than a citation. Recorded so nobody relaxes that wording later to make a
+row easier to add.
 
 ---
 
