@@ -82,6 +82,12 @@ def build(ws: Workspace, plan: Plan) -> JSONObject:
             for e in entries
         ],
         "plan_hash": str(by_step["plan"].body["plan_hash"]),
+        # The count a reader will get from `verify` after this report is emitted.
+        # Without it the report lists N entries, `verify` reports N+1, and the
+        # report itself tells the reader to go and run `verify`. The flagship
+        # output would be sending an auditor to a command that contradicts it.
+        # C-16.
+        "entries_verify_will_report": len(entries) + 1,
         "honest_limits": list(HONEST_LIMITS),
     }
 
@@ -135,6 +141,11 @@ def render_markdown(report: JSONObject) -> str:
             f"`{str(link['entry_digest'])[:16]}` |"
         )
     lines += [
+        "",
+        f"**This is the chain as at emission: {len(chain)} entries.** Emitting this report "
+        f"appends one further entry, so `prevalence-kit verify` on this run will report "
+        f"**{report['entries_verify_will_report']} entries**. A report cannot list its own "
+        "emission; the difference is that entry, not a discrepancy.",
         "",
         "Anyone can re-check this with `prevalence-kit verify`. It redraws the sample and "
         "recomputes the estimate from the sealed record, rather than re-reading the numbers "

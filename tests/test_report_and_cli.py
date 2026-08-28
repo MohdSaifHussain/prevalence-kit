@@ -281,3 +281,41 @@ def test_an_empty_run_directory_still_says_ledger(tmp_path: Path) -> None:
     result = cli("verify", "--run", str(empty))
     assert result.returncode == 2
     assert result.stderr.splitlines()[0] == "REFUSED [LEDGER_BROKEN]"
+
+
+def test_the_report_says_what_verify_will_count(
+    run: Workspace, plan: Plan, plan_path: Path
+) -> None:
+    """C-16. The flagship artifact must not contradict the command it recommends.
+
+    The report lists the chain as at emission, then `emit-report` appends its own
+    entry -- so the table showed 4 and `verify` reported 5, with nothing
+    explaining the difference, in the one document that tells the reader to go
+    and run `verify`.
+
+    A report cannot list its own emission. It can say so, and state the count the
+    reader should expect, so the two artifacts agree out loud rather than by
+    inference.
+    """
+    markdown, as_json = report_mod.emit(run, plan)
+    report = json.loads(as_json.read_text(encoding="utf-8"))
+
+    predicted = report["entries_verify_will_report"]
+    assert predicted == len(report["chain"]) + 1
+    assert f"will report **{predicted} entries**" in markdown.read_text(encoding="utf-8")
+
+    # And the prediction has to be right, not merely present.
+    actual = next(c for c in verify_run(run, plan_path) if c.name == "ledger chain")
+    assert f"{predicted} entries" in actual.note
+
+
+def test_the_prediction_holds_on_a_second_emission(
+    run: Workspace, plan: Plan, plan_path: Path
+) -> None:
+    """`report` repeats (D-17), so the count must track, not be hardcoded."""
+    report_mod.emit(run, plan, stem="first")
+    _, as_json = report_mod.emit(run, plan, stem="second")
+
+    predicted = json.loads(as_json.read_text(encoding="utf-8"))["entries_verify_will_report"]
+    actual = next(c for c in verify_run(run, plan_path) if c.name == "ledger chain")
+    assert f"{predicted} entries" in actual.note

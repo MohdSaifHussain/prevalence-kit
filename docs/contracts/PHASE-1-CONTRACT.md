@@ -198,7 +198,7 @@ Expected results are stated **in advance**, including exit codes.
 | # | Command | Expected |
 |---|---|---|
 | E1 | `prevalence-kit plan examples/synthetic/plan.yaml` | Prints the plan hash. **Exit 0.** |
-| E2 | Point the plan's data path at a nonexistent file, rerun E1 | **Same plan hash. Exit 0.** Proves R1. |
+| E2 ▸ **RESTATED** | **Leave the plan file untouched. Rename or move the population file so it is absent from disk.** Rerun E1. | **Same plan hash as E1, byte for byte. Exit 0.** Proves R1. |
 | E3 | `sample` → `ingest-labels` → `estimate` → `emit-report`, full chain | A report at a named path. **Exit 0.** |
 | E4 | **Read `report.md` by eye** | Estimate, 95% interval, design, n, every hash, and an Honest Limits block. Does it read in plain English? Does the interval look sane against the synthetic truth? |
 | E5 | `verify` | **Exit 0.** Prints each link checked. |
@@ -218,6 +218,10 @@ Expected results are stated **in advance**, including exit codes.
 | E13 | Run the zero-network test | Passes. **Then add `httpx` to the dependencies and run it again — it must fail.** A guard that has only ever passed is a decoration. |
 | E14 | Run `tools/check_claims.py --selftest` | Passes, and demonstrates it catches a planted mismatch. |
 | E15 | Run the tripwire script | Reports TW-1/2/3 against the 2026-08-28 baselines. |
+
+**E2's action is stated as an action on the *filesystem*, not on the plan.** The original wording -- *"point the plan's data path at a nonexistent file"* -- reads naturally as *edit the plan so it names a file that does not exist*. Under that reading the plan record changes, so the hash changes, and the stated expectation of "same plan hash" is **false**. The check is that the hash does not depend on the *data*; the path is part of the commitment and is supposed to affect it. The director performed the correct action and the hash was identical.
+
+*The reviewer's harness had encoded the wrong reading:* it edited the plan and printed `same as the real plan? False` with a note explaining why that was acceptable. That is §7a's stated limit -- **a second instrument is not an independent truth** -- demonstrating itself on the first occasion it mattered. Recorded as evidence for that sentence rather than as an assertion of it. `docs/CORRECTIONS.md` C-17.
 
 **E8d exists because E8 and E8b both passed while E8d failed.** Both of those edit the plan file; neither re-runs `plan`, which is the path that actually defeated pre-registration. A checklist that only tests the path the builder had in mind is a checklist testing the builder.
 

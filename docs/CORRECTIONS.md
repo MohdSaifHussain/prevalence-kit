@@ -17,9 +17,10 @@ neither the director nor the AI can quietly absorb the other's.
 | Chat reviewer (draft author) | 3 | 0 | **3** |
 | Research report (passed through unverified) | 2 | 0 | **2** |
 | Stale-at-draft-time, queued but built on anyway | 1 | 0 | **1** |
-| **Builder (Claude Code)** | **9** | **0** | **9** |
+| **Builder (Claude Code)** | **11** | **0** | **11** |
 | Director | 0 | 0 | 0 |
-| **Total** | **15** | **0** | **15** |
+| Tool artifact (noted, not a defect) | - | - | **1** |
+| **Total** | **17** | **0** | **17** |
 
 C-1 … C-6 are Phase 0: defects in the chat-drafted vision, all caught before any code, none reaching
 an artifact. **C-7 … C-13 are Phase 1, and all seven are mine.** Five were caught by the director's
@@ -296,6 +297,67 @@ CSV with a bare `DictReader` and died on `_csv.Error: field larger than field li
 defect V-11 named, inside the checker written to prevent that class of thing recurring. And adding
 `RUN_NOT_FOUND` made the contract's "22 reason codes" stale, which the `figures` check caught on the
 same run. Both are the checker working on its own author.
+
+---
+
+---
+
+## C-16 - The report contradicted the command it tells the reader to run
+
+| | |
+|---|---|
+| **Claimed** | `report.md` listed the chain as four ledger entries. |
+| **Actually** | `verify` on the same run reports **five**. `emit-report` appends its own entry after the table is built, and nothing in the report explained the difference - in the one document that tells the reader *"Anyone can re-check this with `prevalence-kit verify`"*. |
+| **Direction** | Against the reader, in the flagship artifact. An outsider reading the report and running the command it recommends gets two numbers that disagree, with no way to tell which is wrong. |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | The director, at exit check **E4** - reading the report by eye. No instrument caught it: the tests assert the chain's *contents*, the checker asks about citations and fixtures, and the harness never emitted a report at all (contract 7a records that E4 and R7 were outside its reach). |
+| **Severity** | Medium. Nothing computed is wrong. What was wrong is that the artifact an auditor actually reads undermined its own audit instruction. |
+| **Replaced by** | The report now states the chain as at emission, that emitting appends one further entry, and **the exact count `verify` will report**. Asserted by `test_the_report_says_what_verify_will_count`, which checks the prediction is *correct* and not merely present, and by a second test that it tracks across repeat emissions. |
+| **Status** | **OPEN** - closes at phase close |
+
+**Why this one is worth its entry.** It is the clearest instance in the phase of the thing rule 4
+exists for: *green tests prove self-consistency, not meaning.* Every test passed, the checker
+reconciled, the harness ran 24 damage cases - and the defect was visible in ten seconds to a person
+reading the output.
+
+---
+
+## C-17 - E2's wording admitted a reading under which its own expectation was false
+
+| | |
+|---|---|
+| **Claimed** | Exit check E2: *"Point the plan's data path at a nonexistent file, rerun E1. Expected: same plan hash."* |
+| **Actually** | Ambiguous. Read as *edit the plan so it names a file that does not exist*, the plan record changes, so the hash changes, and the stated expectation is **wrong**. The path is part of the commitment and is *supposed* to affect the hash. The check is that the hash does not depend on the **data**, which requires leaving the plan alone and making the file absent. |
+| **Direction** | Against the check. A checklist item whose expectation is false under a natural reading of its own action is not a check. |
+| **Source** | **Builder (Claude Code)** - I wrote E2. |
+| **Caught by** | The director, performing it, noticing both readings, and choosing the correct one |
+| **Severity** | Low in effect, notable in kind. R1 is the property pre-registration rests on, and its exit check was the one written loosely. |
+| **Replaced by** | E2 restated as an action on the filesystem: *leave the plan untouched, rename or move the population file*. |
+| **Status** | **OPEN** - closes at phase close |
+
+**The part worth keeping.** *The reviewer's harness had encoded the wrong reading.* It edited the
+plan, printed `same as the real plan? False`, and added a note explaining why that was fine - so the
+harness was internally coherent and testing the wrong thing. Contract 7a says **a second instrument
+is not an independent truth** because it carries its author's blind spots. This is the evidence for
+that sentence rather than an assertion of it, and it arrived on the first occasion it mattered.
+
+Neither instrument was wrong about what it checked. Both read the same ambiguous sentence and
+resolved it the same way. That is what a shared upstream defect looks like, and it is why the
+*director* performing the checklist is not redundant with either.
+
+---
+
+## C-18 - The ruff file-count artifact, appearing where C-7 said it would
+
+| | |
+|---|---|
+| **Claimed** | Nothing new. C-7 already records that ruff's summary integer is not a file count. |
+| **Actually** | The director's hand-run of E12 printed *"42 files already formatted"* against a project with far fewer Python files. |
+| **Direction** | - |
+| **Source** | Not a defect in this project. Recorded because **C-7 predicted it would keep surfacing, and it has now surfaced in the director's own hand-run** rather than only in my reports. |
+| **Severity** | None. Logged so that the next person who sees the number has somewhere to look instead of investigating it again. |
+| **Replaced by** | Gate evidence is exit codes and the test count. Neither this project nor its record quotes the ruff integer. |
+| **Status** | **noted** - carries forward as a known artifact of the tool, not an open item |
 
 ---
 
