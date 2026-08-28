@@ -43,11 +43,22 @@ jobs:
       - name: ruff format --check
         run: ruff format --check .
 
-      - name: mypy --strict
+      - name: mypy --strict src
         run: mypy --strict src
 
+      - name: mypy (config: src + tests)
+        # V-16. CI ran the strict half over src/ and stopped there, so the
+        # eleven test files were never type-checked on the remote: 12 files
+        # against the config form's 23. The gate on the desk was stronger than
+        # the gate on the remote and nothing said so. Rule 5, applied to the
+        # gate's own coverage -- a gate half-run is a gate not run.
+        run: mypy
+
       - name: pytest
-        run: pytest -q
+        # NOT `pytest -q`. pyproject.toml already sets addopts = "-q", so -q
+        # becomes -qq and suppresses the summary line, leaving a gate step that
+        # cannot produce its own evidence. E11 exists for that count.
+        run: pytest
 
       - name: Determinism across versions
         # R2: the same plan and seed must draw a byte-identical sample on every

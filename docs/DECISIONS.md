@@ -750,6 +750,83 @@ prefix**, the same class as `_safe_id` in F-7, so the full 64 hex characters are
 
 ---
 
+## D-27 - A retrieval procedure is a pinned thing, with its own re-check date
+
+**Date:** 2026-08-29 - **Made in:** the director's C-22 ruling - **Ruled by:** director
+
+`docs/STANDARDS.md` gains **S-8**, a section for the *calls* that fetch sources, each with its own
+re-check date, alongside the sections for the sources themselves.
+
+**Reason, as ruled:** *"A pinned URL, a digest and a version are all worthless if the call that
+fetches them 400s. The register currently pins what to fetch and not how, and the how is the part
+that just broke."*
+
+**What broke.** The retrieval note written 2026-08-28 prescribed one header. It worked that day -- it
+is how the "prevalence appears zero times" count was made over the full official texts. By 2026-08-29
+the same call returned **HTTP 400** on `32011D0833` and on `32024R2835`, the CELEX it was written
+for. It needs `Accept-Language: eng` as well. `docs/CORRECTIONS.md` C-22.
+
+**Why this is a decision and not just a fix.** Fixing the header is one line. The decision is that
+**rule 3 now covers procedures too**.
+
+Rule 3 says a pin nobody re-checks quietly expires. We had only ever applied it to sources. So the
+one entry that every other entry depends on was the one with no re-check date. The general form:
+*anything the register depends on that can change under us gets a re-check date, whether or not it
+looks like a source.*
+
+**Reading did not find this. Running it did.** The note read just as correctly on 2026-08-29 as on
+2026-08-28. Only the call returned 400.
+
+**Alternative not taken.** Fix the header and move on. Rejected: that fixes one case and leaves the
+class. The next expired procedure would be found the same way -- by accident, mid-task, by whoever
+happened to run it instead of quoting it. D-23 again: a check that names its question generalises; a
+check that names a row does not.
+
+**Second-order consequence, recorded rather than absorbed.** `tools/check_tripwires.py` TW-3 fetches
+the same endpoint **without** an `Accept` header, gets RDF, and works -- it needs existence, not
+content. Stated in S-8.2 as deliberate, so a later reader does not "fix" it into the S-8.1 form and
+silently change what TW-3 measures.
+
+---
+
+## D-28 - The documented gate and the executed gate are one list, reconciled by a check
+
+**Date:** 2026-08-29 - **Made in:** the director's V-16 ruling - **Ruled by:** director
+
+`CLAUDE.md`'s gate block is **machine-read**. `tools/check_claims.py`'s seventh check, `gate`, parses
+it and requires `.github/workflows/gate.yml` to run every line, in both directions.
+
+**What it closes.** `CLAUDE.md` documented seven checks. `gate.yml` ran six. The missing one was
+`mypy` in its **config form**, which covers `src` *and* `tests` -- **23 files against
+`--strict src`'s 12**, re-derived 2026-08-29. The eleven test files were never type-checked on the
+remote, so **a type error in a test would pass CI and fail on the director's machine, and nothing
+said the remote gate was the weaker one.**
+
+**The director's framing, recorded as given:** doctrine rule 5's *a gate half-run is a gate not run*,
+applied to the gate's own coverage. And the same shape as V-15 -- an instrument whose inputs quietly
+drifted from what it claims to cover, with no failure and no warning, just less checked than the day
+before.
+
+**Why a check and not a habit.** Rule 14. Two lists that must agree, with nothing making them
+agree, will drift apart. The only question is when. So the block in `CLAUDE.md` is now one command
+per line, and the prose that used to sit inside it moved out.
+
+**It checks both directions, on purpose.** A documented check missing from CI is the defect we hit.
+A CI step running a gate tool nobody documented is the same defect from the other side -- and that
+one looks like extra rigour rather than drift.
+
+**The selftest plant is the defect itself**, not a stand-in: it rewrites `run: pytest` to
+`run: pytest -q`, which is the other half of what the first CI run exposed -- `addopts` already sets
+`-q`, so `-q` is `-qq` and the count is suppressed. The gate that asserts R2 could not say how many
+tests it ran.
+
+**Alternative not taken.** Have CI run a single `make gate` target so there is only one list.
+Genuinely simpler, and rejected for this phase: it would rewrite the working gate at the Phase 1 to 2
+boundary to remove a defect a check already catches, which is D-26's churn argument. **Recorded as
+the better answer if a third list ever appears.**
+
+---
+
 ## Carried obligations opened by these decisions
 
 | # | Obligation | Owner | Opened by |
@@ -761,4 +838,5 @@ prefix**, the same class as `_safe_id` in F-7, so the full 64 hex characters are
 | O-12 | `verify` states in words when the on-disk plan check was skipped because the file is absent. | Phase 1 | **D-15** |
 | O-13 | Measure how far `svy`'s design-based Wilson diverges from the textbook binomial interval at small *n*. D-18 records that they differ in construction; the magnitude is unmeasured. | Phase 2 | **D-18** |
 | O-15 | Add a schema version to the ledger, if a run made before `plan_source_path` existed ever needs different advice from an API-created run. Not added speculatively. | Phase 2+ | **D-25** |
+| O-19 | Re-pin `actions/checkout` and `actions/setup-python` before GitHub drops Node 20. Both are two majors behind and both target Node 20. Watched by TW-4, which fired on its first run. | Phase 3 | **TW-4** |
 | O-14 | Build the keyless structural audit mode `verify_structure`'s docstring described but `verify_run` never offered. Genuinely valuable: an auditor without the key could still check sequence integrity. | Phase 2 | **V-10** |

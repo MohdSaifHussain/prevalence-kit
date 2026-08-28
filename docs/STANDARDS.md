@@ -34,12 +34,12 @@ updated with a dated note. A pin nobody re-checks is a pin that quietly expires.
 
 **Retrieval note -- corrected 2026-08-29. The earlier version of this note no longer works.**
 
-`eur-lex.europa.eu` is behind an AWS WAF bot challenge and returns **HTTP 202 with an empty body**
-to scripted fetches. Re-measured 2026-08-29 against the legal notice and against the CELEX record
-for `32011D0833`: both 202, both 0 bytes. That part has not changed.
+`eur-lex.europa.eu` blocks scripts. It answers **HTTP 202 with an empty body**. Measured again on
+2026-08-29, on the legal notice and on the CELEX record for `32011D0833`: both 202, both 0 bytes.
+That has not changed.
 
-What changed is the workaround. The Publications Office endpoint needs **two** headers, and the
-version of this note written on 2026-08-28 recorded only one:
+The workaround changed. The Publications Office endpoint needs **two** headers. The version of this
+note written on 2026-08-28 gave only one:
 
     curl -H "Accept: application/xhtml+xml" -H "Accept-Language: eng" \
          http://publications.europa.eu/resource/celex/<CELEX>
@@ -53,9 +53,10 @@ version of this note written on 2026-08-28 recorded only one:
 | no `Accept` header | HTTP 200, but `application/rdf+xml` -- metadata, not the act |
 | **both headers** | **HTTP 200**, 48,730 bytes, `application/xhtml+xml` |
 
-The one-header call also returns 400 against `32024R2835`, which is the CELEX this note was
-originally written for. **The recorded procedure had stopped working on the document it was recorded
-against, and nothing said so.** `docs/CORRECTIONS.md` C-22.
+The one-header call also fails on `32024R2835` -- the CELEX this note was written for.
+
+**So the recorded procedure had stopped working on the document it was written for, and nothing said
+so.** `docs/CORRECTIONS.md` C-22.
 
 ---
 
@@ -139,13 +140,13 @@ are due within two months of each period's end.
 
 ### The reuse question -- O-18's evidence, gathered 2026-08-29
 
-**What O-18 asks.** Whether `OJ_L_202402835_EN_TXT.pdf` may ship in a public repository, with the
-EUR-Lex reuse terms **checked rather than assumed**. Phase 2 contract, section 10.
+**What O-18 asks.** Can `OJ_L_202402835_EN_TXT.pdf` go in a public repository? The EUR-Lex reuse
+terms had to be **checked, not assumed**. Phase 2 contract, section 10.
 
-**The anchor is the Decision, not the website's summary of it.** EUR-Lex's legal notice says the
-reuse policy "is based on Decision 2011/833/EU". That sentence is the Publications Office
-paraphrasing an instrument. Hard Rule 3 takes the anchor from the primary source, so the articles
-below are quoted from the Decision, and the notice is recorded as **corroboration**.
+**We anchor to the law, not to the website's summary of it.** The EUR-Lex legal notice says the
+reuse policy "is based on Decision 2011/833/EU". That is the Publications Office describing a law in
+its own words. Hard Rule 3 says go to the law itself. So the articles below are quoted from the
+Decision. The notice is recorded as **backup evidence**, not as the anchor.
 
 **Quoted verbatim from Decision 2011/833/EU** (S-4.3):
 
@@ -180,49 +181,60 @@ below are quoted from the Decision, and the notice is recorded as **corroboratio
 > (b) the obligation not to distort the original meaning or message of the documents; (c) the
 > non-liability of the Commission for any consequence stemming from the reuse."*
 
-**Corroboration, recorded as corroboration and not as the anchor.** EUR-Lex legal notice, copyright
-section, read in a browser by the director on 2026-08-29 and supplied as text because no fetcher in
-this project could retrieve it:
+**The backup evidence.** This is the EUR-Lex legal notice, copyright section. The director read it
+in a browser on 2026-08-29 and typed it out, because no fetcher here can reach the page:
 
 > *"(c) European Union, 1998-2026 ... The Commission's document reuse policy is based on Decision
 > 2011/833/EU. Unless otherwise specified, you can re-use the legal documents published in EUR-Lex
 > for commercial or non-commercial purposes."*
 
-**Two independent retrievals of the Decision agree.** The director's PDF of OJ L 330 and the
-Publications Office XHTML for CELEX `32011D0833` were extracted separately and compared on
-Articles 2, 4 and 6. They agree word for word. The second retrieval exists only because the recorded
-procedure was tested rather than trusted -- see the retrieval note above, and C-22.
+**We fetched the Decision twice, two different ways, and the two agree.** One is the director's PDF
+of OJ L 330. The other is the Publications Office XHTML for CELEX `32011D0833`. Both were extracted
+and compared on Articles 2, 4 and 6. They match word for word.
+
+The second copy exists only because we ran the recorded procedure instead of trusting it. See the
+retrieval note above, and C-22.
 
 **"Unless otherwise specified" -- checked against the act itself, not assumed.**
 
-The escape clause in the notice is Article 6(1). The notice names International Accounting Standards
-as an example of documents that carry special conditions, and says those conditions are stated in the
-respective Official Journal. So the place to look is the act.
+"Unless otherwise specified" comes from Article 6(1). The notice gives International Accounting
+Standards as an example of a document with special conditions, and says those conditions appear in
+the Official Journal itself. So the place to look is the act.
 
-Searched: the full text of `OJ_L_202402835_EN_TXT.pdf`, 48 pages, extracted to 4,595 lines, for
-`reproduc`, `copyright`, `(c) European Union`, the copyright symbol itself, `all rights reserved`,
-`reuse`, `re-use`, `licence`, `license`, `2011/833`, `permission`, `otherwise specified`,
-`otherwise stated` and `special condition`. Also read the masthead, the final page, and the embedded
-XMP metadata.
+**What we searched.** The whole of `OJ_L_202402835_EN_TXT.pdf` -- 48 pages, 4,595 lines of extracted
+text. Terms: `reproduc`, `copyright`, `(c) European Union`, the copyright symbol, `all rights
+reserved`, `reuse`, `re-use`, `licence`, `license`, `2011/833`, `permission`, `otherwise specified`,
+`otherwise stated`, `special condition`. We also read the first page, the last page, and the PDF's
+own metadata.
 
-**Found: nothing.** Four hits on `copyright`, all of them substantive content -- the
-`KEYWORD_COPYRIGHT_INFRINGEMENT` category in the reporting template, and guidance on counting notices
-about copyright-infringing videos. Zero occurrences of the copyright symbol. No `dc:rights`,
-`xmpRights`, `WebStatement` or `Marked` tag in the XMP. The only thing repeated on every page is the
-ELI footer `http://data.europa.eu/eli/reg_impl/2024/2835/oj`.
+**What we found: nothing.** There are four hits on `copyright`. All four are ordinary content -- the
+`KEYWORD_COPYRIGHT_INFRINGEMENT` category in the reporting template, and a note about counting
+copyright complaints. The copyright symbol does not appear at all. The metadata holds no `dc:rights`,
+`xmpRights`, `WebStatement` or `Marked` tag. The only thing on every page is the ELI footer,
+`http://data.europa.eu/eli/reg_impl/2024/2835/oj`.
 
-**Nothing is otherwise specified in this act.** That is a performed check, and its search terms are
-listed above so someone else can run the same one.
+**So nothing is otherwise specified in this act.** We ran that check. The search terms are listed
+above so anyone can run it again.
 
-**The boundary, stated so nobody reads this wider than it is.** Decision 2011/833/EU covers documents
-**produced by the Commission**. Implementing Regulation (EU) 2024/2835 is a Commission act, so
-Article 2(1)(a) fits it squarely. **Regulation (EU) 2022/2065 (S-4.1) is a Parliament and Council
-act**, and this evidence says nothing about it. If a later phase wants to ship the DSA text, that is
-a separate question needing its own answer.
+**Where this stops.** Decision 2011/833/EU covers documents **made by the Commission**.
+Implementing Regulation (EU) 2024/2835 is a Commission act, so Article 2(1)(a) covers it.
 
-**Proposed disposition, for the director to rule.** The condition that actually binds redistribution
-is Article 6(2)(a) -- acknowledge the source -- and this register already does that for both
-documents, by CELEX, ELI, OJ reference, date and sha256. **The builder does not close O-18.**
+**Regulation (EU) 2022/2065 -- the DSA, S-4.1 -- is a Parliament and Council act.** This evidence
+says nothing about it. If a later phase wants to ship the DSA text, that needs its own answer.
+
+**O-18 CLOSED -- ruled by the director, 2026-08-29.** Decision 2011/833/EU permits reuse.
+Article 6(2)(a)'s source acknowledgement is the binding condition, and this register already
+satisfies it for both documents by CELEX, ELI, OJ reference, date and sha256. The director's
+grounds, recorded as given: two independent retrievals agreeing word for word on all three articles
+is stronger evidence than the charter asks for.
+
+> **The boundary travels with the clearance, and it is not decoration.** This closure covers
+> **Commission documents**. Implementing Regulation (EU) 2024/2835 is a Commission act and
+> Article 2(1)(a) fits it. **Regulation (EU) 2022/2065 -- the DSA, S-4.1 -- is a Parliament and
+> Council act, and O-18's closure says nothing about it.** The charter cites the DSA repeatedly.
+> The day someone adds its Official Journal text to this repository, they must not read this
+> clearance as covering it. That is a separate question needing its own answer, and this sentence
+> exists so nobody has to reconstruct that later.
 
 **Local copies, and only one of them is tracked.**
 
@@ -231,19 +243,22 @@ documents, by CELEX, ELI, OJ reference, date and sha256. **The builder does not 
 | `OJ_L_202402835_EN_TXT.pdf` | `daff77f027fde1e0f92f89d70114327255456a3a4fa420fb6478da204a31337b` | 1,387,069 | 48 | **yes, since `5b4f97f`** |
 | `OJ_L_2011_330_FULL_EN_TXT.pdf` | `5ac1d20087e45d96a821af65748a77b20be8f794210ad7a324b0a37404e34886` | 2,084,648 | 52 | **no, deliberately** |
 
-**The asymmetry is the point.** The first PDF cannot be kept out of the repository -- it has been in
-history since `5b4f97f`, and a private repository's history is what a later public repository would
-inherit. The second has never been committed, so keeping it out is still possible, and it is free.
-It is named in `.gitignore` so it cannot be committed by accident, and anyone can fetch it from the
-pinned CELEX URL in S-4.3 and check it against the digest above. **That is the pattern O-18 would
-have asked for on the first file had the question been raised before `5b4f97f`, applied now to the
-one where it still works.**
+**Why one is tracked and the other is not.** The first PDF cannot be kept out now. It has been in
+git history since `5b4f97f`, and a private repository's history is what a public one would inherit.
 
-**A limit of the checker, stated so nobody reads it as covering this.** `tools/check_claims.py`'s
-`check_paths` matches paths under `src/`, `tests/`, `docs/` or `tools/` that end in `.py`, `.md`,
-`.toml` or `.txt`. Neither PDF matches, on either count. So the two filenames above are **not**
-reconciled against the filesystem by any check, and the second one deliberately would not resolve in
-a fresh clone. Candidate for **D2.14**, which already owns extending the checker to new artifacts.
+The second has never been committed, so keeping it out still works, and it costs nothing.
+`.gitignore` names it so it cannot be added by accident. Anyone can fetch it from the CELEX URL in
+S-4.3 and check it against the digest above.
+
+**This is what O-18 would have asked for on the first file, if the question had come up before
+`5b4f97f`. We applied it to the one file where it still works.**
+
+**What the checker does not cover here.** `check_paths` in `tools/check_claims.py` only looks at
+paths under `src/`, `tests/`, `docs/` or `tools/` that end in `.py`, `.md`, `.toml` or `.txt`.
+Neither PDF matches -- wrong folder, wrong extension.
+
+So **no check confirms these two filenames exist**, and the second one is meant to be missing from a
+fresh clone. Ruled into **D2.14**.
 
 ## S-5 — Security engineering
 
@@ -254,6 +269,12 @@ a fresh clone. Candidate for **D2.14**, which already owns extending the checker
 | S-5.2a | Provenance in CI | `actions/attest-build-provenance` | **v4.2.2**, released **2026-08-06** | **2026-11-28** |
 | S-5.2b | Supply-chain posture | OpenSSF `ossf/scorecard` | **v5.5.0**, released **2026-04-23** | **2026-11-28** |
 | S-5.3 | Hash chain and all digests | **SHA-256**, NIST **FIPS 180-4** (Secure Hash Standard) | `https://csrc.nist.gov/pubs/fips/180-4/upd1/final`, fetched **2026-08-28**, HTTP 200 | never — fixed publication |
+
+| S-5.4 | CI actions, SHA-pinned per charter 5.1 | `actions/checkout` **v5.0.0** (`08c6903cd8c0fde910a37f88322edcfb5dd907a8`); `actions/setup-python` **v5.6.0** (`a26af69be951a213d495a4c3e4e4022e16d87065`) | Both **target Node 20**, which GitHub is deprecating and currently force-runs on Node 24. 28 warnings in run `33204075014`. **TW-4 / O-19.** | **every phase close** (TW-4) |
+
+*(S-5.4 sits in this table because a pinned action is a supply-chain control. The pins are read out
+of `.github/workflows/gate.yml` by `tools/check_tripwires.py` rather than copied into it, so the
+tripwire and the artifact cannot drift apart.)*
 
 **S-5.1 ruled: Fernet**, on soak time, cross-project consistency with finding-bridge, and the
 availability of AES-GCM AAD binding if ever needed. **Cobblestone-128 considered and rejected** — it
@@ -315,6 +336,38 @@ Citation: Borkan, Dixon, Sorensen, Thain, Vasserman (2019), arXiv 1903.04561.
 
 ---
 
+## S-8 — Retrieval procedures
+
+**Why this section exists.** C-22. The register pinned *what* to fetch -- a URL, a version, a
+digest. It never pinned *how* to fetch it. The how broke.
+
+A pinned URL is worth nothing if the call that fetches it returns 400. Rule 3 says a pin nobody
+re-checks quietly expires, but rule 3 had only ever been applied to sources. So the one entry every
+other entry depends on was the one with no re-check date.
+
+**Ruled by the director, 2026-08-29: a procedure is a pinned thing too, and it gets its own
+re-check date.** D-27.
+
+| ID | Procedure | Exact call | Last measured | Re-check |
+|---|---|---|---|---|
+| S-8.1 | Fetch an EU legal act as readable text | `curl -H "Accept: application/xhtml+xml" -H "Accept-Language: eng" http://publications.europa.eu/resource/celex/<CELEX>` | **2026-08-29**: HTTP 200, 48,730 bytes on `32011D0833`; HTTP 200, 721,977 bytes on `32024R2835` | **2026-09-29** |
+| S-8.2 | Probe whether a CELEX work exists at all | the same URL, **no** `Accept` header | **2026-08-29**: HTTP 200, `application/rdf+xml`, 339,544 bytes. This is the form `tools/check_tripwires.py` TW-3 uses, **deliberately**: it needs existence, not content | **2026-09-29** |
+| S-8.3 | `eur-lex.europa.eu` directly | any scripted fetch | **2026-08-29**: **HTTP 202, 0 bytes**, on the legal notice and on the CELEX record for `32011D0833`. Unusable. Measured twice, by two instruments | **2026-11-29** |
+
+**The standing rule.** It has two incidents behind it now, not one: the reviewer's three empty
+EUR-Lex fetches, and the expired header in C-22.
+
+> **"I could not read it" is a result to report, not a reason to work from memory.**
+
+If a source cannot be fetched, say so. Say what was tried and what came back. The director decides
+what happens next. Never fill it in from memory, and never quietly drop it.
+
+**What this section cannot do.** It records that a call worked on one date. It cannot tell you the
+day it stops working. Only running it can do that. The re-check date is the instruction to run it.
+C-22 is what happens when nobody does.
+
+---
+
 ## S-X — Context sources (never a method source)
 
 | ID | Source | Why it is here | Why it cannot be a method source |
@@ -343,6 +396,7 @@ Tracked by name until discharged. Each is owned by a named phase.
 | O-8 | Rogan–Gladen has no library witness — validate against the worked results in Lang & Reiczigel (2014) | Phase 2 | open |
 | O-9 | Implement and test Fernet chunking above the in-memory limit; assert chunk-boundary behaviour | Phase 1 | **discharged 2026-08-28** — `test_chunking_is_exact_at_the_boundary` and the F-2 pair |
 | O-10 | README credits `svy` as the estimator layer; assert by overclaim scanner | Phase 3 | open |
+| O-19 | **Re-pin the CI actions before GitHub drops Node 20.** Both are SHA-pinned two major versions back (S-5.4) and both target Node 20. When it is dropped, the failure is a **red X on every job with nothing wrong in this repository**. Watched by **TW-4**, which **FIRED on its first run**, 2026-08-29 | Phase 3 | open |
 
 ## Re-check log
 
@@ -353,3 +407,5 @@ Tracked by name until discharged. Each is owned by a named phase.
 | 2026-08-29 | Claude (builder), Phase 1 to 2 boundary | EUR-Lex reachability: legal notice, and CELEX `32011D0833` | Unchanged. HTTP 202, 0 bytes, both |
 | 2026-08-29 | Claude (builder), Phase 1 to 2 boundary | **S-4.3 added.** Decision 2011/833/EU, quoted from the OJ PDF and from the Publications Office XHTML | The two agree word for word on Articles 2, 4 and 6 |
 | 2026-08-29 | Claude (builder), Phase 1 to 2 boundary | S-4.2's digest and page count, re-derived from the file | `daff77f0...31337b`, 48 pages. Both match what was recorded |
+| 2026-08-29 | **Director's ruling** | **O-18 closed**, with the Parliament-and-Council boundary written into S-4.3 | Closed on the evidence above |
+| 2026-08-29 | Claude (builder), first `--check` of TW-4 | **S-5.4's actions against their latest releases** | **TW-4 FIRED.** `checkout` v5.0.0 vs latest **v7.0.1**; `setup-python` v5.6.0 vs latest **v7.0.0**. Both two majors back. O-19 |

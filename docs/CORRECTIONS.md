@@ -523,30 +523,33 @@ bad path in **`CLAUDE.md` specifically** - a file the old list would never have 
 | **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)**, naming the commit that discharged it |
 
 **This is not the believed-mechanism class.** The note was **true when written**. Phase 0 used that
-endpoint successfully on 2026-08-28 -- it is how the "prevalence appears zero times" count was made
-over the full official texts. It expired some time in the following day or so, and nothing in this
-project was watching.
+endpoint on 2026-08-28 and it worked -- that is how the "prevalence appears zero times" count was
+made over the full texts. It expired within about a day, and nothing here was watching.
 
-**The register's own rule 3 is what should have caught it, and could not.** Rule 3 gives every
-*source* a re-check date, because "a pin nobody re-checks is a pin that quietly expires." **The
-retrieval procedure had no re-check date.** It is the infrastructure every pin sits on, and it was
-the one entry in the register with no flip-day. It has dated measurements now.
+**Rule 3 should have caught it and could not.** Rule 3 gives every *source* a re-check date, because
+a pin nobody re-checks quietly expires. **The retrieval procedure had no re-check date.** Every pin
+in the register sits on it, and it was the one entry with no expiry of its own. It has dated
+measurements now.
 
-**The tooling limit, recorded because it is wider than this question.** Three EUR-Lex pages were
-tried by the reviewer -- the legal notice, the about page, and the CELEX record for `32011D0833` --
-and all three returned empty content to its fetcher. Reproduced here independently: the legal notice
-and the CELEX record both return **HTTP 202 with 0 bytes**. The director read the site in a browser
-and supplied the text.
+**The tooling limit, recorded because it is wider than this one question.** The reviewer tried
+three EUR-Lex pages -- the legal notice, the about page, and the CELEX record for `32011D0833`. All
+three came back empty. I reproduced it here: the legal notice and the CELEX record both return
+**HTTP 202 with 0 bytes**. The director read the site in a browser and typed out the text.
 
-So: **a source this project depends on cannot be read by the instrument this project has been using
-to verify sources.** That matters before Phase 2, which leans on more external references than any
-phase so far -- CRAN, a pinned Docker digest, and the Lang & Reiczigel worked results.
+So: **a source this project depends on cannot be read by the tool this project uses to check
+sources.** That matters now, because Phase 2 leans on more outside references than any phase so far
+-- CRAN, a pinned Docker digest, and the Lang & Reiczigel worked results.
 
-**The standing rule it produces:** *"I could not read it" is a reportable outcome, not a prompt to
-work from memory.* A source that cannot be fetched gets reported as unfetched, with what was tried
-and what came back, and the director decides. It never gets filled in from recall and it never gets
-quietly dropped. That is doctrine rule 7 -- claims at the width of the evidence -- applied to the
-retrieval step rather than to the claim.
+**RULED 2026-08-29: accepted, and taken further than this entry took it.** The director's ruling
+adds one step: the procedure gets **its own register entry, with its own re-check date**. A pinned
+URL, digest and version are worth nothing if the call that fetches them returns 400. The register
+pinned *what* to fetch and never *how*, and the how is what broke. `docs/STANDARDS.md` **S-8**, and
+**D-27**.
+
+**The standing rule it produces:** *"I could not read it" is a result to report, not a reason to
+work from memory.* If a source cannot be fetched, say so, say what was tried, and say what came
+back. The director decides. Never fill it in from memory. Never quietly drop it. That is doctrine
+rule 7 -- claims at the width of the evidence -- applied to fetching rather than to the claim.
 
 ---
 

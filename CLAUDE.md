@@ -34,15 +34,30 @@ Corrections to them go in `docs/CORRECTIONS.md` with the date and the direction 
 
 ## The gate is seven checks, not four
 
+**A machine reads this block.** The `gate` check in `tools/check_claims.py` reads it, then checks
+that `.github/workflows/gate.yml` runs every line. One command per line. Nothing else in the block.
+
+Before V-16 these were two lists that had to agree, with nothing making them agree.
+
 ```
-ruff check .                       ruff format --check .
-mypy --strict src                  mypy            (config: src + tests)
-tools/check_claims.py --selftest   tools/check_claims.py
-pytest                             (NOT pytest -q -- addopts already sets -q, so -q is -qq
-                                    and suppresses the count. E11 exists for that count.)
+ruff check .
+ruff format --check .
+mypy --strict src
+mypy
+tools/check_claims.py --selftest
+tools/check_claims.py
+pytest
 ```
 
-Run **all of them** after any scripted edit, not the half that looks affected. Use
+`mypy` on its own is the **config form**. It covers `src` *and* `tests`. Counted 2026-08-29:
+`--strict src` reads **12** files, plain `mypy` reads **23**.
+
+Until V-16, CI ran only the first one. The eleven test files were never type-checked on the remote.
+
+**Never `pytest -q`.** `pyproject.toml` already sets `addopts = "-q"`, so `-q` is `-qq` and
+suppresses the count. E11 exists for that count.
+
+Run **all seven** after any scripted edit, not the half that looks affected. Use
 `.venv\Scripts\python.exe`.
 
 `tools/check_tripwires.py` is offline by default; `--check` reaches the network. It is a phase-close
@@ -68,13 +83,24 @@ ritual, not a CI job — a tripwire firing is a decision for the director, not a
 **Phase 0** ratified. **Phase 1** closed at `d66d225` — 222 tests, 20 findings closed, 23 corrections
 recorded. **Phase 2** contract **approved**, Q1-Q3 ruled; no Phase 2 code exists.
 
-**Two blockers owed before Phase 2 code, both needing a remote:**
+**Both blockers are gone.** The repository exists and CI has run.
 
-- **O-17** — CI has never executed. `.github/workflows/gate.yml` was verified by reading.
-- **O-16** — all 222 tests have only run on Python 3.14.0. R2 requires byte-identical sampling across
-  3.12/3.13/3.14 "asserted, not assumed". It is currently **assumed**. CI is the only instrument that
-  asserts it.
+- **O-16 discharged.** Run `33204075014` drew the same sample on CPython 3.12.14, 3.13.15 and
+  3.14.7. R2 is asserted now, not assumed. This is the first evidence in the project produced by
+  something neither the director nor the builder wrote.
+- **O-17 discharged.** The workflow has run. Four jobs, all green.
+- **O-18 closed.** Decision 2011/833/EU allows reuse. It covers **Commission** documents only —
+  the DSA is a Parliament and Council act, so it is not covered. `docs/STANDARDS.md` S-4.3.
 
-**Next session:** create the private repository, push, read the CI result — especially a red 3.12
-job, which would mean the sample is not byte-identical across versions. Then Phase 2 code, starting
-with **D2.1: reproduce Barnett Table 2B in R before any estimator is written.**
+**What the first CI run found**, which is what a first run is for:
+
+- **V-16** — CI ran six of the seven checks. `mypy` in its config form was missing, so no test file
+  was ever type-checked on the remote. Fixed, and the `gate` check now compares the two lists.
+- **`pytest -q` in CI** — `addopts` already sets `-q`, so it was `-qq` and printed no count. Fixed.
+- **TW-4 fired on its first check.** Both pinned actions are two major versions behind and target
+  Node 20. **O-19**, owned by Phase 3.
+
+**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private.
+
+**Next: Phase 2 code, starting with D2.1** — reproduce Barnett Table 2B in R, in the digest-pinned
+image, before any estimator is written.

@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from types import ModuleType
 
 import pytest
 
@@ -177,3 +178,65 @@ def test_every_reason_code_is_screaming_snake_ascii() -> None:
     for reason in Reason:
         assert re.fullmatch(r"[A-Z][A-Z_]+", reason.value), reason
         assert reason.name == reason.value
+
+
+# --------------------------------------------------------------------- V-16
+
+
+def _check_claims_module() -> ModuleType:
+    """Load `tools/check_claims.py` as a module. It is not on the import path."""
+    import importlib.util
+    import sys
+
+    path = Path(__file__).resolve().parents[1] / "tools" / "check_claims.py"
+    spec = importlib.util.spec_from_file_location("check_claims_under_test", path)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    # Registered before exec: `@dataclass(slots=True)` looks its own module up in
+    # sys.modules and fails with an unregistered synthetic name.
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_ci_runs_every_check_the_gate_documents() -> None:
+    """V-16. The documented gate and the executed gate are one list.
+
+    CI ran `mypy --strict src` and stopped, so the eleven test files were never
+    type-checked on the remote -- 12 files against the config form's 23. A type
+    error in a test passed CI and failed on the director's machine, and nothing
+    said the remote gate was the weaker one. Rule 5 applied to the gate's own
+    coverage: a gate half-run is a gate not run.
+
+    This is the positive control. The negative control is below, and
+    `check_claims.py --selftest` plants `pytest -q` -- the other half of the same
+    defect -- and requires the checker to catch it.
+    """
+    root = Path(__file__).resolve().parents[1]
+    problems = _check_claims_module().check_gate(root)
+    assert not problems, "\n".join(p.line() for p in problems)
+
+
+def test_the_gate_check_notices_a_step_ci_stops_running(tmp_path: Path) -> None:
+    """The negative control. Without it the check passes forever, checking nothing.
+
+    Reproduces V-16 itself rather than a stand-in: delete the config-form `mypy`
+    line from the documented block's counterpart in CI and require the checker to
+    name the missing command.
+    """
+    module = _check_claims_module()
+    root = Path(__file__).resolve().parents[1]
+
+    workflow = tmp_path / ".github" / "workflows"
+    workflow.mkdir(parents=True)
+    original = (root / ".github" / "workflows" / "gate.yml").read_text(encoding="utf-8")
+    assert "\n        run: mypy\n" in original, "V-16's step is not where this test expects it"
+    (workflow / "gate.yml").write_text(
+        original.replace("\n        run: mypy\n", "\n", 1), encoding="utf-8", newline="\n"
+    )
+    (tmp_path / "CLAUDE.md").write_text(
+        (root / "CLAUDE.md").read_text(encoding="utf-8"), encoding="utf-8", newline="\n"
+    )
+
+    problems = module.check_gate(tmp_path)
+    assert [p for p in problems if "`mypy`" in p.detail], [p.line() for p in problems]

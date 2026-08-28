@@ -60,6 +60,7 @@ governance layer more valuable, not less, because there would then be something 
 
 ---
 
+
 ## TW-2 — `svy` ships Trust & Safety prevalence and transparency output
 
 **This tripwire was rewritten in Phase 0. The vision's version rested on a false premise.**
@@ -158,6 +159,62 @@ of ours. Any own schema is deprecated with a migration note. Since `emit-dsa` is
 pivot is cheap by design — that is why it is not in v1.0.
 
 **Preserved.** Everything upstream of the emitter: plan, sample, seal, estimate, verify.
+
+---
+
+## TW-4 — A SHA-pinned GitHub Action falls behind its runtime
+
+**Added 2026-08-29, after the first CI run. FIRED on its first check.**
+
+**Why it matters.** Charter §5.1 requires SHA-pinned actions, because a tag can move.
+
+But pinning is what stops an action updating itself. **So a pin has an expiry, and someone has to
+watch it.** That is the price of pinning, not a reason against it. The alternative is an action that
+changes under us without telling anyone.
+
+**What fires it.** A pinned action superseded by a newer release, or the runtime it targets being
+withdrawn.
+
+**Recorded state, 2026-08-29** (`docs/STANDARDS.md` S-5.4):
+
+| Action | Pinned | SHA | Runtime it targets | Latest release |
+|---|---|---|---|---|
+| `actions/checkout` | **v5.0.0** | `08c6903cd8c0fde910a37f88322edcfb5dd907a8` | Node 20 | **v7.0.1** |
+| `actions/setup-python` | **v5.6.0** | `a26af69be951a213d495a4c3e4e4022e16d87065` | Node 20 | **v7.0.0** |
+
+Both are **two major versions behind**. Run `33204075014` carried **28 deprecation warnings**:
+*"Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on
+Node.js 24."*
+
+**What it will look like when GitHub drops Node 20.** Not a wrong answer. **A red X on every job,
+with nothing wrong in this repository** — no code change, no failing test, no commit that caused it.
+
+Whoever debugs it will start hunting a bug that is not there. This paragraph exists so they read it
+first.
+
+**Monitor.**
+
+| What | Where |
+|---|---|
+| A newer release of a pinned action | `https://api.github.com/repos/<owner>/<repo>/releases/latest`, compared against the pin **read out of `.github/workflows/gate.yml`**, never a copy of it |
+| The runtime deprecation itself | The warning text in any run's annotations |
+
+Scripted: `tools/check_tripwires.py` TW-4. It reads the workflow rather than carrying its own copy of
+the SHA, so the tripwire and the artifact cannot drift apart.
+
+**It fires on "a newer release exists", not on "Node 20 is gone"** — the first is the signal that can
+still be acted on. By the time the second is true, the decision has been made for us.
+
+**Cadence.** Every phase close. Every release.
+
+**Pivot if it fires.** It has fired. **That is a decision for the director, not a red X. The tool
+exits 0.**
+
+The decision: re-pin to the current release SHAs, re-verify, and record the new pins in S-5.4. Weigh
+that against D-26 — redoing verified, committed work to reach an equally good result is churn. Owned
+by **Phase 3**, where the supply chain gets its bar. **O-19.**
+
+**Preserved.** Everything. This is a CI pin, not a design commitment.
 
 ---
 

@@ -47,6 +47,7 @@ the same wrong reason.
 | V-9 | low | closed | `test_the_sealed_plan_is_canonical_bytes` | — |
 | V-10 | low | closed | `test_verify_structure_docstring_does_not_promise_a_keyless_verify` | O-14 |
 | V-11 | medium | closed | `test_the_ceiling_is_named_not_a_traceback` | D-19 |
+| V-16 | medium | closed | `test_ci_runs_every_check_the_gate_documents` | D-28 |
 | Q-1 | — | ruled | `test_svy_wilson_is_not_the_textbook_interval` | D-18 |
 | Q-2 | — | noted | none — not fixable by the builder | C-12 |
 

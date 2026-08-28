@@ -5,7 +5,9 @@ Doctrine rule 14: a lesson that lives only in prose will not hold, so build the
 check. Rule 11: an obligation is tracked by name until discharged, and reported
 against the artifact rather than against the last report.
 
-Five checks, each answering a question that has actually gone wrong here:
+Seven checks, each answering a question that has actually gone wrong here.
+(This sentence said "five" while six were listed, which is the count treadmill
+rule 14 names. Re-derive it from `CHECKS` if you touch this file.)
 
   citations   Does every D-nn / C-nn / O-nn / F-n / V-n reference resolve?
               (C-8: the code cited a D-17 that did not exist, and a
@@ -34,6 +36,12 @@ Five checks, each answering a question that has actually gone wrong here:
               could not be performed at all. A finding closed in one artifact
               and open in another. See D-23 for why the findings check cannot
               see this class on its own.)
+
+  gate        Does CI run every check the gate documents, and only those?
+              (V-16: CLAUDE.md documented seven and gate.yml ran six. The
+              missing one was `mypy` in its config form, so the eleven test
+              files were never type-checked on the remote. The gate on the
+              remote was weaker than the gate on the desk and nothing said so.)
 
 Exit 0 when everything reconciles, 1 otherwise. `--selftest` proves each check
 can fail, because a check that has only ever passed is a decoration.
@@ -281,6 +289,84 @@ def check_fixtures(root: Path) -> list[Problem]:
     return problems
 
 
+GATE_BLOCK = re.compile(r"## The gate is \w+ checks.*?```\n(.*?)```", re.DOTALL)
+"""The fenced block under CLAUDE.md's gate heading. One command per line."""
+
+GATE_COUNT = re.compile(r"## The gate is (\w+) checks")
+NUMBER_WORD = {
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+}
+
+CI_RUN = re.compile(r"^\s+run:[ \t]+(?!\|)(.+?)\s*$", re.MULTILINE)
+"""A single-line `run:` step. The `|` block form is a script, not a gate check."""
+
+GATE_TOOLS = ("ruff ", "mypy", "pytest", "tools/check_claims.py")
+"""Prefixes that mark a CI step as one of the gate's checks rather than setup."""
+
+
+def _normalise_command(cmd: str) -> str:
+    """`python -m ruff check .` and `ruff check .` are the same check."""
+    cmd = re.sub(r"^python\s+-m\s+", "", cmd.strip())
+    cmd = re.sub(r"^python\s+", "", cmd)
+    cmd = re.sub(r"^\./", "", cmd)
+    return " ".join(cmd.split())
+
+
+def check_gate(root: Path) -> list[Problem]:
+    """The documented gate and the executed gate must be one list.
+
+    V-16: `CLAUDE.md` documented seven checks and `gate.yml` ran six. The missing
+    one was `mypy` in its config form, so the eleven test files were never
+    type-checked on the remote -- 12 files against 23. A type error in a test
+    passed CI and failed on the director's machine, and nothing said the remote
+    gate was the weaker one.
+
+    Same shape as V-15: an instrument whose inputs drifted from what it claims to
+    cover, with no failure and no warning, just less checked than the day before.
+    """
+    problems: list[Problem] = []
+    claude = root / "CLAUDE.md"
+    workflow = root / ".github" / "workflows" / "gate.yml"
+    if not claude.exists() or not workflow.exists():
+        return problems
+
+    claude_text = claude.read_text(encoding="utf-8")
+    block = GATE_BLOCK.search(claude_text)
+    if not block:
+        return [Problem("gate", "CLAUDE.md", "no machine-readable gate block found")]
+
+    documented = [_normalise_command(ln) for ln in block.group(1).splitlines() if ln.strip()]
+    executed = {_normalise_command(c) for c in CI_RUN.findall(workflow.read_text(encoding="utf-8"))}
+
+    # The heading's number word is itself a restated figure. C-7's class.
+    stated = GATE_COUNT.search(claude_text)
+    if stated and NUMBER_WORD.get(stated.group(1)) not in (None, len(documented)):
+        problems.append(
+            Problem(
+                "gate",
+                "CLAUDE.md",
+                f"heading says {stated.group(1)} checks, the block lists {len(documented)}",
+            )
+        )
+
+    for cmd in documented:
+        if cmd not in executed:
+            problems.append(Problem("gate", ".github/workflows/gate.yml", f"does not run `{cmd}`"))
+
+    for cmd in sorted(executed):
+        if cmd.startswith(GATE_TOOLS) and cmd not in documented:
+            problems.append(
+                Problem("gate", "CLAUDE.md", f"gate.yml runs `{cmd}`, which is not documented")
+            )
+    return problems
+
+
 def check_figures(root: Path) -> list[Problem]:
     """Figures restated in prose must be derivable, not remembered.
 
@@ -332,6 +418,7 @@ CHECKS = {
     "findings": check_findings,
     "fixtures": check_fixtures,
     "figures": check_figures,
+    "gate": check_gate,
 }
 
 
@@ -383,6 +470,14 @@ def selftest() -> int:
             "examples/synthetic/labels.csv",
             "",
             "",
+        ),
+        "gate": (
+            # The plant is the defect itself: `pytest -q` on top of
+            # addopts = "-q" is -qq, which suppresses the count. That shipped in
+            # CI and only the first real run exposed it.
+            ".github/workflows/gate.yml",
+            "        run: pytest\n",
+            "        run: pytest -q\n",
         ),
     }
 

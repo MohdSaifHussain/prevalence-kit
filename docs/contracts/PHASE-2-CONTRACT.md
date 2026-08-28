@@ -96,7 +96,7 @@ Each names the top standard it must follow.
 | D2.11 | CI wiring: fixtures in the gate, R image pinned by digest | S-6 toolchain |
 | **D2.12** | **T-1.** Close every discharged correction, each naming the commit that discharged it | Tier trim, ruled 2026-08-29 |
 | **D2.13** | **T-2.** Apply the decision-entry rule to the log, and state it in `docs/DECISIONS.md`. **The rule governs choices the builder makes alone. A question put to the director and ruled is recorded because it was ruled, whatever its operator visibility.** Without that line, Q3 — same CLI, same codes, invisible to an operator — would be suppressed by the first rule written to shrink the log, which is the one thing it must never do. | Tier trim, ruled 2026-08-29 |
-| D2.14 | Extend `check_claims` to the new artifacts (fixtures directory, R script) | D-23's stated limit |
+| D2.14 | Extend `check_claims` to the new artifacts (fixtures directory, R script). **Two more gaps found 2026-08-29, ruled into this deliverable:** (a) `check_paths` does not cover either PDF — wrong directory prefix *and* wrong extension; (b) **the counts table in `docs/CORRECTIONS.md` is not covered by `check_figures`, and was updated by hand.** That is the count treadmill, in the table that counts our own counting errors | D-23's stated limit |
 | D2.15 | Discharge or restate O-3, O-14, O-15 | rule 11 |
 
 **Not a deliverable, deliberately:** any change to how the report or CLI *renders* the new
@@ -255,9 +255,10 @@ exists so that is a scheduled decision rather than a remembered intention.
 | O-13 | Measure the `svy` Wilson divergence at small *n* | D-18 |
 | O-14 | Keyless structural audit mode | V-10 |
 | O-15 | Ledger schema version, **only if** an old run and an API-created run need different advice | D-25 |
-| **O-16** | **R2's cross-version determinism is asserted only by CI, and CI has never run.** All 222 tests have run on Python 3.14.0 alone. Blocker: no remote. | Phase 1 close |
-| **O-17** | **`.github/workflows/gate.yml` has never executed** — verified by reading, in a project whose doctrine says a gate that has only ever passed is a decoration. Blocker: no remote. | Phase 1 close |
-| **O-18** | **Decide whether `OJ_L_202402835_EN_TXT.pdf` ships in a public repository**, with the EUR-Lex reuse terms **checked rather than assumed**, and the option of a version-locked URL plus its recorded sha256 instead. | Phase 3 |
+| **O-16** | **DISCHARGED 2026-08-29.** R2's cross-version determinism is now *asserted*. Run `33204075014` printed an identical draw on **CPython 3.12.14 / 3.13.15 / 3.14.7**: `('item-0129', 'item-0089', 'item-0169', 'item-0027', 'item-0008')`. Verified by the director from the run log, not from the builder's table. **The first externally-produced evidence in this project's life.** | Phase 1 close |
+| **O-17** | **DISCHARGED 2026-08-29.** The workflow has executed: `https://github.com/MohdSaifHussain/prevalence-kit/actions/runs/33204075014`, head `7f19bd9`, four jobs, all success. It is no longer a gate verified by reading. **Its first run produced V-16 and the `pytest -q` defect** — which is what a first execution is for. | Phase 1 close |
+| **O-18** | **CLOSED 2026-08-29.** Decision 2011/833/EU permits reuse; Article 6(2)(a)'s source acknowledgement is the binding condition and the register satisfies it. **The closure covers Commission documents only** — Regulation (EU) 2022/2065 is a Parliament and Council act and is **not** covered. Boundary written into `docs/STANDARDS.md` S-4.3 so it travels with the clearance. | Phase 3 |
+| **O-19** *(new)* | **Re-pin the CI actions before GitHub drops Node 20.** `checkout` v5.0.0 and `setup-python` v5.6.0, both two majors behind, both targeting Node 20. Watched by **TW-4**, which **fired on its first check**. | Phase 3 |
 
 Each reported at close as **discharged**, or **unmet with a named blocker**.
 

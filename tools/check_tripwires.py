@@ -8,6 +8,10 @@ close and at release, and the result is recorded in the phase outcome as
   TW-1  Pinterest open-sources the arXiv 2602.18518 system.
   TW-2  svy ships Trust & Safety prevalence or transparency output.
   TW-3  Official DSA accuracy-indicator tooling appears.
+  TW-4  A SHA-pinned GitHub Action falls behind its runtime. Pinning is what
+        stops an action updating itself, so the pin has an expiry and somebody
+        has to watch it. That is the cost of pinning, not an argument against
+        it. O-19.
 
 **This tool makes network calls. The shipped package does not.**
 It lives in `tools/`, is not part of `prevalence_kit`, and is never imported by
@@ -30,7 +34,9 @@ import urllib.request
 from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[1]
 TIMEOUT = 30
 AGENT = "prevalence-kit-tripwires (+https://github.com/MohdSaifHussain/prevalence-kit)"
 
@@ -132,7 +138,49 @@ def check_tw3() -> Result:
     return Result("TW-3", fired, "; ".join(notes) or "in force, unamended, no consolidated version")
 
 
-CHECKS = {"TW-1": check_tw1, "TW-2": check_tw2, "TW-3": check_tw3}
+ACTION_PIN = re.compile(r"uses:\s+([\w.-]+/[\w.-]+)@([0-9a-f]{40})\s*#\s*(v\S+)")
+
+
+def pinned_actions() -> dict[str, tuple[str, str]]:
+    """Read the pins out of the workflow instead of carrying a copy of them.
+
+    A baseline constant here would be a second place the SHA lives, and the two
+    would drift. The workflow is the artifact; this reads it. Rule 13.
+    """
+    text = (ROOT / ".github" / "workflows" / "gate.yml").read_text(encoding="utf-8")
+    return {repo: (sha, tag) for repo, sha, tag in ACTION_PIN.findall(text)}
+
+
+def check_tw4() -> Result:
+    """Actions: has a pinned action been superseded?
+
+    Fires on "a newer release exists", not on "Node 20 is gone", because the
+    first is the signal you can still act on. When GitHub drops Node 20 the
+    failure is a red X on every job with nothing wrong in this repository, and
+    by then the decision has been made for us.
+    """
+    fired = False
+    notes: list[str] = []
+    pins = pinned_actions()
+    if not pins:
+        return Result("TW-4", False, "COULD NOT CHECK: no SHA-pinned actions found in gate.yml")
+
+    for repo, (sha, tag) in sorted(pins.items()):
+        release = fetch(f"https://api.github.com/repos/{repo}/releases/latest", as_json=True)
+        assert isinstance(release, dict)
+        newest = release.get("tag_name", "?")
+        if newest != tag:
+            fired = True
+            notes.append(f"{repo} pinned at {tag} ({sha[:12]}...), latest release is {newest}")
+
+    return Result(
+        "TW-4",
+        fired,
+        "; ".join(notes) or f"{len(pins)} pinned actions, each at its latest release",
+    )
+
+
+CHECKS = {"TW-1": check_tw1, "TW-2": check_tw2, "TW-3": check_tw3, "TW-4": check_tw4}
 
 
 def main(argv: Iterable[str] | None = None) -> int:
@@ -150,6 +198,8 @@ def main(argv: Iterable[str] | None = None) -> int:
         )
         print(f"    TW-2  svy {BASELINE_SVY_VERSION}, no prevalence or transparency surface")
         print(f"    TW-3  CELEX {DSA_CELEX} in force, unamended")
+        for repo, (sha, tag) in sorted(pinned_actions().items()):
+            print(f"    TW-4  {repo} pinned {tag} @ {sha[:12]}...")
         return 0
 
     results: list[Result] = []
