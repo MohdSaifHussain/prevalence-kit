@@ -235,15 +235,28 @@ ourselves.** The manifest above is the cost of that choice, paid rather than def
 working file without being told where it is. That closes a real hole: forgetting `--plan` used to
 give a clean `verify` on a tampered plan (V-12).
 
-**The consequence, stated rather than absorbed.** A run directory that is shared, published, or
-attached to an audit carries that path with it. On this platform it is absolute, so it can disclose
-a username and directory structure. Paths already appear in refusal messages; this is the first time
-one is written into the ledger, which is the artifact most likely to be handed to someone else.
+**The consequence, stated at the width of the behaviour.** A run directory that is shared,
+published, or attached to an audit carries that path with it. Paths already appear in refusal
+messages; this is the first time one is written into the ledger, which is the artifact most likely
+to be handed to someone else.
 
-It is a small disclosure and it is not nothing. If a run will leave your machine, look at
-`ledger.jsonl` entry 0 before it does. The plan **hash** is unaffected -- the path is in the entry
-body, not in the hashed plan record -- so removing or rewriting the field would break the chain, not
-the plan's identity. There is no supported way to redact it in this version.
+**The path recorded is the one you typed, not a resolved absolute path.** Verified both ways:
+
+    prevalence-kit plan plan.yaml ...              records  "plan.yaml"
+    prevalence-kit plan C:\work\jan\plan.yaml ...  records  "C:\work\jan\plan.yaml"
+
+**So you have a control, and it is the useful half of this section.** Run `plan` from the directory
+holding the plan and pass a bare filename. The ledger then records a filename and discloses nothing
+about your machine. Pass an absolute path and the ledger records your directory structure, which on
+this platform usually includes a username.
+
+If a run will leave your machine, look at `ledger.jsonl` entry 0 before it does. The plan **hash** is
+unaffected either way -- the path is in the entry body, not the hashed plan record -- so editing the
+field afterwards would break the chain rather than the plan's identity. **There is no supported way
+to redact it after the fact**, which is why the control is at invocation time.
+
+*This section previously said the path "is absolute". It is not, and the correction cost the reader
+an action they actually had. `docs/CORRECTIONS.md` V-13.*
 
 **A moved run reports honestly rather than silently.** Copy a run to another machine and the
 recorded path will not exist there; `verify` says `NOT CHECKED`, names the path, and says it may

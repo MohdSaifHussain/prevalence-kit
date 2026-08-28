@@ -692,6 +692,38 @@ second skip.
 
 ---
 
+---
+
+## D-25 - A run with no recorded plan path is a supported case, not an edge
+
+**Date:** 2026-08-29 - **Made in:** the director's V-14 finding - **Reason: recorded because the
+reasoning decided the treatment**
+
+`verify` reports `NOT CHECKED -- this run recorded no plan path` when the plan ledger entry has no
+`plan_source_path`. Two different runs produce that, and **the ledger has no version marker, so
+`verify` cannot tell them apart**:
+
+1. **A run created before commit `25f9996`**, when the field did not exist. Every user of the tool
+   before that commit has one.
+2. **A run created through the Python API** by a caller who built a `Plan` with `from_mapping`
+   rather than `Plan.load`.
+
+**The message is honest for both**, which is why nothing needs to change today. It says what was not
+checked and what to pass to check it, and neither reader is misled.
+
+**Stated as a property rather than left as an accident**, per the director: the day those two cases
+need different advice, nothing in the record distinguishes them. Adding a schema version to the
+ledger is the fix if that day comes; it is not needed now and is not being added speculatively.
+**Obligation O-15** carries it.
+
+**Why this is a decision and not a note.** The builder called case 2 "unreachable through the CLI"
+and treated case 1 as not existing. Case 1 is what every existing user meets on their next `verify`.
+A branch believed unreachable gets a pin and a shrug; a branch every user hits deserves a release
+note and a check that the message reads right to someone who never had the field. It does read
+right -- and that was luck, not design. `docs/CORRECTIONS.md` V-14.
+
+---
+
 ## Carried obligations opened by these decisions
 
 | # | Obligation | Owner | Opened by |
@@ -702,4 +734,5 @@ second skip.
 | O-11 | Chunk-digest manifest bound into the ledger; `verify` discriminates tamper / truncate / reorder / substitute by distinct reason code. | Phase 1 | **D-14** |
 | O-12 | `verify` states in words when the on-disk plan check was skipped because the file is absent. | Phase 1 | **D-15** |
 | O-13 | Measure how far `svy`'s design-based Wilson diverges from the textbook binomial interval at small *n*. D-18 records that they differ in construction; the magnitude is unmeasured. | Phase 2 | **D-18** |
+| O-15 | Add a schema version to the ledger, if a run made before `plan_source_path` existed ever needs different advice from an API-created run. Not added speculatively. | Phase 2+ | **D-25** |
 | O-14 | Build the keyless structural audit mode `verify_structure`'s docstring described but `verify_run` never offered. Genuinely valuable: an auditor without the key could still check sequence integrity. | Phase 2 | **V-10** |

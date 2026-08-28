@@ -17,11 +17,11 @@ neither the director nor the AI can quietly absorb the other's.
 | Chat reviewer (draft author) | 3 | 0 | **3** |
 | Research report (passed through unverified) | 2 | 0 | **2** |
 | Stale-at-draft-time, queued but built on anyway | 1 | 0 | **1** |
-| **Builder (Claude Code)** | **13** | **0** | **13** |
-| Reviewer instrument | **1** | 0 | **1** |
+| **Builder (Claude Code)** | **15** | **0** | **15** |
+| Reviewer instrument | **1** | 0 | **2** (1 noted) |
 | Director | 0 | 0 | 0 |
 | Tool artifact (noted, not a defect) | - | - | **1** |
-| **Total** | **20** | **0** | **20** |
+| **Total** | **22** | **0** | **23** |
 
 C-1 … C-6 are Phase 0: defects in the chat-drafted vision, all caught before any code, none reaching
 an artifact. **C-7 … C-13 are Phase 1, and all seven are mine.** Five were caught by the director's
@@ -404,6 +404,71 @@ against the wording.
 | **Severity** | Low in effect: the conclusion survives. Notable in kind - this is the believed-mechanism class again (C-10, V-5, C-7), and it appeared **in the same message where I corrected someone else's reading of a transcript.** |
 | **Replaced by** | Recorded in D-24's "alternative not taken": the argument holds on one check, not two. |
 | **Status** | **OPEN** - closes at the Phase 1 to 2 boundary |
+
+---
+
+---
+
+## V-13 - SECURITY 3.8 stated the disclosure wider than the behaviour
+
+| | |
+|---|---|
+| **Claimed** | `SECURITY.md` 3.8: *"On this platform it is absolute, so it can disclose a username and directory structure."* |
+| **Actually** | The recorded path is **as invoked**, not resolved. Verified both ways: `plan plan.yaml` records `"plan.yaml"`; `plan C:\...\plan.yaml` records the full path. The director's own Phase 1 hand-run recorded `plan.yaml` and disclosed nothing. |
+| **Direction** | **Overstated a limit** - safe in effect, wrong in kind. Doctrine 7 is never more and never less, and a security document is exactly where a reader checks a claim against the artifact. An operator who reads 3.8, opens `ledger.jsonl` entry 0, and finds a bare filename learns the document does not describe the tool. |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | The director, reading the section against the ledger |
+| **Severity** | Low in exposure, medium in kind: it is a false statement in the one document read for accuracy. |
+| **Replaced by** | 3.8 now states the as-invoked behaviour with both examples, **and gives the operator the control it was hiding**: run `plan` from the plan's own directory with a bare filename and nothing sensitive is recorded. The old text said only "there is no supported way to redact it", leaving the reader with no action. |
+| **Status** | **OPEN** - closes at the Phase 1 to 2 boundary |
+
+**The part worth keeping.** Overstating a limit felt like the safe direction and was not. It cost the
+reader a control they actually had, and it put a checkable falsehood in the security document.
+
+---
+
+## V-14 - I called a branch unreachable that every existing user hits first
+
+| | |
+|---|---|
+| **Claimed** | V-12 report and D-24: a run with no recorded plan path *"is unreachable through the CLI... it requires the Python API, which Phase 1 does not document as a supported surface."* |
+| **Actually** | **Every run created before commit `25f9996` has no `plan_source_path`.** The director reached the branch through the CLI, against his own Phase 1 close run. Reproduced here by stripping the field and re-chaining honestly: `[--] NOT CHECKED -- this run recorded no plan path`, exit 0, no traceback. Anyone who used the tool before that commit has such a run on disk. |
+| **Direction** | Against the case's importance. I described a branch as needing an undocumented surface when it is the first thing an existing user meets. |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | The director, running the new `verify` against an old run rather than reasoning about which callers reach the branch |
+| **Severity** | Low in effect - **no harm done**, the message is well worded and the behaviour is right. Medium in kind: **the reasoning decides the treatment.** A branch believed unreachable gets a pin and a shrug; a branch every user hits deserves a release note and a check that the message reads right to someone who never had the field. It does. That was luck. |
+| **Replaced by** | **D-25** treats it as a supported case, records that the ledger cannot distinguish an old run from an API caller, and carries **O-15** for a schema version if the two ever need different advice. |
+| **Class** | Believed-mechanism (C-10, V-5, C-7, C-20). Fourth instance in that family, and the second inside a sentence where I was careful enough to bring the case to the director rather than absorb it. **Bringing it was right; the characterisation attached to it was not.** |
+| **Status** | **OPEN** - closes at the Phase 1 to 2 boundary |
+
+---
+
+## C-21 - The fifth reviewer-instrument defect, and the first gate to fire on an accident
+
+| | |
+|---|---|
+| **What happened** | The reviewer directed the V-12 re-run into a directory its own dry-run had already populated. `plan` refused `RUN_ALREADY_OPEN`; the later verbs appended a second attempt; `verify` refused `RUN_NOT_LINEAR: Step 'sample' was recorded more than once (again at entry 4)`. The re-run was redone in a fresh timestamped workspace and passed. |
+| **Source** | **Reviewer instrument.** Second recorded instance; fifth overall in the class. |
+| **Severity** | None to the tool. Recorded because of what it demonstrates. |
+| **Status** | **noted** |
+
+**Two things this is evidence for, and neither was constructed by us.**
+
+**V-1's Layers 1 and 2 fired on a real accident.** Every previous exercise of them was a case one of
+us built. This time a person made an ordinary mistake -- reusing a folder -- and both layers behaved
+exactly as designed, including `verify` refusing to certify a workspace holding two attempts. The
+mechanism has now been tested by the world rather than by its authors.
+
+**Refusals go to stderr.** `| Out-Null` swallowed stdout and the refusal still printed. That is what
+makes the CLI usable in a pipeline, and it was confirmed by accident rather than by a test.
+
+**The class is now a property, not a run of luck.** Five occasions: the harness's clean frame that
+never exercised V-7; the harness encoding the wrong reading of E2; the E8c command that omitted
+`--plan` instead of deleting the file; and now a re-run directed into a dirty directory. The
+director's characterisation, recorded verbatim at C-19, holds on all five:
+
+> *My instruments have been wrong about what the contract's action is, never about what the code
+> does.*
 
 ---
 

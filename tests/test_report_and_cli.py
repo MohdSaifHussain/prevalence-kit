@@ -459,3 +459,35 @@ def test_a_plan_without_a_source_path_records_none(tmp_path: Path) -> None:
     working = next(c for c in verify_run(ws) if c.name == "plan (working file)")
     assert not working.performed
     assert "recorded no plan path" in working.note
+
+
+def test_the_recorded_plan_path_is_as_invoked(tmp_path: Path) -> None:
+    """V-13. SECURITY 3.8 said the path "is absolute". It is not.
+
+    It is whatever was typed, which is why the operator has a control: run `plan`
+    from the plan's own directory with a bare filename and the ledger records a
+    filename, disclosing nothing about the machine.
+
+    Pinned because 3.8 now documents that control, and a security document must
+    describe the tool.
+    """
+    plan_path, _ = build_inputs(tmp_path)
+    absolute = tmp_path / "abs-run"
+    relative = tmp_path / "rel-run"
+
+    cli("plan", str(plan_path), "--run", str(absolute))
+    subprocess.run(
+        [*CLI, "plan", "plan.yaml", "--run", str(relative)],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    def recorded(run_dir: Path) -> str:
+        line = (run_dir / "ledger.jsonl").read_text(encoding="utf-8").splitlines()[0]
+        return str(json.loads(line)["body"]["plan_source_path"])
+
+    assert recorded(relative) == "plan.yaml", "a bare filename must stay a bare filename"
+    assert recorded(absolute) == str(plan_path)
+    assert str(tmp_path) not in str(recorded(relative))
