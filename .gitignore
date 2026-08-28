@@ -15,3 +15,9 @@ build/
 *.sealed
 .prevalence-kit/
 sealed/
+
+# Primary sources kept on disk, deliberately not committed.
+# docs/STANDARDS.md S-4.3 records the CELEX URL and the sha256, so a stranger can
+# fetch and check it. Keeping it out is possible only because it was never
+# committed -- OJ_L_202402835_EN_TXT.pdf has been in history since 5b4f97f.
+OJ_L_2011_330_FULL_EN_TXT.pdf

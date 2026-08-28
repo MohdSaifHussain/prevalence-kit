@@ -32,10 +32,30 @@ clearly marked, and may never be cited as the reason a method was chosen.
 Every source has a **re-check date**. On that date, the pin is re-fetched and either confirmed or
 updated with a dated note. A pin nobody re-checks is a pin that quietly expires.
 
-**Retrieval note.** `eur-lex.europa.eu` is behind an AWS WAF bot challenge and returns HTTP 202 with
-an empty body to scripted fetches. Use the EU Publications Office endpoint
-`http://publications.europa.eu/resource/celex/<CELEX>` with `Accept: application/xhtml+xml`. Same
-authority, machine-readable, no challenge.
+**Retrieval note -- corrected 2026-08-29. The earlier version of this note no longer works.**
+
+`eur-lex.europa.eu` is behind an AWS WAF bot challenge and returns **HTTP 202 with an empty body**
+to scripted fetches. Re-measured 2026-08-29 against the legal notice and against the CELEX record
+for `32011D0833`: both 202, both 0 bytes. That part has not changed.
+
+What changed is the workaround. The Publications Office endpoint needs **two** headers, and the
+version of this note written on 2026-08-28 recorded only one:
+
+    curl -H "Accept: application/xhtml+xml" -H "Accept-Language: eng" \
+         http://publications.europa.eu/resource/celex/<CELEX>
+
+**Measured 2026-08-29 against `32011D0833`:**
+
+| Request | Result |
+|---|---|
+| `Accept: application/xhtml+xml` alone | **HTTP 400**, 205 bytes: *"Invalid content type CONTENT_STREAM for WORK ... without language"* |
+| `Accept: text/html` alone | HTTP 400, 205 bytes |
+| no `Accept` header | HTTP 200, but `application/rdf+xml` -- metadata, not the act |
+| **both headers** | **HTTP 200**, 48,730 bytes, `application/xhtml+xml` |
+
+The one-header call also returns 400 against `32024R2835`, which is the CELEX this note was
+originally written for. **The recorded procedure had stopped working on the document it was recorded
+against, and nothing said so.** `docs/CORRECTIONS.md` C-22.
 
 ---
 
@@ -100,6 +120,7 @@ Google."* Expert review, not independent peer review. State this wherever it is 
 |---|---|---|---|
 | S-4.1 | Regulation (EU) 2022/2065 (Digital Services Act) | **19 October 2022**; OJ L 277, 27.10.2022, p. 1; ELI `http://data.europa.eu/eli/reg/2022/2065/oj`; CELEX `32022R2065` | **2027-02-28** |
 | S-4.2 | Commission Implementing Regulation (EU) 2024/2835 | **4 November 2024**; OJ L series 2024/2835, **5.11.2024**; CELEX `32024R2835`; in force, **unamended**, `END-OF-VALIDITY 9999-12-31`, no consolidated version | **every phase close** (TW-3) |
+| S-4.3 | **Commission Decision 2011/833/EU** on the reuse of Commission documents -- the reuse anchor, not a prevalence source | **12 December 2011**; OJ L 330, **14.12.2011**, p. 39; CELEX `32011D0833`; ELI `http://data.europa.eu/eli/dec/2011/833/oj`; repeals 2006/291/EC, Euratom | **2027-02-28** |
 
 **Recorded finding, and it governs how the README may be written:** the word "prevalence" appears
 **zero times** in S-4.1 and **zero times** in S-4.2, counted mechanically over the full official
@@ -115,6 +136,114 @@ Dates, for the record: templates apply from **1 July 2025**; the Commission's an
 4 November 2024 says *"the first harmonised reports due in the beginning of 2026"*; recital (9) says
 *"The first full harmonised reporting cycle covers 1 January 2026 until 31 December 2026"*; reports
 are due within two months of each period's end.
+
+### The reuse question -- O-18's evidence, gathered 2026-08-29
+
+**What O-18 asks.** Whether `OJ_L_202402835_EN_TXT.pdf` may ship in a public repository, with the
+EUR-Lex reuse terms **checked rather than assumed**. Phase 2 contract, section 10.
+
+**The anchor is the Decision, not the website's summary of it.** EUR-Lex's legal notice says the
+reuse policy "is based on Decision 2011/833/EU". That sentence is the Publications Office
+paraphrasing an instrument. Hard Rule 3 takes the anchor from the primary source, so the articles
+below are quoted from the Decision, and the notice is recorded as **corroboration**.
+
+**Quoted verbatim from Decision 2011/833/EU** (S-4.3):
+
+> **Article 2, Scope.** *"1. This Decision applies to public documents produced by the Commission or
+> by public and private entities on its behalf: (a) which have been published by the Commission or
+> by the Publications Office on its behalf through publications, websites or dissemination tools;
+> or (b) which have not been published for economic or other practical reasons, such as studies,
+> reports and other data."*
+>
+> *"2. This Decision shall not apply: (a) to software or to documents covered by industrial property
+> rights such as patents, trademarks, registered designs, logos and names; (b) to documents for
+> which the Commission is not in a position to allow their reuse in view of intellectual property
+> rights of third parties; (c) to documents which pursuant to the rules established in Regulation
+> (EC) No 1049/2001 are excluded from access or only made accessible to a party under specific rules
+> governing privileged access; (d) to confidential data ...; (e) to documents resulting from ongoing
+> research projects ..."*
+>
+> *"4. Nothing in this Decision authorises reuse of documents in a manner calculated to deceive or
+> to defraud."*
+>
+> **Article 4, General principle.** *"All documents shall be available for reuse: (a) for commercial
+> or non-commercial purposes under the conditions laid down in Article 6; (b) without charge,
+> subject to the provisions laid down in Article 9; and (c) without the need to make an individual
+> application, unless otherwise provided in Article 7."*
+>
+> **Article 6, Conditions for reuse of documents.** *"1. Documents shall be made available for reuse
+> without application unless otherwise specified and without restrictions or, where appropriate, an
+> open licence or disclaimer setting out conditions explaining the rights of reusers."*
+>
+> *"2. Those conditions, which shall not unnecessarily restrict possibilities for reuse, may include
+> the following: (a) the obligation for the reuser to acknowledge the source of the documents;
+> (b) the obligation not to distort the original meaning or message of the documents; (c) the
+> non-liability of the Commission for any consequence stemming from the reuse."*
+
+**Corroboration, recorded as corroboration and not as the anchor.** EUR-Lex legal notice, copyright
+section, read in a browser by the director on 2026-08-29 and supplied as text because no fetcher in
+this project could retrieve it:
+
+> *"(c) European Union, 1998-2026 ... The Commission's document reuse policy is based on Decision
+> 2011/833/EU. Unless otherwise specified, you can re-use the legal documents published in EUR-Lex
+> for commercial or non-commercial purposes."*
+
+**Two independent retrievals of the Decision agree.** The director's PDF of OJ L 330 and the
+Publications Office XHTML for CELEX `32011D0833` were extracted separately and compared on
+Articles 2, 4 and 6. They agree word for word. The second retrieval exists only because the recorded
+procedure was tested rather than trusted -- see the retrieval note above, and C-22.
+
+**"Unless otherwise specified" -- checked against the act itself, not assumed.**
+
+The escape clause in the notice is Article 6(1). The notice names International Accounting Standards
+as an example of documents that carry special conditions, and says those conditions are stated in the
+respective Official Journal. So the place to look is the act.
+
+Searched: the full text of `OJ_L_202402835_EN_TXT.pdf`, 48 pages, extracted to 4,595 lines, for
+`reproduc`, `copyright`, `(c) European Union`, the copyright symbol itself, `all rights reserved`,
+`reuse`, `re-use`, `licence`, `license`, `2011/833`, `permission`, `otherwise specified`,
+`otherwise stated` and `special condition`. Also read the masthead, the final page, and the embedded
+XMP metadata.
+
+**Found: nothing.** Four hits on `copyright`, all of them substantive content -- the
+`KEYWORD_COPYRIGHT_INFRINGEMENT` category in the reporting template, and guidance on counting notices
+about copyright-infringing videos. Zero occurrences of the copyright symbol. No `dc:rights`,
+`xmpRights`, `WebStatement` or `Marked` tag in the XMP. The only thing repeated on every page is the
+ELI footer `http://data.europa.eu/eli/reg_impl/2024/2835/oj`.
+
+**Nothing is otherwise specified in this act.** That is a performed check, and its search terms are
+listed above so someone else can run the same one.
+
+**The boundary, stated so nobody reads this wider than it is.** Decision 2011/833/EU covers documents
+**produced by the Commission**. Implementing Regulation (EU) 2024/2835 is a Commission act, so
+Article 2(1)(a) fits it squarely. **Regulation (EU) 2022/2065 (S-4.1) is a Parliament and Council
+act**, and this evidence says nothing about it. If a later phase wants to ship the DSA text, that is
+a separate question needing its own answer.
+
+**Proposed disposition, for the director to rule.** The condition that actually binds redistribution
+is Article 6(2)(a) -- acknowledge the source -- and this register already does that for both
+documents, by CELEX, ELI, OJ reference, date and sha256. **The builder does not close O-18.**
+
+**Local copies, and only one of them is tracked.**
+
+| File | sha256, re-derived 2026-08-29 | Bytes | Pages | In git? |
+|---|---|---|---|---|
+| `OJ_L_202402835_EN_TXT.pdf` | `daff77f027fde1e0f92f89d70114327255456a3a4fa420fb6478da204a31337b` | 1,387,069 | 48 | **yes, since `5b4f97f`** |
+| `OJ_L_2011_330_FULL_EN_TXT.pdf` | `5ac1d20087e45d96a821af65748a77b20be8f794210ad7a324b0a37404e34886` | 2,084,648 | 52 | **no, deliberately** |
+
+**The asymmetry is the point.** The first PDF cannot be kept out of the repository -- it has been in
+history since `5b4f97f`, and a private repository's history is what a later public repository would
+inherit. The second has never been committed, so keeping it out is still possible, and it is free.
+It is named in `.gitignore` so it cannot be committed by accident, and anyone can fetch it from the
+pinned CELEX URL in S-4.3 and check it against the digest above. **That is the pattern O-18 would
+have asked for on the first file had the question been raised before `5b4f97f`, applied now to the
+one where it still works.**
+
+**A limit of the checker, stated so nobody reads it as covering this.** `tools/check_claims.py`'s
+`check_paths` matches paths under `src/`, `tests/`, `docs/` or `tools/` that end in `.py`, `.md`,
+`.toml` or `.txt`. Neither PDF matches, on either count. So the two filenames above are **not**
+reconciled against the filesystem by any check, and the second one deliberately would not resolve in
+a fresh clone. Candidate for **D2.14**, which already owns extending the checker to new artifacts.
 
 ## S-5 — Security engineering
 
@@ -220,3 +349,7 @@ Tracked by name until discharged. Each is owned by a named phase.
 | Date | Who | What was re-checked | Result |
 |---|---|---|---|
 | 2026-08-28 | Claude (builder), Phase 0 | All of S-1 to S-7 established from primary sources | Baseline set |
+| 2026-08-29 | Claude (builder), Phase 1 to 2 boundary | **The retrieval procedure itself**, by execution | **Stale.** The one-header call returns HTTP 400 on `32011D0833` and on `32024R2835`. `Accept-Language: eng` added. C-22 |
+| 2026-08-29 | Claude (builder), Phase 1 to 2 boundary | EUR-Lex reachability: legal notice, and CELEX `32011D0833` | Unchanged. HTTP 202, 0 bytes, both |
+| 2026-08-29 | Claude (builder), Phase 1 to 2 boundary | **S-4.3 added.** Decision 2011/833/EU, quoted from the OJ PDF and from the Publications Office XHTML | The two agree word for word on Articles 2, 4 and 6 |
+| 2026-08-29 | Claude (builder), Phase 1 to 2 boundary | S-4.2's digest and page count, re-derived from the file | `daff77f0...31337b`, 48 pages. Both match what was recorded |

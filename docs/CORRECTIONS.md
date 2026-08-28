@@ -17,11 +17,11 @@ neither the director nor the AI can quietly absorb the other's.
 | Chat reviewer (draft author) | 3 | 0 | **3** |
 | Research report (passed through unverified) | 2 | 0 | **2** |
 | Stale-at-draft-time, queued but built on anyway | 1 | 0 | **1** |
-| **Builder (Claude Code)** | **16** | **0** | **16** |
+| **Builder (Claude Code)** | **17** | **0** | **17** |
 | Reviewer instrument | **1** | 0 | **2** (1 noted) |
 | Director | 0 | 0 | 0 |
 | Tool artifact (noted, not a defect) | - | - | **1** |
-| **Total** | **23** | **0** | **24** |
+| **Total** | **24** | **0** | **25** |
 
 C-1 … C-6 are Phase 0: defects in the chat-drafted vision, all caught before any code, none reaching
 an artifact. **C-7 … C-13 are Phase 1, and all seven are mine.** Five were caught by the director's
@@ -506,6 +506,47 @@ bad path in **`CLAUDE.md` specifically** - a file the old list would never have 
    `src/svy/estimation/base.py`, quoted from another package as D-18's evidence, and
    `tests/test_plan.py`, quoted in C-8 as the defect itself. **An explicit set beats widening the
    regex or skipping whole files: every exemption is visible and has to be justified when added.**
+
+---
+
+## C-22 - A recorded retrieval procedure that had quietly stopped working
+
+| | |
+|---|---|
+| **Claimed** | `docs/STANDARDS.md`, retrieval note, written 2026-08-28: *"Use the EU Publications Office endpoint `http://publications.europa.eu/resource/celex/<CELEX>` with `Accept: application/xhtml+xml`. Same authority, machine-readable, no challenge."* |
+| **Actually** | That call returns **HTTP 400**, 205 bytes: *"Invalid content type CONTENT_STREAM for WORK ... without language"*. Measured 2026-08-29 against `32011D0833` **and against `32024R2835`, the CELEX the note was originally written for.** It needs a second header. With `Accept: application/xhtml+xml` **and** `Accept-Language: eng`: HTTP 200, 48,730 bytes, `application/xhtml+xml`. |
+| **Direction** | Against the next person who needs a primary source. A recorded procedure that does not work is worse than no procedure, because it reads as checked. |
+| **Source** | **Builder (Claude Code)** - I wrote the note in Phase 0. |
+| **Caught by** | The builder, by **executing** the recorded procedure instead of quoting it, while gathering the O-18 evidence the director asked for. It surfaced only because the director supplied the EUR-Lex text his browser could read and no fetcher here could. |
+| **Severity** | Medium. Nothing shipped wrong. But every future pin in this register depends on being able to fetch a primary source, and the one instruction for doing that had expired with nothing saying so. |
+| **Replaced by** | The corrected note, with both headers, the four measured request forms and their results, and the date. Plus four rows in the re-check log. |
+| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)**, naming the commit that discharged it |
+
+**This is not the believed-mechanism class.** The note was **true when written**. Phase 0 used that
+endpoint successfully on 2026-08-28 -- it is how the "prevalence appears zero times" count was made
+over the full official texts. It expired some time in the following day or so, and nothing in this
+project was watching.
+
+**The register's own rule 3 is what should have caught it, and could not.** Rule 3 gives every
+*source* a re-check date, because "a pin nobody re-checks is a pin that quietly expires." **The
+retrieval procedure had no re-check date.** It is the infrastructure every pin sits on, and it was
+the one entry in the register with no flip-day. It has dated measurements now.
+
+**The tooling limit, recorded because it is wider than this question.** Three EUR-Lex pages were
+tried by the reviewer -- the legal notice, the about page, and the CELEX record for `32011D0833` --
+and all three returned empty content to its fetcher. Reproduced here independently: the legal notice
+and the CELEX record both return **HTTP 202 with 0 bytes**. The director read the site in a browser
+and supplied the text.
+
+So: **a source this project depends on cannot be read by the instrument this project has been using
+to verify sources.** That matters before Phase 2, which leans on more external references than any
+phase so far -- CRAN, a pinned Docker digest, and the Lang & Reiczigel worked results.
+
+**The standing rule it produces:** *"I could not read it" is a reportable outcome, not a prompt to
+work from memory.* A source that cannot be fetched gets reported as unfetched, with what was tried
+and what came back, and the director decides. It never gets filled in from recall and it never gets
+quietly dropped. That is doctrine rule 7 -- claims at the width of the evidence -- applied to the
+retrieval step rather than to the claim.
 
 ---
 
