@@ -599,6 +599,49 @@ code with directional detail text.
 
 ---
 
+---
+
+## D-23 - A finding can be closed in one artifact and open in another
+
+**Date:** 2026-08-28 - **Made in:** the director's F-4 regression finding - **Reason: recorded as a
+limit of the checker, not special-cased**
+
+`tools/check_claims.py` reconciles the findings register against the code. It cannot see this class,
+and that is a property of what it checks rather than a bug in how it checks:
+
+> **The findings check asks whether a closing test exists and passes. F-4's test does exist and does
+> pass. The register is correct that F-4 is closed *in the test suite*. Nothing in that question can
+> reveal that a different artifact - the shipped example - cannot reproduce the contract's own exit
+> check.**
+
+**What happened.** F-4 was "run-level E9c cannot exercise `SEAL_REORDERED` because every fixture item
+is one chunk". It was fixed in `tests/conftest.py`. `examples/synthetic/` was created afterwards,
+from a demo run, with no large item - so the defect came back in a new place while its closing test
+went on passing. Three instruments looked at this repository and none of them looked there: the test
+suite has its own fixture, the reviewer harness synthesises its own, and the checker asks about
+tests.
+
+**The decision: record it as a limit, then narrow it with a sixth check rather than a special case.**
+`check_fixtures` asks a different question - *can the shipped example perform the exit checks that
+name it?* - and each requirement names the check that needs it, so a failure says what the director
+will not be able to do. That does not close the general class. It closes the one instance and gives
+the class a name.
+
+**The general class stays open, and is stated here so nobody reads the checker as covering it:**
+a property proved in one artifact and assumed in another. The checker now covers two artifacts (the
+suite and the shipped example); it does not cover documentation examples, the README, or any future
+fixture. Adding artifacts to `check_fixtures` is the way to extend it.
+
+**Alternative not taken.** Special-casing F-4 in the findings check - asserting that this particular
+finding has evidence in two places. Rejected: it would fix one row and teach nothing, and the next
+regression would be in a finding nobody special-cased. A check that names its question generalises;
+a check that names a row does not.
+
+**Recorded for the tier re-ask.** The instance was caught by the director running the shipped
+example by hand, which is a STANDARD practice. It is not evidence for FULL.
+
+---
+
 ## Carried obligations opened by these decisions
 
 | # | Obligation | Owner | Opened by |

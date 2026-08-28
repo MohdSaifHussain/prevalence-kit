@@ -233,3 +233,51 @@ def test_every_command_prints_ascii_only(tmp_path: Path) -> None:
     for args in (("--help",), ("plan", "--help"), ("verify", "--help")):
         result = cli(*args)
         assert all(ord(c) < 128 for c in result.stdout), args
+
+
+# --------------------------------------------- the shipped example, C-15 / D-23
+
+
+def test_the_shipped_example_has_a_multi_chunk_item() -> None:
+    """C-15. E9c cannot be performed without one, and it regressed once already.
+
+    F-4 was fixed in `tests/conftest.py`; `examples/synthetic/` was created
+    afterwards from a demo run and had none. The defect came back in a new
+    artifact while its closing test went on passing -- the class D-23 names.
+
+    `tools/check_claims.py`'s `fixtures` check asserts the same property, so this
+    is belt and braces on purpose: the checker guards the repository, this guards
+    the suite that the checker's own findings row points at.
+    """
+    import csv
+
+    from prevalence_kit.run import _wide_csv_fields
+    from prevalence_kit.seal import CHUNK_BYTES
+
+    labels = Path(__file__).resolve().parents[1] / "examples" / "synthetic" / "labels.csv"
+    with labels.open(newline="", encoding="utf-8") as fh, _wide_csv_fields():
+        rows = list(csv.DictReader(fh))
+
+    multi = [r for r in rows if len(r["content"].encode("utf-8")) > CHUNK_BYTES]
+    assert multi, "the shipped example needs one multi-chunk item or E9c cannot be run"
+    assert len(rows) == 40
+
+
+def test_a_missing_run_directory_is_not_a_broken_ledger(tmp_path: Path) -> None:
+    """D-22's rule applied: the artifact to open is the path, not the ledger.
+
+    `verify --run <nonexistent>` used to say "The ledger is empty; there is
+    nothing to verify", sending the operator to inspect a file that is not there.
+    """
+    result = cli("verify", "--run", str(tmp_path / "no-such-run"))
+    assert result.returncode == 2
+    assert result.stderr.splitlines()[0] == "REFUSED [RUN_NOT_FOUND]"
+
+
+def test_an_empty_run_directory_still_says_ledger(tmp_path: Path) -> None:
+    """The other side of the split: the directory exists, the ledger does not."""
+    empty = tmp_path / "empty-run"
+    empty.mkdir()
+    result = cli("verify", "--run", str(empty))
+    assert result.returncode == 2
+    assert result.stderr.splitlines()[0] == "REFUSED [LEDGER_BROKEN]"

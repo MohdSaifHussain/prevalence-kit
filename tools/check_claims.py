@@ -26,6 +26,15 @@ Five checks, each answering a question that has actually gone wrong here:
   figures     Is any figure restated in prose without being derivable?
               (C-7: two gate numbers quoted that no command produces.)
 
+  fixtures    Can the shipped example actually perform the exit checks that
+              name it?
+              (C-15: F-4 was closed in tests/conftest.py and regressed into
+              examples/synthetic/, which was created afterwards. Every item
+              was one chunk, so E9c -- swap two chunks WITHIN one item --
+              could not be performed at all. A finding closed in one artifact
+              and open in another. See D-23 for why the findings check cannot
+              see this class on its own.)
+
 Exit 0 when everything reconciles, 1 otherwise. `--selftest` proves each check
 can fail, because a check that has only ever passed is a decoration.
 """
@@ -181,6 +190,59 @@ def check_findings(root: Path) -> list[Problem]:
     return problems
 
 
+def check_fixtures(root: Path) -> list[Problem]:
+    """Can the shipped example perform the exit checks that name it?
+
+    An exit check the director cannot perform is not a check. The findings check
+    cannot see this: F-4's closing test passes, so the register is correct that
+    it is closed *in the suite*. It has no way to know a different artifact
+    cannot reproduce the contract's own instruction. D-23.
+
+    Each requirement names the exit check that needs it, so a failure says what
+    the director will not be able to do rather than only what is missing.
+    """
+    import csv
+
+    sys.path.insert(0, str(root / "src"))
+    from prevalence_kit.run import _wide_csv_fields
+    from prevalence_kit.seal import CHUNK_BYTES
+
+    labels = root / "examples" / "synthetic" / "labels.csv"
+    if not labels.exists():
+        return [Problem("fixtures", "examples/synthetic", "labels.csv is missing")]
+
+    # Read it the way the tool reads it. The first version of this check used a
+    # bare DictReader and died on `_csv.Error: field larger than field limit` --
+    # the exact defect V-11 named, in the checker written to prevent its class.
+    with labels.open(newline="", encoding="utf-8") as fh, _wide_csv_fields():
+        rows = list(csv.DictReader(fh))
+
+    problems: list[Problem] = []
+
+    multi = [r for r in rows if len(r.get("content", "").encode("utf-8")) > CHUNK_BYTES]
+    if not multi:
+        problems.append(
+            Problem(
+                "fixtures",
+                "examples/synthetic/labels.csv",
+                f"no item exceeds CHUNK_BYTES ({CHUNK_BYTES:,}), so E9c -- swap two chunks "
+                "within one item, expect SEAL_REORDERED -- cannot be performed. "
+                "Run tools/make_example.py.",
+            )
+        )
+
+    if len(rows) < 2:
+        problems.append(
+            Problem(
+                "fixtures",
+                "examples/synthetic/labels.csv",
+                "too few rows for E9's cross-item cases",
+            )
+        )
+
+    return problems
+
+
 def check_figures(root: Path) -> list[Problem]:
     """Figures restated in prose must be derivable, not remembered.
 
@@ -230,6 +292,7 @@ CHECKS = {
     "paths": check_paths,
     "codes": check_codes,
     "findings": check_findings,
+    "fixtures": check_fixtures,
     "figures": check_figures,
 }
 
@@ -275,6 +338,11 @@ def selftest() -> int:
             "bytes. Not unbounded",
             "bytes. Not unbounded",
         ),
+        "fixtures": (
+            "examples/synthetic/labels.csv",
+            "",
+            "",
+        ),
     }
 
     failures = 0
@@ -291,6 +359,10 @@ def selftest() -> int:
             if name == "figures":
                 # Change the artifact, not the prose, so the two disagree.
                 text = text.replace("_CSV_FIELD_LIMIT = 64 * 1024 * 1024", "_CSV_FIELD_LIMIT = 123")
+            elif name == "fixtures":
+                # Shrink every content field, recreating the C-15 regression.
+                lines = text.splitlines()
+                text = "\n".join([lines[0], *(ln[:60] for ln in lines[1:4])]) + "\n"
             else:
                 assert old in text, f"selftest plant anchor missing for {name}"
                 text = text.replace(old, new, 1)

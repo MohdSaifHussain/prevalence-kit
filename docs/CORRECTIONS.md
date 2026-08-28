@@ -17,9 +17,9 @@ neither the director nor the AI can quietly absorb the other's.
 | Chat reviewer (draft author) | 3 | 0 | **3** |
 | Research report (passed through unverified) | 2 | 0 | **2** |
 | Stale-at-draft-time, queued but built on anyway | 1 | 0 | **1** |
-| **Builder (Claude Code)** | **8** | **0** | **8** |
+| **Builder (Claude Code)** | **9** | **0** | **9** |
 | Director | 0 | 0 | 0 |
-| **Total** | **14** | **0** | **14** |
+| **Total** | **15** | **0** | **15** |
 
 C-1 … C-6 are Phase 0: defects in the chat-drafted vision, all caught before any code, none reaching
 an artifact. **C-7 … C-13 are Phase 1, and all seven are mine.** Five were caught by the director's
@@ -271,6 +271,31 @@ omitted eight open findings. Rounds two and three were caused by defects in the 
 the method asking for them. Had the first report been complete there would have been one round. So
 the remedy is not fewer rounds - it is `tools/check_claims.py`, which makes a report reconcilable
 against the artifact. Recorded here because the correction and the conclusion travelled together.
+
+---
+
+---
+
+## C-15 - F-4 regressed into the shipped example
+
+| | |
+|---|---|
+| **Claimed** | Report of 2026-08-28 against `d5442d4`: F-4 closed, and "Phase 1: nothing" open. |
+| **Actually** | `examples/synthetic/labels.csv` had 40 rows, every content field exactly 31 bytes, against `CHUNK_BYTES = 65,536`. Every item sealed to one chunk, so **exit check E9c - swap two chunks WITHIN one item, expect `SEAL_REORDERED` - could not be performed at all** on the fixture the director was about to run the checklist against. The nearest possible action, a cross-item swap, returns `SEAL_MANIFEST_MISMATCH`. |
+| **Direction** | Against the contract. F-4's own sentence returning: green tests, wrong document. |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | The director, running the shipped example end to end before the hand-run |
+| **Severity** | **Medium, and blocking.** It did not make the tool wrong - E9, E9b and E9c still returned three distinct codes, but by luck, because dropping an item's only chunk reads as truncation. The reorder path was never exercised at the director's hand. |
+| **How it happened** | I fixed F-4 in `tests/conftest.py`, then generated `examples/synthetic/labels.csv` from a demo run without carrying the same property across. The fixture requirement lived in one file's constants and in prose, and prose does not travel. |
+| **Replaced by** | `tools/make_example.py` generates the example with one deliberately multi-chunk item, and states in code why. `check_claims`'s sixth check, `fixtures`, asserts the property. E9c restated to name `item-0154` and `0000.bin`/`0001.bin` specifically. **Verified: E9c on the shipped example now returns `SEAL_REORDERED`, with E9 and E9b returning `SEAL_TAMPERED` and `SEAL_TRUNCATED` on the same item.** |
+| **Class** | New, and named in **D-23**: a finding closed in one artifact and open in another. Distinct from the wrong-statement class (C-7..C-11) and the wrong-reporting class (C-12..C-14). |
+| **Status** | **OPEN** - closes at phase close |
+
+**Two smaller things the same fix surfaced, both mine.** `check_fixtures`'s first version read the
+CSV with a bare `DictReader` and died on `_csv.Error: field larger than field limit` - the exact
+defect V-11 named, inside the checker written to prevent that class of thing recurring. And adding
+`RUN_NOT_FOUND` made the contract's "22 reason codes" stale, which the `figures` check caught on the
+same run. Both are the checker working on its own author.
 
 ---
 

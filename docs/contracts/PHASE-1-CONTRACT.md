@@ -119,6 +119,7 @@ Each gets a distinct reason code, a negative control, and a positive control.
 | `LABELS_UNMATCHED` | Labels do not correspond one-to-one with the drawn sample |
 | `EMPTY_SAMPLE` | n = 0 — no interval is defined |
 | `RUN_ALREADY_OPEN` ▸ **AMENDED** | `plan` was run into a workspace that already holds a measurement |
+| `RUN_NOT_FOUND` ▸ **AMENDED** | The run directory does not exist -- a mistyped path, not a broken ledger |
 | `RUN_NOT_LINEAR` ▸ **AMENDED** | An evidence step repeats, or the steps are recorded out of order, or a step name is unknown |
 | `SEAL_ALREADY_WRITTEN` ▸ **AMENDED** | A second seal into the write-once `plan.sealed` store |
 | `SEAL_ID_COLLISION` ▸ **AMENDED** | A sealed directory already belongs to a different item id |
@@ -129,7 +130,7 @@ Each gets a distinct reason code, a negative control, and a positive control.
 | `FRAME_TOO_SMALL` ▸ **AMENDED** | The frame holds fewer items than the plan asks for |
 | `CONTENT_TOO_LARGE` ▸ **AMENDED** | A CSV field exceeds the reader's ceiling |
 
-**22 reason codes at this commit.** `EMPTY_SAMPLE` used to carry four of these situations at once, which told an operator nothing about which of four different things to fix.
+**23 reason codes at this commit.** `EMPTY_SAMPLE` used to carry four of these situations at once, which told an operator nothing about which of four different things to fix.
 | `PLAN_MISSING` ▸ **AMENDED** | The sealed plan copy is absent, so check (a) of D-15 cannot run. *(A missing **working** plan file is not a failure — see R10.)* |
 
 ## 4b. The linearity rule ▸ **AMENDED**
@@ -210,7 +211,7 @@ Expected results are stated **in advance**, including exit codes.
 | E8d ▸ **AMENDED** | Run the full chain. Then edit the plan, **re-run `plan`**, and re-run the full chain into the same workspace. Rerun `verify`. | **Non-zero exit, named reason code, and the code must NOT be `ESTIMATE_MISMATCH`.** Expect `RUN_ALREADY_OPEN` at the re-plan. |
 | E9 | Edit one byte in a sealed chunk, rerun `verify` | **Non-zero exit. Reason code `SEAL_TAMPERED`.** |
 | E9b ▸ **AMENDED** | **Drop the final chunk** of a sealed item, rerun `verify` | **Non-zero exit. Reason code `SEAL_TRUNCATED`.** |
-| E9c ▸ **RESTATED** | **Swap the first two chunks of the multi-chunk item** — the synthetic generator seals one deliberately large item for this purpose — then rerun `verify` | **Non-zero exit. Reason code `SEAL_REORDERED`.** Distinct from E9 and E9b. |
+| E9c ▸ **RESTATED AGAIN** | **Swap `0000.bin` and `0001.bin` of item `item-0154`** in `<run>/sealed/` — the one deliberately multi-chunk item in the shipped example — then rerun `verify` | **Non-zero exit. Reason code `SEAL_REORDERED`.** Distinct from E9 and E9b, which use the same item. |
 | E10 | `grep -ri "<sentinel string>"` across every output artifact | **No matches.** Proves R4. |
 | E11 | `pytest -q` | All pass. Every refusal has both controls. |
 | E12 | `ruff check . && ruff format --check . && mypy --strict src` | All clean. Both ruff halves. |

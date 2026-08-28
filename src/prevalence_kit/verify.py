@@ -48,11 +48,22 @@ def verify_run(ws: Workspace, plan_path: Path | None = None) -> list[Check]:
     """Walk every link. Raises Refusal at the first thing that does not hold."""
     checks: list[Check] = []
 
+    # A missing run directory and an empty ledger are different problems with
+    # different artifacts to open -- the path you typed, versus the ledger file.
+    # D-22's rule counts artifacts, and these are two. Reporting LEDGER_BROKEN for
+    # a mistyped path sends the operator to inspect a file that is not there.
+    if not ws.root.is_dir():
+        raise Refusal(
+            Reason.RUN_NOT_FOUND,
+            f"There is no run directory at {ws.root}.",
+            "Check the path you passed to --run. If this is a new measurement, run `plan` first.",
+        )
+
     entries = ws.ledger.verify()
     if not entries:
         raise Refusal(
             Reason.LEDGER_BROKEN,
-            "The ledger is empty; there is nothing to verify.",
+            f"The run at {ws.root} has no ledger entries yet.",
             "Run `plan` first.",
         )
     checks.append(
