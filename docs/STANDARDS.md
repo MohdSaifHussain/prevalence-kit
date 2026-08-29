@@ -325,16 +325,20 @@ function anywhere in this package.** So the failure the director warned about --
 against `betainc`, which would look like agreement and mean nothing -- cannot occur here by
 construction rather than by care.
 
-**Measured 2026-08-29, across all 23 cases from n = 1 to n = 1,999,514:**
+**Measured across all 69 cases: n = 1 to n = 1,999,514, k across each, and confidence in
+{0.90, 0.95, 0.99}.** The figures below were first published as 7.1e-11 and 6.9e-09, which were
+the same measurements at confidence 0.95 only -- **C-30**. An agreement figure states its axes.
 
 | What | Worst disagreement |
 |---|---|
-| The method, in full double precision | **7.1e-11** |
-| After our own `DIGITS = 12` record rounding | 6.9e-09 |
+| The method, in full double precision | **8.4e-11** |
+| After our own `DIGITS = 12` record rounding | **2.6e-07** |
 | The defining property at our endpoints -- `P(X >= k | lower)` against `alpha/2` | **3.9e-13** |
 
-**The rounding is the larger of the two, and that matters for how the first figure is read.** The
-6.9e-09 is our record format, not our estimator. R2.3 asks for four significant digits; both clear
+**The rounding is the larger of the two, and adding the confidence axis widened the gap from 100x
+to 3000x.** `DIGITS = 12` costs a fixed *absolute* precision; higher confidence pushes rare-event
+lower bounds smaller, so the same absolute error is a larger relative one. The 2.6e-07 is our
+record format, not our estimator. R2.3 asks for four significant digits; both clear
 it by orders of magnitude.
 
 ## S-3 — Platform methodology (context; sets the honest limits)

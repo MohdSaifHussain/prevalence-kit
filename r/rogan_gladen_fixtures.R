@@ -31,40 +31,54 @@ suppressPackageStartupMessages({
 })
 
 stopifnot(as.character(packageVersion("epiR")) == "2.0.92")
-CONFIDENCE <- 0.95
+# THE SECOND AXIS, added 2026-08-29.
+#
+# This fixture varied pos, tested, se and sp, and held conf.level at 0.95. So
+# every agreement figure taken from it described the estimator at one confidence
+# level while reading as a statement about the estimator.
+#
+# F-8 made it concrete: `confidence` was unvalidated in every interval
+# estimator, and no fixture could have caught it, because none varied it.
+#
+# epi.prev takes conf.level, so closing this costs a loop.
+CONF_LEVELS <- c(0.90, 0.95, 0.99)
+PRIMARY <- 0.95
 
 cases <- list()
 
 add <- function(label, pos, tested, se, sp, ours, note) {
-  warned <- character(0)
-  r <- withCallingHandlers(
-    epi.prev(pos = pos, tested = tested, se = se, sp = sp,
-             method = "c-p", units = 1, conf.level = CONFIDENCE),
-    warning = function(w) {
-      warned <<- c(warned, conditionMessage(w))
-      invokeRestart("muffleWarning")
-    }
-  )
+  for (conf in CONF_LEVELS) {
+    warned <- character(0)
+    r <- withCallingHandlers(
+      epi.prev(pos = pos, tested = tested, se = se, sp = sp,
+               method = "c-p", units = 1, conf.level = conf),
+      warning = function(w) {
+        warned <<- c(warned, conditionMessage(w))
+        invokeRestart("muffleWarning")
+      }
+    )
 
-  # The Rogan-Gladen denominator, recorded so a reader can see why a case fails
-  # without recomputing it.
-  denominator <- se + sp - 1
-  ap <- pos / tested
+    # The Rogan-Gladen denominator, recorded so a reader can see why a case
+    # fails without recomputing it.
+    denominator <- se + sp - 1
+    ap <- pos / tested
 
-  cases[[length(cases) + 1]] <<- list(
-    label = label, note = note,
-    pos = pos, tested = tested, se = se, sp = sp,
-    apparent = ap,
-    denominator = denominator,
-    ap_est = r$ap$est, ap_lower = r$ap$lower, ap_upper = r$ap$upper,
-    tp_est = r$tp$est, tp_lower = r$tp$lower, tp_upper = r$tp$upper,
-    # An interval whose lower bound exceeds its upper bound is not an interval.
-    # Recorded as data rather than described, because it is the argument.
-    tp_interval_inverted = isTRUE(r$tp$lower > r$tp$upper),
-    epiR_warned = length(warned) > 0,
-    epiR_warning = if (length(warned)) warned else NULL,
-    prevalence_kit = ours
-  )
+    cases[[length(cases) + 1]] <<- list(
+      label = label, note = note, conf = conf,
+      pos = pos, tested = tested, se = se, sp = sp,
+      apparent = ap,
+      denominator = denominator,
+      ap_est = r$ap$est, ap_lower = r$ap$lower, ap_upper = r$ap$upper,
+      tp_est = r$tp$est, tp_lower = r$tp$lower, tp_upper = r$tp$upper,
+      # An interval whose lower bound exceeds its upper bound is not an
+      # interval. Recorded as data rather than described, because it is the
+      # argument.
+      tp_interval_inverted = isTRUE(r$tp$lower > r$tp$upper),
+      epiR_warned = length(warned) > 0,
+      epiR_warning = if (length(warned)) warned else NULL,
+      prevalence_kit = ours
+    )
+  }
 }
 
 cat("\n")
@@ -144,7 +158,7 @@ fixture <- list(
   deliverable = "D2.5",
   produced_by = "r/rogan_gladen_fixtures.R",
   generated_before_any_estimator = TRUE,
-  exact_call = "epi.prev(pos, tested, se, sp, method = \"c-p\", units = 1, conf.level = 0.95)",
+  exact_call = "epi.prev(pos, tested, se, sp, method = \"c-p\", units = 1, conf.level = conf), for conf in {0.90, 0.95, 0.99}",
   witness_note = paste(
     "epiR implements Rogan-Gladen; its intervals follow Reiczigel et al. (2010),",
     "S-1.6, which assumes Se and Sp are known -- our assumption, D-31.",
@@ -182,7 +196,17 @@ fixture <- list(
     witness = "S-1.10 epiR 2.0.92",
     not_implemented = "S-1.5 Lang & Reiczigel (2014); S-1.11 Kopacka & Fuchs (2026)"
   ),
-  confidence = CONFIDENCE,
+  confidence = PRIMARY,
+  confidence_levels = CONF_LEVELS,
+  axes = list(
+    varied = c("pos", "tested", "se", "sp", "conf"),
+    held_fixed = c("method = c-p"),
+    note = paste(
+      "Every agreement figure taken from this fixture must state its axes.",
+      "Before 2026-08-29 conf was pinned at 0.95 and the figures did not say so.",
+      "method stays c-p: Q7 ships no other corrected interval, so no other is witnessed."
+    )
+  ),
   cases = cases
 )
 

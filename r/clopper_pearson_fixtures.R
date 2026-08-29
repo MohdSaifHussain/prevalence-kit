@@ -25,17 +25,33 @@
 
 suppressPackageStartupMessages(library(jsonlite))
 
-CONFIDENCE <- 0.95
+# THE SECOND AXIS, added 2026-08-29.
+#
+# The first version of this fixture varied n across six orders of magnitude
+# and held confidence at exactly 0.95. So "7.1e-11 across 23 cases, n = 1 to
+# n = 1,999,514" read as a statement about the estimator when it was a
+# statement about the estimator AT ONE CONFIDENCE LEVEL. Nothing in the
+# sentence said which dimensions were explored and which were pinned.
+#
+# F-8 is what made this concrete: `confidence` was unvalidated in every
+# interval estimator, and no fixture could have found it, because no fixture
+# ever varied it. A parameter no instrument points at.
+#
+# binom.test takes conf.level, so closing this costs three lines.
+CONF_LEVELS <- c(0.90, 0.95, 0.99)
+PRIMARY <- 0.95
 
 cases <- list()
 add <- function(n, k, note) {
-  bt <- binom.test(k, n, conf.level = CONFIDENCE)
-  ci <- as.numeric(bt$conf.int)
-  cases[[length(cases) + 1]] <<- list(
-    n = n, k = k, note = note,
-    point = k / n,
-    lower = ci[1], upper = ci[2]
-  )
+  for (conf in CONF_LEVELS) {
+    bt <- binom.test(k, n, conf.level = conf)
+    ci <- as.numeric(bt$conf.int)
+    cases[[length(cases) + 1]] <<- list(
+      n = n, k = k, conf = conf, note = note,
+      point = k / n,
+      lower = ci[1], upper = ci[2]
+    )
+  }
 }
 
 # Edges first, because they are where interval code goes wrong.
@@ -64,10 +80,10 @@ cat("\n")
 cat("D2.4 -- Clopper-Pearson fixtures from stats::binom.test\n")
 cat("=======================================================\n")
 cat(sprintf("  %s\n", R.version.string))
-cat(sprintf("  confidence %.2f, alpha/2 = %.4f in each tail\n\n", CONFIDENCE, (1 - CONFIDENCE) / 2))
-cat(sprintf("  %8s %8s %16s %16s   %s\n", "n", "k", "lower", "upper", "note"))
+cat(sprintf("  confidence levels: %s\n\n", paste(CONF_LEVELS, collapse = ", ")))
+cat(sprintf("  %8s %8s %6s %16s %16s\n", "n", "k", "conf", "lower", "upper"))
 for (c in cases) {
-  cat(sprintf("  %8d %8d %16.12f %16.12f   %s\n", c$n, c$k, c$lower, c$upper, c$note))
+  cat(sprintf("  %8d %8d %6.2f %16.12f %16.12f\n", c$n, c$k, c$conf, c$lower, c$upper))
 }
 
 fixture <- list(
@@ -75,7 +91,7 @@ fixture <- list(
   deliverable = "D2.4",
   produced_by = "r/clopper_pearson_fixtures.R",
   generated_before_any_estimator = TRUE,
-  exact_call = "binom.test(k, n, conf.level = 0.95)$conf.int",
+  exact_call = "binom.test(k, n, conf.level = conf)$conf.int, for conf in {0.90, 0.95, 0.99}",
   witness_note = paste(
     "stats::binom.test is base R, a different implementation lineage from",
     "survey. It reaches the interval by inverting an incomplete beta (qbeta).",
@@ -92,7 +108,16 @@ fixture <- list(
     cran_snapshot = getOption("repos")[["CRAN"]]
   ),
   standards = list(anchor = "S-1.1 Brown, Cai & DasGupta (2001), DOI 10.1214/ss/1009213286"),
-  confidence = CONFIDENCE,
+  confidence = PRIMARY,
+  confidence_levels = CONF_LEVELS,
+  axes = list(
+    varied = c("n", "k", "conf"),
+    held_fixed = c("none"),
+    note = paste(
+      "Every agreement figure taken from this fixture must state its axes.",
+      "Before 2026-08-29 conf was pinned at 0.95 and the figures did not say so."
+    )
+  ),
   cases = cases
 )
 

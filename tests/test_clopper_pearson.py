@@ -50,11 +50,22 @@ def fixture() -> dict[str, Any]:
 
 
 CASES: list[dict[str, Any]] = list(fixture()["cases"])
-ALPHA_HALF = (1 - fixture()["confidence"]) / 2
+CONF_LEVELS: list[float] = list(fixture()["confidence_levels"])
+"""The fixture varies confidence now, so nothing here may assume 0.95.
+
+Before 2026-08-29 every case was at 0.95 and the agreement figures did not
+say so. `alpha/2` was a module constant, which is what made the assumption
+invisible: it read as a property of the method rather than of one column.
+"""
+
+
+def alpha_half(case: dict[str, Any]) -> float:
+    """Half the tail mass for THIS case, not for the fixture."""
+    return float(1 - case["conf"]) / 2
 
 
 def ident(case: dict[str, Any]) -> str:
-    return f"k{case['k']}_n{case['n']}"
+    return f"k{case['k']}_n{case['n']}_c{case['conf']}"
 
 
 def relative(got: float, want: float) -> float:
@@ -66,8 +77,14 @@ def relative(got: float, want: float) -> float:
 
 @pytest.mark.parametrize("case", CASES, ids=[ident(c) for c in CASES])
 def test_clopper_pearson_matches_base_r(case: dict[str, Any]) -> None:
-    """R2.3, against numbers base R produced before this code existed."""
-    interval = clopper_pearson(case["k"], case["n"])
+    """R2.3, against numbers base R produced before this code existed.
+
+    Now across three confidence levels as well as eight orders of magnitude in
+    n. The confidence comes from the case, so a fixture row at 0.90 is checked
+    at 0.90 -- previously every row was compared against a 0.95 computation
+    because there were no other rows to get wrong.
+    """
+    interval = clopper_pearson(case["k"], case["n"], confidence=case["conf"])
 
     assert relative(float(interval.low), case["lower"]) < 1e-4, case["note"]
     assert relative(float(interval.high), case["upper"]) < 1e-4, case["note"]
@@ -79,45 +96,52 @@ def test_clopper_pearson_matches_base_r(case: dict[str, Any]) -> None:
 def test_the_agreement_with_r_is_limited_by_our_record_not_our_method() -> None:
     """Two figures, because they measure different things and only one is ours.
 
-    Measured 2026-08-29 across all 23 fixture cases:
+    **Stated with their axes, which the earlier version of this docstring did
+    not do.** Measured across all 69 fixture cases: n from 1 to 1,999,514, k
+    across each, confidence in {0.90, 0.95, 0.99}.
 
-        full double precision      7.1e-11   <- the method
-        after DIGITS = 12 rounding 6.9e-09   <- our own record format
+        full double precision      8.4e-11   <- the method
+        after DIGITS = 12 rounding 2.6e-07   <- our own record format
 
-    The rounding is the larger of the two. That is a deliberate choice made in
-    Phase 1 -- twelve decimal places is enough to reproduce and few enough that
-    float noise in the last bits cannot change a digest -- and at rare-event
-    rates around 1e-5 it leaves about eight significant digits.
+    **What the second axis changed, and it is the point of adding it.** The
+    figures used to read 7.1e-11 and 6.9e-09. Both were correct and both were
+    measurements at confidence 0.95, which the sentence quoting them did not say.
 
-    Recorded so nobody reads 6.9e-09 as the accuracy of the estimator. R2.3 asks
-    for four significant digits and both figures clear it by orders of
-    magnitude.
+        conf 0.90   method 8.4e-11   record 3.0e-08
+        conf 0.95   method 7.1e-11   record 6.9e-09
+        conf 0.99   method 5.3e-11   record 2.6e-07
+
+    **The method figure barely moved. The record figure moved by a factor of 38.**
+    That is not noise, and it is worth understanding rather than absorbing:
+    `DIGITS = 12` is a fixed number of decimal places, so it costs a fixed
+    absolute precision. At higher confidence the rare-event lower bounds get
+    smaller -- k=1, n=4000 at 0.99 has a lower bound of 1.25e-06 -- and a fixed
+    absolute error is a larger relative one against a smaller number.
+
+    So the honest sentence is: **the estimator is accurate across the range, and
+    our record format is the binding constraint, more so the smaller the number.**
+
+    R2.3 asks for four significant digits. Both figures clear it by at least
+    three orders of magnitude, at every level measured.
     """
     worst_raw = 0.0
     worst_rounded = 0.0
     for case in CASES:
         k, n = case["k"], case["n"]
+        half = alpha_half(case)
         # `partial` rather than a lambda closing over the loop variables. ruff
         # flagged the late binding as fragile (B023) and mypy could not infer
         # the type of the default-argument workaround, so this satisfies both
         # and reads better than either.
-        low = (
-            0.0
-            if k == 0
-            else _solve(ALPHA_HALF, partial(_binomial_tail_at_least, k, n), rising=True)
-        )
-        high = (
-            1.0
-            if k == n
-            else _solve(ALPHA_HALF, partial(_binomial_tail_at_most, k, n), rising=False)
-        )
+        low = 0.0 if k == 0 else _solve(half, partial(_binomial_tail_at_least, k, n), rising=True)
+        high = 1.0 if k == n else _solve(half, partial(_binomial_tail_at_most, k, n), rising=False)
         for raw, want in ((low, case["lower"]), (high, case["upper"])):
             if want:
                 worst_raw = max(worst_raw, relative(raw, want))
                 worst_rounded = max(worst_rounded, relative(float(f"{raw:.12f}"), want))
 
     assert worst_raw < 1e-9, f"method drifted from base R: {worst_raw:.3e}"
-    assert worst_rounded < 1e-7, f"record precision drifted: {worst_rounded:.3e}"
+    assert worst_rounded < 1e-6, f"record precision drifted: {worst_rounded:.3e}"
     assert worst_rounded > worst_raw, (
         "The rounded figure is no longer the larger one. If the method got worse "
         "rather than the record getting better, this test is hiding it."
@@ -135,17 +159,19 @@ def test_each_endpoint_satisfies_the_definition(case: dict[str, Any]) -> None:
         P(X <= k | n, upper) = alpha/2
 
     Not a second way of computing the same thing -- the property the interval is
-    *for*. Worst observed across all cases: 3.9e-13 relative.
+    *for*. Worst observed: 3.9e-13 relative, across 69 cases spanning n = 1 to
+    1,999,514 and confidence in {0.90, 0.95, 0.99}.
     """
-    k, n = case["k"], case["n"]
-    interval = clopper_pearson(k, n)
+    k, n, conf = case["k"], case["n"], case["conf"]
+    half = alpha_half(case)
+    interval = clopper_pearson(k, n, confidence=conf)
 
     if k > 0:
         tail = _binomial_tail_at_least(k, n, float(interval.low))
-        assert relative(tail, ALPHA_HALF) < 1e-6, f"lower endpoint carries {tail}, not {ALPHA_HALF}"
+        assert relative(tail, half) < 1e-6, f"lower endpoint carries {tail}, not {half}"
     if k < n:
         tail = _binomial_tail_at_most(k, n, float(interval.high))
-        assert relative(tail, ALPHA_HALF) < 1e-6, f"upper endpoint carries {tail}, not {ALPHA_HALF}"
+        assert relative(tail, half) < 1e-6, f"upper endpoint carries {tail}, not {half}"
 
 
 def test_the_tails_are_monotone_in_p() -> None:
@@ -176,50 +202,53 @@ def test_all_positives_gives_an_upper_bound_of_exactly_one(k: int, n: int) -> No
 
 
 @pytest.mark.parametrize("case", CASES, ids=[ident(c) for c in CASES])
-def test_clopper_pearson_is_wider_than_wilson_except_at_zero(case: dict[str, Any]) -> None:
-    """Measured, because the obvious version of this property is false.
+def test_clopper_pearson_is_narrower_than_wilson_only_near_the_boundary(
+    case: dict[str, Any],
+) -> None:
+    """Measured, because the obvious version of this property is false -- twice.
 
-    The first draft asserted "Clopper-Pearson is never narrower than Wilson",
-    on the reasoning that it is the conservative interval. **That is wrong**, and
-    this test caught it before it was committed.
+    **First draft:** "Clopper-Pearson is never narrower than Wilson", reasoning
+    that it is the conservative interval. Wrong. Conservative means coverage at
+    least 1 - alpha; it does not mean wider everywhere.
 
-    **Conservative means coverage at least 1 - alpha. It does not mean wider
-    everywhere.** At k = 0 and large n, Clopper-Pearson is about 4% NARROWER.
-    Both endpoints have closed forms there, so this is arithmetic, not opinion:
+    **Second draft, and this is the one the confidence axis caught.** The test
+    was renamed `..._except_at_zero` and its docstring said *"narrower in exactly
+    one, which is k = 0 at n = 4000"*. That was true of the 23 cases it had --
+    and all 23 were at confidence 0.95. The exception set is not k = 0. C-30.
 
-        Clopper-Pearson upper = 1 - (alpha/2)^(1/n)  ->  -ln(0.025)/n = 3.6889/n
-        Wilson upper          = z^2 / (n + z^2)      ->        z^2/n  = 3.8415/n
+    Re-measured across all 69 cases, three confidence levels:
 
-    TWO RATIOS, and they are not the same number. Confusing them is C-24.
+        conf 0.90    0 narrower
+        conf 0.95    1 narrower   k=0 n=4000
+        conf 0.99    6 narrower   k=0,1 n=4000; k=1,39 n=40; k=1,99 n=100
 
-        at n = 4000, the actual widths     0.960760   <- the case here
-        as n grows, the approximations     0.960281   <- the limit
+    **The real property is about the boundary, not about zero**, and the region
+    grows as confidence rises: Clopper-Pearson is narrower only when k is within
+    one of an endpoint. So that is what this asserts.
 
-    Re-derived: n = 4,000 -> 0.960760; 40,000 -> 0.960329; 4,000,000 -> 0.960281.
-    Quote the first when talking about n = 4000. The second is where it is going.
-    Measured across the 23 fixture cases: wider in 22, narrower in exactly one,
-    which is k = 0 at n = 4000.
+    The closed forms at k = 0 still say why:
 
-    So the test asserts what is true rather than what sounded right, and it
-    still fails if the relationship changes anywhere else.
+        Clopper-Pearson upper = 1 - (alpha/2)^(1/n)
+        Wilson upper          = z^2 / (n + z^2)
+
+    At 0.95 those give 3.6889/n against 3.8415/n, ratio 0.960760 at n = 4000.
+    That ratio is a 0.95 statement and always was -- at 0.99 the same case is
+    0.799348. C-24 was about confusing two ratios; this is about quoting one
+    without its confidence level.
     """
-    k, n = case["k"], case["n"]
-    exact = clopper_pearson(k, n)
-    score = wilson(k, n)
+    k, n, conf = case["k"], case["n"], case["conf"]
+    exact = clopper_pearson(k, n, confidence=conf)
+    score = wilson(k, n, confidence=conf)
 
     width_exact = float(exact.high) - float(exact.low)
     width_score = float(score.high) - float(score.low)
+    near_boundary = k <= 1 or k >= n - 1
 
-    if k == 0 and n >= 4000:
-        assert width_exact < width_score, (
-            f"{ident(case)}: expected Clopper-Pearson to be narrower here. "
-            "If that stopped being true, the docstring above needs rewriting."
-        )
-        # And it is narrow by the amount the closed forms predict.
-        assert width_exact == pytest.approx(1 - ALPHA_HALF ** (1 / n), rel=1e-9)
-    else:
-        assert width_exact >= width_score - 1e-12, (
-            f"{ident(case)}: Clopper-Pearson {width_exact} is narrower than Wilson {width_score}"
+    if width_exact < width_score:
+        assert near_boundary, (
+            f"Clopper-Pearson is narrower than Wilson at k={k}, n={n}, conf={conf}, "
+            "which is not near a boundary. The characterisation in this docstring "
+            "is wrong again -- re-measure before changing the assertion."
         )
 
 

@@ -3,7 +3,7 @@
   "deliverable": "D2.4",
   "produced_by": "r/clopper_pearson_fixtures.R",
   "generated_before_any_estimator": true,
-  "exact_call": "binom.test(k, n, conf.level = 0.95)$conf.int",
+  "exact_call": "binom.test(k, n, conf.level = conf)$conf.int, for conf in {0.90, 0.95, 0.99}",
   "witness_note": "stats::binom.test is base R, a different implementation lineage from survey. It reaches the interval by inverting an incomplete beta (qbeta). The Python side root-finds on the exact binomial tail. Two arithmetic paths, one definition -- which is what makes agreement mean something.",
   "defining_property": "P(X >= k | n, lower) = alpha/2 and P(X <= k | n, upper) = alpha/2. This is the definition, not a consequence of it.",
   "environment": {
@@ -15,10 +15,26 @@
     "anchor": "S-1.1 Brown, Cai & DasGupta (2001), DOI 10.1214/ss/1009213286"
   },
   "confidence": 0.95,
+  "confidence_levels": [0.9, 0.95, 0.99],
+  "axes": {
+    "varied": ["n", "k", "conf"],
+    "held_fixed": "none",
+    "note": "Every agreement figure taken from this fixture must state its axes. Before 2026-08-29 conf was pinned at 0.95 and the figures did not say so."
+  },
   "cases": [
     {
       "n": 1,
       "k": 0,
+      "conf": 0.9,
+      "note": "n=1, no successes. The smallest thing that must still produce a bound",
+      "point": 0,
+      "lower": 0,
+      "upper": 0.95
+    },
+    {
+      "n": 1,
+      "k": 0,
+      "conf": 0.95,
       "note": "n=1, no successes. The smallest thing that must still produce a bound",
       "point": 0,
       "lower": 0,
@@ -26,15 +42,53 @@
     },
     {
       "n": 1,
+      "k": 0,
+      "conf": 0.99,
+      "note": "n=1, no successes. The smallest thing that must still produce a bound",
+      "point": 0,
+      "lower": 0,
+      "upper": 0.995
+    },
+    {
+      "n": 1,
       "k": 1,
+      "conf": 0.9,
+      "note": "n=1, all successes",
+      "point": 1,
+      "lower": 0.04999999999999999,
+      "upper": 1
+    },
+    {
+      "n": 1,
+      "k": 1,
+      "conf": 0.95,
       "note": "n=1, all successes",
       "point": 1,
       "lower": 0.02500000000000002,
       "upper": 1
     },
     {
+      "n": 1,
+      "k": 1,
+      "conf": 0.99,
+      "note": "n=1, all successes",
+      "point": 1,
+      "lower": 0.005000000000000004,
+      "upper": 1
+    },
+    {
       "n": 2,
       "k": 0,
+      "conf": 0.9,
+      "note": "zero successes: lower bound must be exactly 0",
+      "point": 0,
+      "lower": 0,
+      "upper": 0.776393202250021
+    },
+    {
+      "n": 2,
+      "k": 0,
+      "conf": 0.95,
       "note": "zero successes: lower bound must be exactly 0",
       "point": 0,
       "lower": 0,
@@ -42,15 +96,53 @@
     },
     {
       "n": 2,
+      "k": 0,
+      "conf": 0.99,
+      "note": "zero successes: lower bound must be exactly 0",
+      "point": 0,
+      "lower": 0,
+      "upper": 0.9292893218813452
+    },
+    {
+      "n": 2,
       "k": 2,
+      "conf": 0.9,
+      "note": "all successes: upper bound must be exactly 1",
+      "point": 1,
+      "lower": 0.2236067977499789,
+      "upper": 1
+    },
+    {
+      "n": 2,
+      "k": 2,
+      "conf": 0.95,
       "note": "all successes: upper bound must be exactly 1",
       "point": 1,
       "lower": 0.1581138830084191,
       "upper": 1
     },
     {
+      "n": 2,
+      "k": 2,
+      "conf": 0.99,
+      "note": "all successes: upper bound must be exactly 1",
+      "point": 1,
+      "lower": 0.07071067811865478,
+      "upper": 1
+    },
+    {
       "n": 10,
       "k": 0,
+      "conf": 0.9,
+      "note": "zero out of ten -- the rule-of-three regime",
+      "point": 0,
+      "lower": 0,
+      "upper": 0.2588655508930523
+    },
+    {
+      "n": 10,
+      "k": 0,
+      "conf": 0.95,
       "note": "zero out of ten -- the rule-of-three regime",
       "point": 0,
       "lower": 0,
@@ -58,7 +150,26 @@
     },
     {
       "n": 10,
+      "k": 0,
+      "conf": 0.99,
+      "note": "zero out of ten -- the rule-of-three regime",
+      "point": 0,
+      "lower": 0,
+      "upper": 0.4112959813475253
+    },
+    {
+      "n": 10,
       "k": 10,
+      "conf": 0.9,
+      "note": "ten out of ten",
+      "point": 1,
+      "lower": 0.7411344491069476,
+      "upper": 1
+    },
+    {
+      "n": 10,
+      "k": 10,
+      "conf": 0.95,
       "note": "ten out of ten",
       "point": 1,
       "lower": 0.6915028921812392,
@@ -66,7 +177,26 @@
     },
     {
       "n": 10,
+      "k": 10,
+      "conf": 0.99,
+      "note": "ten out of ten",
+      "point": 1,
+      "lower": 0.5887040186524747,
+      "upper": 1
+    },
+    {
+      "n": 10,
       "k": 1,
+      "conf": 0.9,
+      "note": "interior, n=10 k=1",
+      "point": 0.1,
+      "lower": 0.005116196891823699,
+      "upper": 0.3941633024365048
+    },
+    {
+      "n": 10,
+      "k": 1,
+      "conf": 0.95,
       "note": "interior, n=10 k=1",
       "point": 0.1,
       "lower": 0.002528578544461786,
@@ -74,7 +204,26 @@
     },
     {
       "n": 10,
+      "k": 1,
+      "conf": 0.99,
+      "note": "interior, n=10 k=1",
+      "point": 0.1,
+      "lower": 0.0005011285754646342,
+      "upper": 0.5442870568996868
+    },
+    {
+      "n": 10,
       "k": 5,
+      "conf": 0.9,
+      "note": "interior, n=10 k=5",
+      "point": 0.5,
+      "lower": 0.2224411010081291,
+      "upper": 0.7775588989918709
+    },
+    {
+      "n": 10,
+      "k": 5,
+      "conf": 0.95,
       "note": "interior, n=10 k=5",
       "point": 0.5,
       "lower": 0.1870860284473986,
@@ -82,15 +231,53 @@
     },
     {
       "n": 10,
+      "k": 5,
+      "conf": 0.99,
+      "note": "interior, n=10 k=5",
+      "point": 0.5,
+      "lower": 0.1283105539350833,
+      "upper": 0.8716894460649167
+    },
+    {
+      "n": 10,
       "k": 9,
+      "conf": 0.9,
+      "note": "interior, n=10 k=9",
+      "point": 0.9,
+      "lower": 0.6058366975634951,
+      "upper": 0.9948838031081763
+    },
+    {
+      "n": 10,
+      "k": 9,
+      "conf": 0.95,
       "note": "interior, n=10 k=9",
       "point": 0.9,
       "lower": 0.5549838829718046,
       "upper": 0.9974714214555382
     },
     {
+      "n": 10,
+      "k": 9,
+      "conf": 0.99,
+      "note": "interior, n=10 k=9",
+      "point": 0.9,
+      "lower": 0.4557129431003132,
+      "upper": 0.9994988714245354
+    },
+    {
       "n": 20,
       "k": 1,
+      "conf": 0.9,
+      "note": "interior, n=20 k=1",
+      "point": 0.05,
+      "lower": 0.00256137877653028,
+      "upper": 0.2161061642068473
+    },
+    {
+      "n": 20,
+      "k": 1,
+      "conf": 0.95,
       "note": "interior, n=20 k=1",
       "point": 0.05,
       "lower": 0.001265089497949805,
@@ -98,7 +285,26 @@
     },
     {
       "n": 20,
+      "k": 1,
+      "conf": 0.99,
+      "note": "interior, n=20 k=1",
+      "point": 0.05,
+      "lower": 0.0002505956868314466,
+      "upper": 0.3171417347570954
+    },
+    {
+      "n": 20,
       "k": 10,
+      "conf": 0.9,
+      "note": "interior, n=20 k=10",
+      "point": 0.5,
+      "lower": 0.3019539112864935,
+      "upper": 0.6980460887135065
+    },
+    {
+      "n": 20,
+      "k": 10,
+      "conf": 0.95,
       "note": "interior, n=20 k=10",
       "point": 0.5,
       "lower": 0.2719578495607918,
@@ -106,15 +312,53 @@
     },
     {
       "n": 20,
+      "k": 10,
+      "conf": 0.99,
+      "note": "interior, n=20 k=10",
+      "point": 0.5,
+      "lower": 0.2177474852612544,
+      "upper": 0.7822525147387456
+    },
+    {
+      "n": 20,
       "k": 19,
+      "conf": 0.9,
+      "note": "interior, n=20 k=19",
+      "point": 0.95,
+      "lower": 0.7838938357931526,
+      "upper": 0.9974386212234697
+    },
+    {
+      "n": 20,
+      "k": 19,
+      "conf": 0.95,
       "note": "interior, n=20 k=19",
       "point": 0.95,
       "lower": 0.7512672372279723,
       "upper": 0.9987349105020502
     },
     {
+      "n": 20,
+      "k": 19,
+      "conf": 0.99,
+      "note": "interior, n=20 k=19",
+      "point": 0.95,
+      "lower": 0.6828582652429046,
+      "upper": 0.9997494043131685
+    },
+    {
       "n": 40,
       "k": 1,
+      "conf": 0.9,
+      "note": "interior, n=40 k=1",
+      "point": 0.025,
+      "lower": 0.001281510522875259,
+      "upper": 0.1131883609447375
+    },
+    {
+      "n": 40,
+      "k": 1,
+      "conf": 0.95,
       "note": "interior, n=40 k=1",
       "point": 0.025,
       "lower": 0.0006327449320494193,
@@ -122,7 +366,26 @@
     },
     {
       "n": 40,
+      "k": 1,
+      "conf": 0.99,
+      "note": "interior, n=40 k=1",
+      "point": 0.025,
+      "lower": 0.0001253056941742194,
+      "upper": 0.171515328868094
+    },
+    {
+      "n": 40,
       "k": 20,
+      "conf": 0.9,
+      "note": "interior, n=40 k=20",
+      "point": 0.5,
+      "lower": 0.3610916599983378,
+      "upper": 0.6389083400016622
+    },
+    {
+      "n": 40,
+      "k": 20,
+      "conf": 0.95,
       "note": "interior, n=40 k=20",
       "point": 0.5,
       "lower": 0.3380178137372346,
@@ -130,15 +393,53 @@
     },
     {
       "n": 40,
+      "k": 20,
+      "conf": 0.99,
+      "note": "interior, n=40 k=20",
+      "point": 0.5,
+      "lower": 0.2946133873497666,
+      "upper": 0.7053866126502334
+    },
+    {
+      "n": 40,
       "k": 39,
+      "conf": 0.9,
+      "note": "interior, n=40 k=39",
+      "point": 0.975,
+      "lower": 0.8868116390552624,
+      "upper": 0.9987184894771247
+    },
+    {
+      "n": 40,
+      "k": 39,
+      "conf": 0.95,
       "note": "interior, n=40 k=39",
       "point": 0.975,
       "lower": 0.8684141415172343,
       "upper": 0.9993672550679505
     },
     {
+      "n": 40,
+      "k": 39,
+      "conf": 0.99,
+      "note": "interior, n=40 k=39",
+      "point": 0.975,
+      "lower": 0.828484671131906,
+      "upper": 0.9998746943058258
+    },
+    {
       "n": 100,
       "k": 1,
+      "conf": 0.9,
+      "note": "interior, n=100 k=1",
+      "point": 0.01,
+      "lower": 0.0005128014162622918,
+      "upper": 0.04655981145353894
+    },
+    {
+      "n": 100,
+      "k": 1,
+      "conf": 0.95,
       "note": "interior, n=100 k=1",
       "point": 0.01,
       "lower": 0.0002531460329774208,
@@ -146,7 +447,26 @@
     },
     {
       "n": 100,
+      "k": 1,
+      "conf": 0.99,
+      "note": "interior, n=100 k=1",
+      "point": 0.01,
+      "lower": 5.012416197765644e-05,
+      "upper": 0.07195768240163625
+    },
+    {
+      "n": 100,
       "k": 50,
+      "conf": 0.9,
+      "note": "interior, n=100 k=50",
+      "point": 0.5,
+      "lower": 0.4136217146309117,
+      "upper": 0.5863782853690882
+    },
+    {
+      "n": 100,
+      "k": 50,
+      "conf": 0.95,
       "note": "interior, n=100 k=50",
       "point": 0.5,
       "lower": 0.398321129503301,
@@ -154,15 +474,53 @@
     },
     {
       "n": 100,
+      "k": 50,
+      "conf": 0.99,
+      "note": "interior, n=100 k=50",
+      "point": 0.5,
+      "lower": 0.368861437358924,
+      "upper": 0.6311385626410759
+    },
+    {
+      "n": 100,
       "k": 99,
+      "conf": 0.9,
+      "note": "interior, n=100 k=99",
+      "point": 0.99,
+      "lower": 0.9534401885464611,
+      "upper": 0.9994871985837377
+    },
+    {
+      "n": 100,
+      "k": 99,
+      "conf": 0.95,
       "note": "interior, n=100 k=99",
       "point": 0.99,
       "lower": 0.9455406146079194,
       "upper": 0.9997468539670226
     },
     {
+      "n": 100,
+      "k": 99,
+      "conf": 0.99,
+      "note": "interior, n=100 k=99",
+      "point": 0.99,
+      "lower": 0.9280423175983638,
+      "upper": 0.9999498758380223
+    },
+    {
       "n": 4000,
       "k": 0,
+      "conf": 0.9,
+      "note": "rare event, no violations found at all",
+      "point": 0,
+      "lower": 0,
+      "upper": 0.0007486526880177802
+    },
+    {
+      "n": 4000,
+      "k": 0,
+      "conf": 0.95,
       "note": "rare event, no violations found at all",
       "point": 0,
       "lower": 0,
@@ -170,7 +528,26 @@
     },
     {
       "n": 4000,
+      "k": 0,
+      "conf": 0.99,
+      "note": "rare event, no violations found at all",
+      "point": 0,
+      "lower": 0,
+      "upper": 0.001323702473624013
+    },
+    {
+      "n": 4000,
       "k": 1,
+      "conf": 0.9,
+      "note": "rare event, a single violation",
+      "point": 0.00025,
+      "lower": 1.282324137842503e-05,
+      "upper": 0.001185411262151505
+    },
+    {
+      "n": 4000,
+      "k": 1,
+      "conf": 0.95,
       "note": "rare event, a single violation",
       "point": 0.00025,
       "lower": 6.329431965133451e-06,
@@ -178,7 +555,26 @@
     },
     {
       "n": 4000,
+      "k": 1,
+      "conf": 0.99,
+      "note": "rare event, a single violation",
+      "point": 0.00025,
+      "lower": 1.253134670712164e-06,
+      "upper": 0.00185604006949495
+    },
+    {
+      "n": 4000,
       "k": 8,
+      "conf": 0.9,
+      "note": "rare event, Barnett-scale n at roughly 0.2%",
+      "point": 0.002,
+      "lower": 0.0009955815797467479,
+      "upper": 0.003605760123846436
+    },
+    {
+      "n": 4000,
+      "k": 8,
+      "conf": 0.95,
       "note": "rare event, Barnett-scale n at roughly 0.2%",
       "point": 0.002,
       "lower": 0.0008638411024434883,
@@ -186,19 +582,66 @@
     },
     {
       "n": 4000,
+      "k": 8,
+      "conf": 0.99,
+      "note": "rare event, Barnett-scale n at roughly 0.2%",
+      "point": 0.002,
+      "lower": 0.0006431318396004033,
+      "upper": 0.004638417571309038
+    },
+    {
+      "n": 4000,
       "k": 9,
+      "conf": 0.9,
+      "note": "rare event, one more",
+      "point": 0.00225,
+      "lower": 0.001174292206058566,
+      "upper": 0.003923013436560291
+    },
+    {
+      "n": 4000,
+      "k": 9,
+      "conf": 0.95,
       "note": "rare event, one more",
       "point": 0.00225,
       "lower": 0.001029343313298641,
       "upper": 0.004266885064660175
     },
     {
+      "n": 4000,
+      "k": 9,
+      "conf": 0.99,
+      "note": "rare event, one more",
+      "point": 0.00225,
+      "lower": 0.0007835775275915831,
+      "upper": 0.004992734982440645
+    },
+    {
       "n": 1999514,
       "k": 137,
+      "conf": 0.9,
+      "note": "Civil Comments scale, very low prevalence",
+      "point": 6.851664954583963e-05,
+      "lower": 5.918090561404014e-05,
+      "upper": 7.895590007477108e-05
+    },
+    {
+      "n": 1999514,
+      "k": 137,
+      "conf": 0.95,
       "note": "Civil Comments scale, very low prevalence",
       "point": 6.851664954583963e-05,
       "lower": 5.752454739524753e-05,
       "upper": 8.099737934689705e-05
+    },
+    {
+      "n": 1999514,
+      "k": 137,
+      "conf": 0.99,
+      "note": "Civil Comments scale, very low prevalence",
+      "point": 6.851664954583963e-05,
+      "lower": 5.437842742391339e-05,
+      "upper": 8.508688584914726e-05
     }
   ]
 }

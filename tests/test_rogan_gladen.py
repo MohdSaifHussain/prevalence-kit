@@ -214,8 +214,10 @@ def _accept_cases() -> list[dict[str, Any]]:
 def test_the_corrected_interval_reproduces_every_accepted_epir_case() -> None:
     """D2.6 against its witness, on the five cases epiR and we both accept.
 
-    Worst disagreement measured 2026-08-29: **7.3e-13** on either end, against
-    R2.3's requirement of four significant digits.
+    Worst disagreement: **7.3e-13** on either end, across 15 accepted cases --
+    pos, tested, se and sp varied, AND confidence in {0.90, 0.95, 0.99}. Stated
+    with its axes, because the figure used to be measured at 0.95 only and the
+    sentence quoting it did not say so.
 
     The bounds compared are `low_raw` / `high_raw`, deliberately. Those are what
     the arithmetic produced, and they are what epiR reports; `low` / `high` carry
@@ -231,7 +233,7 @@ def test_the_corrected_interval_reproduces_every_accepted_epir_case() -> None:
             case["se"],
             case["sp"],
             interval_method="clopper_pearson",
-            confidence=CONFIDENCE,
+            confidence=case["conf"],
         )
         for ours, theirs in (
             (got.low_raw, case["tp_lower"]),

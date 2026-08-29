@@ -171,7 +171,14 @@ def test_the_inverted_interval_is_still_in_the_fixture() -> None:
     should have to notice.
     """
     inverted = [c for c in RG_CASES if c.get("tp_interval_inverted")]
-    assert len(inverted) == 1, [c["label"] for c in inverted]
+    # One per confidence level: the fixture gained a conf axis on 2026-08-29,
+    # so the same case now appears at 0.90, 0.95 and 0.99. Se + Sp < 1 inverts
+    # the interval at every level, which is itself worth knowing -- it is not a
+    # borderline numerical accident at one alpha.
+    levels = sorted({c["conf"] for c in inverted})
+    assert levels == [0.90, 0.95, 0.99], levels
+    assert len(inverted) == 3, [(c["label"], c["conf"]) for c in inverted]
+    assert {c["label"] for c in inverted} == {"denominator_negative"}
 
     case = inverted[0]
     assert case["label"] == "denominator_negative"

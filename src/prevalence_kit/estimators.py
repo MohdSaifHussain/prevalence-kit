@@ -570,7 +570,8 @@ def rogan_gladen_interval(
 
     **This composes two things already witnessed separately** and introduces no
     third unwitnessed one: `clopper_pearson()`, agreeing with base R's
-    `stats::binom.test` to 7.1e-11 across 23 cases (S-2.4), and `rogan_gladen()`,
+    `stats::binom.test` to 8.4e-11 across 69 cases -- n from 1 to 1,999,514 and
+    confidence in {0.90, 0.95, 0.99} (S-2.4) -- and `rogan_gladen()`,
     checked against all eleven `epiR` cases. Measured across the nine
     positive-denominator fixture rows, `RG(ap_lower) == tp_lower` and
     `RG(ap_upper) == tp_upper` to every digit `epiR` printed.

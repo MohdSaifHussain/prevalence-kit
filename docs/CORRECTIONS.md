@@ -17,11 +17,11 @@ neither the director nor the AI can quietly absorb the other's.
 | Chat reviewer (draft author) | 3 | 0 | **3** |
 | Research report (passed through unverified) | 2 | 0 | **2** |
 | Stale-at-draft-time, queued but built on anyway | 1 | 0 | **1** |
-| **Builder (Claude Code)** | **23** | **0** | **23** |
+| **Builder (Claude Code)** | **24** | **0** | **24** |
 | Reviewer instrument | **2** | 0 | **3** (1 noted) |
 | Director | 0 | 0 | 0 |
 | Tool artifact (noted, not a defect) | - | - | **1** |
-| **Total** | **31** | **0** | **32** |
+| **Total** | **32** | **0** | **33** |
 
 C-1 … C-6 are Phase 0: defects in the chat-drafted vision, all caught before any code, none reaching
 an artifact. **C-7 … C-13 are Phase 1, and all seven are mine.** Five were caught by the director's
@@ -808,6 +808,39 @@ restated without being re-derived from the artifact it describes.
 
 ---
 
+## C-30 - Three agreement figures that were measurements at one confidence level
+
+| | |
+|---|---|
+| **Claimed** | Three separate claims, all from fixtures that varied `n` and held `conf.level` at 0.95. (a) *"7.1e-11 across 23 cases, n = 1 to n = 1,999,514"* -- `docs/STANDARDS.md` S-2.4, `CLAUDE.md`, `estimators.py`. (b) *"after DIGITS = 12 rounding, 6.9e-09"*. (c) The test `test_clopper_pearson_is_wider_than_wilson_except_at_zero`, whose docstring said *"narrower in exactly one, which is k = 0 at n = 4000"*. |
+| **Actually** | Re-measured across 69 cases at confidence 0.90, 0.95 and 0.99. (a) the method is **8.4e-11**, barely moved. (b) the record format is **2.6e-07**, a factor of **38** worse. (c) **the exception set is not k = 0.** At 0.99 six cases are narrower, including `k=1, n=40` and `k=99, n=100`. The real property is `k <= 1 or k >= n - 1`, and the region grows with confidence. |
+| **Direction** | Two against us, one neutral. (b) is the uncomfortable one: our record format is a bigger constraint than reported. (c) was a wrong characterisation stated as a measured fact. |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | Adding a second axis to the fixtures, on the director's instruction. **Nothing else could have caught it** -- no witness comparison varies a parameter no fixture varies. |
+| **Severity** | **Medium.** No shipped number is wrong. Three reported figures were narrower in scope than they read, and one characterisation was false outside its measured point. |
+| **Replaced by** | All three restated with their axes. The test renamed `test_clopper_pearson_is_narrower_than_wilson_only_near_the_boundary` and asserting the boundary property instead of the k = 0 one. |
+| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+
+**Why (b) moved so much, since a factor of 38 deserves an explanation rather than
+a shrug.** `DIGITS = 12` is a fixed number of decimal places, so it costs a fixed
+*absolute* precision. Raising confidence pushes rare-event lower bounds smaller --
+`k=1, n=4000` at 0.99 has a lower bound of 1.25e-06 -- and a fixed absolute error
+is a larger *relative* one against a smaller number.
+
+**So the honest sentence is the one now in the test:** the estimator is accurate
+across the range, and our record format is the binding constraint, more so the
+smaller the number. Both still clear R2.3's four significant digits by at least
+three orders of magnitude at every level.
+
+**(c) is the second time this property was stated wrong.** The first draft said
+Clopper-Pearson is never narrower than Wilson, and the test written to assert it
+disproved it -- logged in the believed-mechanism class, no C-number, caught
+before commit. The second draft fixed the direction and got the *region* wrong,
+and that one did reach a commit. Both errors came from reasoning about a
+conservative interval instead of measuring one.
+
+---
+
 ## Classes, tracked separately from the count
 
 A correction gets a C-number when it reached a commit. A **class** keeps its own tally, because a
@@ -868,6 +901,27 @@ half-checked one deflects it, because the part a reader can verify is right.
 property or split the sentence.**
 
 Both instances were in Phase 1's closed outcome, written in the same section, on the same day.
+
+### A figure measured along one axis and stated as though along all of them
+
+The measurement is real. The sentence reporting it does not say which dimensions
+were explored and which were pinned, so the natural reading is wider than the
+evidence.
+
+| # | Where | Varied | Held fixed, unstated |
+|---|---|---|---|
+| 1 | **C-30** (a) | `n`, 1 to 1,999,514, and `k` across each | `conf.level = 0.95` |
+| 2 | **C-30** (b) | the same | the same -- and this figure moved 38x when the axis was added |
+| 3 | **C-30** (c) | the same | the same -- and the *characterisation* was false outside 0.95 |
+
+**The rule: an agreement figure states its axes -- what was varied, over what
+range, and what was held fixed.** *"7.1e-11 across 23 cases, n = 1 to 1,999,514"*
+becomes *"... all at confidence 0.95"*, which is the same measurement at its real
+width.
+
+**F-8 is the same gap seen from the other side.** `confidence` was unvalidated in
+every interval estimator and no fixture could have found it, because no fixture
+varied it. A parameter no instrument points at is a parameter nothing defends.
 
 ### An instrument that does not cover what it appears to
 

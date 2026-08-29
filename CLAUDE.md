@@ -152,7 +152,7 @@ five since are local until the next push, and the two figures are stated apart o
 | **D2.1** | R witness reproduces **Barnett Table 2B** — `2098/828/584/256/234`, VVR 0.2000%, SD 0.0539 pp. `svydesign` SE against the closed form: 4e-16 |
 | **D2.2** | 4 allocation + 5 estimation fixtures from `survey` 4.5, through the one validated call |
 | **D2.3** | `stratified.py` — Neyman, largest-remainder rounding, stratified estimator. Worst disagreement with `survey`: **9.5e-15** |
-| **D2.4** | Clopper-Pearson **from its definition** — binomial tail in log space, no incomplete beta anywhere. Witness: base R `binom.test`. **7.1e-11** |
+| **D2.4** | Clopper-Pearson **from its definition** — binomial tail in log space, no incomplete beta anywhere. Witness: base R `binom.test`. **8.4e-11**, across n = 1…1,999,514 **and** confidence {0.90, 0.95, 0.99} |
 | **D2.5** | Rogan-Gladen point estimate, 11 cases from `epiR`. Two refusals, both controls |
 | **D2.6** | Rogan-Gladen **interval** — the corrected bounds are the apparent Clopper-Pearson bounds transformed endpoint by endpoint. Against `epiR`: **7.3e-13**. **O-8 discharged.** Clamped both ends (Q6/D-32), Clopper-Pearson only (Q7/D-33) |
 
@@ -198,7 +198,7 @@ document is not binding.**
 committed before any interval code. Measured across all nine positive-denominator cases:
 `RG(ap_lower) == tp_lower` and `RG(ap_upper) == tp_upper` to every printed digit — so
 `epi.prev(..., method = "c-p")` **transforms a Clopper-Pearson interval endpoint by endpoint.** D2.6
-composes D2.4 (7.1e-11 against base R) and D2.5, and introduces no third unwitnessed thing. *That is
+composes D2.4 (8.4e-11 against base R) and D2.5, and introduces no third unwitnessed thing. *That is
 an observation about `epiR`, not a theorem about corrected intervals.*
 
 **Two rulings bind it. `Q6 / D-32`:** clamp to [0, 1] at **both** ends, **say so in the output**, and
