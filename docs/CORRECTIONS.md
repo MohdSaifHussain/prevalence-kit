@@ -1059,6 +1059,45 @@ property or split the sentence.**
 
 Both instances were in Phase 1's closed outcome, written in the same section, on the same day.
 
+### "No witness exists" -- a claim about the world, made by looking at two packages
+
+Three times this project concluded nothing implements a method. **Three times it was wrong, and
+every time in our favour.** The search space was always **D-3's two-library shortlist**, never the
+world.
+
+| # | Concluded | Actually | Found |
+|---|---|---|---|
+| 1 | Rogan-Gladen has no library witness (**O-8**) | `epiR` implements it | D2.5 research, **D-31** |
+| 2 | Clopper-Pearson has no published table, check against an implementation we write (**§2.3**) | base R `stats::binom.test` | D2.4, **S-2.4** |
+| 3 | Neither `survey` nor `svy` implements exact optimal allocation, so it cannot be witnessed (**charter NEXT**) | `stratallo` 3.0.1, **already in our pinned snapshot** | 2026-08-29, **S-1.12** |
+
+**None was found by looking.** Each turned up sideways -- while researching a deliverable, while
+writing a test, while being told to consult official sources on something else.
+
+**The shape.** *"Not in `survey` or `svy`"* is a finding: a search was run and its scope is known.
+*"No witness exists"* is a claim about all of CRAN and PyPI. The first was true every time. The
+second was inferred from it, and **nothing in this project has ever been entitled to make it.**
+
+It is the same class as an agreement figure without its axes and a worst case without its grid: **a
+claim whose scope is the sample you took, stated as though it were the population.** That is now
+three of the record's classes with one root.
+
+**The rule:**
+
+> **A negative claim about the world records the search that produced it** -- what was searched, how,
+> and when. Without that it is not a finding, it is an absence of evidence wearing a finding's
+> clothes.
+
+**Instance 3 is the worst of the three**, because the witness was not merely findable -- it was
+*already inside the pinned image*, installable with no network call the project had not already made.
+Nobody had asked.
+
+**One live claim of this shape survived the sweep**, and it was narrowed rather than re-searched: the
+charter's per-stratum Se/Sp deferral said the corrected variance has *"no published anchor in
+`docs/STANDARDS.md`, so nothing could witness it."* The premise is correctly scoped to our own
+register; the conclusion is not, and no search of CRAN or PyPI was ever made for it. Now stated at
+the width of what was checked. **Two others -- §2.3 and eval-bridge -- were already honestly scoped.**
+
 ### One pyproject setting, two costs
 
 `addopts = "-q"` is set once and has now cost something twice, both times by **doubling** into

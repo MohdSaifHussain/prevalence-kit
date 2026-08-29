@@ -74,6 +74,7 @@ so.** `docs/CORRECTIONS.md` C-22.
 | **S-1.8** | Why apportionment sources apply to survey allocation at all | Wright, T., *The Equivalence of Neyman Optimum Allocation for Sampling and Equal Proportions for Apportioning the U.S. House of Representatives*, **The American Statistician** | **2012**, 66(4), 217-224, DOI `10.1080/00031305.2012.733679` | never |
 | **S-1.10** | **The Rogan-Gladen witness.** O-8 said there was none; that was true of `survey` and `svy`, not of the world | R **`epiR`** (Stevenson et al.), `epi.prev()`. Intervals *"based on code provided by Reiczigel et al. (2010)"* -- S-1.6 | **2.0.92 in our image**, because the base image's CRAN snapshot is frozen at 2026-04-23. **2.0.96 is current on CRAN** (published 2026-08-03), outside the snapshot. `GPL (>= 2)`, which CRAN expands to `GPL-2 \| GPL-3` | **2026-11-29** |
 | S-1.11 *(context, never a method source for v1.0)* | A published alternative that answers where we refuse | Kopacka, I. & Fuchs, K., *Overcoming limitations of the Rogan-Gladen correction: a closed-form solution to a simplified Bayesian method for true prevalence estimation*, **Prev. Vet. Med.** | **2026**, vol 253, DOI `10.1016/j.prevetmed.2026.106891`. Verified live via Crossref 2026-08-29; full text not read. **NEXT queue, not v1.0.** Cited as *published work*, never as a package feature -- our pinned `epiR` 2.0.92 does not implement it, and the disclosure must hold regardless of what any version ships. C-25 | **every phase close** |
+| **S-1.12** | **Witness for the stratified variance and for D-30's rounding.** Not a method source: nothing new is built from it | R **`stratallo`** (Wojciak, Wesolowski, Wieczorkowski). `var_st` / `var_stsi` for the stratified variance; `round_oric` / `round_ran` for integer rounding; `rna` / `rnabox` for allocation | **3.0.1**, published **2026-03-12**, GPL-2. **Inside our pinned snapshot** (2026-04-23) — confirmed by running the image, not by reading CRAN (C-25). `rnabox` implements Wojciak et al., *Survey Methodology* **2024**, box-constrained optimum allocation | **2026-11-29** |
 | **S-1.9** | The formal treatment of largest remainder and its paradoxes | Balinski, M.L. & Young, H.P., *The Quota Method of Apportionment*, **American Mathematical Monthly** | **1975**, 82(7), 701-730, DOI `10.1080/00029890.1975.11993911`. **Metadata verified live via Crossref 2026-08-29; the full text was not read.** See the note below | never |
 
 **Refusal conditions are mathematical consequences, not citations.** The Rogan–Gladen estimator is
@@ -316,6 +317,36 @@ it, and the guard not objecting to it is not evidence about it.** The evidence i
 `r/Dockerfile`.
 
 
+### S-1.12 -- what `stratallo` witnesses, and the narrowing that travels with it
+
+**Found by going to official sources on stratified design, on the director's instruction**, rather
+than by designing the strata layer from reasoning. The search turned up Statistics Canada's *Survey
+Methodology* (2024) on box-constrained optimum allocation, and from there its CRAN implementation.
+
+**It is in our pinned snapshot already.** Verified by running the image:
+
+    snapshot: https://p3m.dev/cran/__linux__/noble/2026-04-23
+    stratallo AVAILABLE, version 3.0.1
+    EXPORTS: alloc_summary, coma, dca, dca_nmax, dca0, dopt, opt, optcost, rdca,
+             rna, rnabox, round_oric, round_ran, sga, sgaplus, var_st, var_stsi
+
+**What it strengthens, and it is all work already built:**
+
+| Ours | Witness | Was checked against |
+|---|---|---|
+| `stratified_estimate` variance | `var_st` / `var_stsi` | R `survey` only |
+| `largest_remainder` (D-30) | `round_oric` / `round_ran` | **nothing** — this is its first |
+
+**The same narrowing as `epiR`, in the same words.** `stratallo` is the algorithm authors' own
+implementation of their own papers. **It confirms we compute what they compute. It does not
+independently confirm the method.** That is a different kind of evidence from Barnett Table 2B, which
+is a published table produced without reference to any implementation.
+
+**What it does NOT change.** `rnabox` is not adopted. Q2's `ALLOCATION_TOO_THIN` continues to refuse
+under `allocation: neyman`, unchanged, and RNABOX is not a plan value in v1.0 — **deferred on scope,
+not on witness.** See the charter's NEXT queue, whose reason was restated the same day because the
+old one was false.
+
 ### Read state -- every entry, stated either way
 
 **S-1.1 was cited unread through two phases and the register was silent about it.** S-1.9 and S-1.11
@@ -336,8 +367,9 @@ defect repeated.
 | Entry | Read state | Evidence |
 |---|---|---|
 | S-1.1 | **full** | Read 2026-08-29 from the director's copy. Three published limits reproduced |
-| S-1.2 Neyman 1934 | `not recorded` | Cited by reprint DOI. The allocation formula came from S-2.3's re-derivation, not from this text |
-| S-1.3 Cochran | `not recorded` | Cited by ISBN as a design reference |
+| S-1.2 Neyman 1934 | **`not read`** *(attempted 2026-08-29)* | JSTOR's page would not load; the Springer reprint is paywalled. A scan exists on a university course page, which is the paper's text but **not the publisher's copy**, so it is not cited as the source under Hard Rule 3. The allocation formula came from S-2.3's re-derivation, not from this text |
+| S-1.3 Cochran | **`not read`** *(2026-08-29)* | A 1977 book with no free official text. Cited by ISBN as a design reference and **nothing in the code rests on it alone** |
+| **S-1.13** *(new)* | **full** | **Statistics Canada**, official methodology, read 2026-08-29. Supplies the two design rules S-1.2 and S-1.3 were standing in for: strata are *"homogeneous, **mutually exclusive** groups"* and *"**independent samples are selected from each stratum**"* |
 | S-1.4 Rogan-Gladen 1978 | `not recorded` | The estimator is one line of algebra and is checked against `epiR`, not against this text |
 | S-1.5 Lang & Reiczigel 2014 | `not read` | Deliberately not implemented (D-31). Cited to say what we do **not** do |
 | S-1.6 Reiczigel 2010 | `not recorded` | The interval is checked against `epiR`, which cites it. We have not read it |
@@ -346,6 +378,7 @@ defect repeated.
 | S-1.9 Balinski-Young 1975 | `not read` | Stated in the entry. The paradox is demonstrated on our own frames instead |
 | S-1.10 `epiR` | **partial** | Source behaviour verified by running 2.0.92 directly. Package docs not the witness (C-25) |
 | S-1.11 Kopacka & Fuchs 2026 | `not read` | Stated in the entry. Crossref metadata only |
+| S-1.12 `stratallo` | **partial** | Availability and exports verified by running the pinned image. Vignette and reference manual **not read** |
 | S-2.1 `survey` 4.5 | **partial** | Tarball compared file by file against the p3m mirror (V-17). Source not read |
 | S-2.1a / S-2.1b | **full** | An image digest and a call, not a document. Both executed |
 | S-2.2 `svy` 0.25.0 | **partial** | `base.py` lines 713-746 read and quoted (D-18) |

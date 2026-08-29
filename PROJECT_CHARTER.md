@@ -138,12 +138,27 @@ breaches it is a deviation to be recorded, not absorbed.
   2026-08-29. Solves the integer allocation directly instead of rounding a Neyman solution, and is
   variance-minimal where our ruled largest-remainder rounding is not (`docs/STANDARDS.md` S-1.7,
   measured: 0 on every shipped fixture, worst 0.74% of variance across 37,910 random designs).
-  **Deferred for the same reason as Q1: neither R `survey` nor `svy` implements it, so R2.3 would
-  have nothing to check it against.** It needs a witness before it can be built. Sources: Wright
-  (2014) S-1.7, Wright (2012) S-1.8.
+  **Deferred for scope, and the reason was restated 2026-08-29 because the old one was false.**
+  It said *"neither R `survey` nor `svy` implements it, so R2.3 would have nothing to check it
+  against. It needs a witness before it can be built."* **Both sentences are untrue.** A witness
+  exists and is already inside our pinned CRAN snapshot: **`stratallo` 3.0.1** (S-1.12), which
+  implements `rnabox` — the box-constrained optimal allocation of Wojciak et al., *Survey
+  Methodology* 2024 — alongside `rna` and exact-optimal routines.
+
+  **The real reason is the phase cap.** §4 says a feature that wants to grow the phase count goes
+  to NEXT instead. Adding it to Phase 2 would grow Phase 2. Two independent gates defer a
+  feature — is it in scope, and can it be witnessed — and Q1 cited the second because the second
+  was binding. **The second has now fallen and the first still holds.** Having a witness makes
+  this a better NEXT entry, not a Phase 2 one. Sources: Wright (2014) S-1.7, Wright (2012) S-1.8,
+  **S-1.12** `stratallo`.
 - **Per-stratum sensitivity/specificity for Rogan–Gladen** — deferred by name, Phase 2 Q1. The
   corrected variance under stratification has **no published anchor** in `docs/STANDARDS.md`, so
-  nothing could witness it. It needs its own anchor before it can be built.
+  **we have nothing in our own register to check it against.** It needs an anchor before it can
+  be built.
+
+  *Narrowed 2026-08-29.* This used to end *"so nothing could witness it"* — a claim about the
+  world drawn from a claim about our register. **No search of CRAN or PyPI was ever made for it.**
+  The premise was correctly scoped and the conclusion was not, which is O-8's shape exactly.
 - **eval-bridge** — explicitly gated. No code before a dedicated prior-art sweep of Inspect AI,
   promptfoo, LangSmith, Braintrust, W&B Weave, Arize Phoenix and OpenAI evals. That seam is crowded
   and the gap is unverified.

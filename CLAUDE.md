@@ -124,36 +124,42 @@ confirms we implement the method as its author does. It does not independently c
    the middle and silently weakens a claim about everything outside your sample. *"As little as
    91%"* is false when the measurement is 0.9098 — **C-32**, the director's, in the charter.
    The sweep it prompted found two more, both ours and both flattering: **C-33**.
-9. **A checked number can carry an unchecked claim.** *"23 reason codes, each with both controls"*
+9. **A negative claim about the world records the search that produced it.** *"Not in `survey` or
+   `svy`"* is a finding. *"No witness exists"* is a claim about all of CRAN and PyPI, and this
+   project has made it three times and been wrong three times, always in our favour — O-8 vs
+   `epiR`, §2.3 vs base R `binom.test`, and the charter's NEXT queue vs **`stratallo`, which was
+   already inside our pinned snapshot.** Same root as rules 8 and 10: **a claim whose scope is
+   the sample you took, stated as though it were the population.**
+10. **A checked number can carry an unchecked claim.** *"23 reason codes, each with both controls"*
    looks like one verified sentence. A machine counted the 23. Nothing checked "each with both
    controls", and it was false — C-27. Same shape in C-28. This is worse than a plain unchecked
    claim, because the half you can verify makes you stop looking. **Check the property, or split
    the sentence.**
-10. **A test asserts a defining property, or a measurement with stated scope. Never a region.**
+11. **A test asserts a defining property, or a measurement with stated scope. Never a region.**
    A defining property is true by construction — *Clopper-Pearson covers at least 1 − α*, and
    S-1.1 §4.2.1 says so. A region description — *narrower where k ≤ 1* — is a summary of the
    grid you happened to sample, and it will be wrong at the corner you did not. **C-30(c) was
    wrong three times** before the width test was deleted and replaced by a coverage test.
-11. **Check an artifact the way its real consumer reads it.** Structured files — YAML, JSON, TOML,
+12. **Check an artifact the way its real consumer reads it.** Structured files — YAML, JSON, TOML,
    CSV, XML — get the **consumer's parser**, never a regex. That is how an unparseable `gate.yml`
    passed a green checker (**C-23**). **Markdown is the exception**, and the reason is the rule: its
    consumer is a human, who reads it loosely too.
-12. **"The guard did not object" is not "the guard looked."** Know what each check does *not* read,
+13. **"The guard did not object" is not "the guard looked."** Know what each check does *not* read,
     and assert that scope rather than describe it.
-13. **A check with no artifact is a memory with a result attached.** The fixture verdict check ran
+14. **A check with no artifact is a memory with a result attached.** The fixture verdict check ran
     once as a `python -c`, was reported as "machine-checked", and left no trace. **The suite count
     not moving is what exposed it** — which is why the gate prints its own count.
-14. **The witness's documentation is not the witness. Only the pinned build is.** C-25: the manual
+15. **The witness's documentation is not the witness. Only the pinned build is.** C-25: the manual
     on CRAN described a version we do not run.
-15. **Re-run the whole gate after anything that writes to the working tree, and report *that*
+16. **Re-run the whole gate after anything that writes to the working tree, and report *that*
     run.** C-29: a mutation loop ended with `git checkout --` on a file whose real edit was
     still unstaged, so it reverted the edit. The gate had been green before the loop. I
     reported those numbers after it, and committed a tree that failed 3 tests.
-16. **A source that anchors an *arithmetic* can be validated by reproduction. A source that
+17. **A source that anchors an *arithmetic* can be validated by reproduction. A source that
     anchors a *decision* has to be read.** S-1.4 and S-1.6 are unread and that is fine — the
     Rogan-Gladen formula either reproduces against `epiR` or it does not. **S-1.1 anchors a
     choice**, and no reproduction checks a choice. It went unread for two phases. O-24.
-17. **Never delete or overwrite the director's working directories.** `C:\Users\mohds\ts-sentry` is
+18. **Never delete or overwrite the director's working directories.** `C:\Users\mohds\ts-sentry` is
     read-only. **Never remove a Docker image** — they belong to the director's other projects.
 
 ## Where things stand
