@@ -310,7 +310,7 @@ exists so that is a scheduled decision rather than a remembered intention.
 | **O-18** | **CLOSED 2026-08-29.** Decision 2011/833/EU permits reuse; Article 6(2)(a)'s source acknowledgement is the binding condition and the register satisfies it. **The closure covers Commission documents only** — Regulation (EU) 2022/2065 is a Parliament and Council act and is **not** covered. Boundary written into `docs/STANDARDS.md` S-4.3 so it travels with the clearance. | Phase 3 |
 | **O-21** *(new)* | **The README must carry the rare-event specificity fact.** Charter section 8 now states it and `CORRECTION_OUT_OF_RANGE` says it to an operator who hits it. The README is where someone decides whether to adopt the tool at all, and this is the fact that makes its refusals read as judgement rather than fragility: 99% specificity sounds excellent and makes the correction undefined at 0.2% prevalence. | **Phase 3** |
 | **O-20** *(new)* | **D-30 condition 1 is honoured at the API and not yet at the plan file.** `allocate()` takes `rounding` as a **required argument with no default**, which is what holds the line today: the rule cannot be a constant in the source. Still owed: `allocation_rounding` as a field in the hashed plan record, and `ALLOCATION_ROUNDING_UNDECLARED` refusing at load when a stratified plan omits it. Opened as a numbered obligation rather than a bullet in a report, because everything said in that report was true and the omission is what would have misled -- C-12's shape. | **D2.8** |
-| **O-24** *(new, 2026-08-29)* | **Every S-entry must carry a read state, checked by machine.** The sweep is done and recorded in `docs/STANDARDS.md`, but nothing stops a new entry being added without one -- which is exactly how S-1.1 stayed silent for two phases. `check_claims` should require one of `full` / `partial` / `not read` / `not recorded` per entry | **D2.14** |
+| **O-24** *(new, 2026-08-29)* | **Every S-entry must carry a read state, checked by machine.** The sweep is done and recorded in `docs/STANDARDS.md`, but nothing stops a new entry being added without one -- which is exactly how S-1.1 stayed silent for two phases. `check_claims` should require one of `full` / `partial` / `not read` / `not recorded` per entry. **And it carries a distinction, not just a mechanism:** *a source that anchors an arithmetic can be validated by reproduction; a source that anchors a decision has to be read.* S-1.4 and S-1.6 are `not recorded` and that is defensible -- the Rogan-Gladen formula either reproduces against `epiR` or it does not. S-1.1 was dangerous precisely because it anchors a **choice**, and no amount of reproduction can check a choice | **D2.14** |
 | **O-22** *(new, 2026-08-29)* | **Q7 / D-33 is honoured at the API and not yet at the plan file.** `rogan_gladen_interval()` takes `interval_method` as a **keyword-only argument with no default**, and `test_the_interval_method_cannot_be_defaulted` pins that, so the choice cannot become a constant in the source. Still owed: an `interval` field in the hashed plan record, and `CORRECTION_INTERVAL_UNSUPPORTED` firing **at `plan`** as exit check **F8d** specifies. **Exactly O-20's shape**, opened the same way and for the same reason -- everything built is real, and the omission is what would mislead if it went unnamed. C-12's class | **D2.8** |
 | **O-23** *(new, 2026-08-29)* | **Q6 / D-32's conditions 2 and 3 are carried by the estimate and not yet by an artifact.** `CorrectedInterval.note` produces the disclosure and `as_record()` carries `low_raw`, `high_raw` and `clamped`. But **no Phase 2 estimator is wired into `run.py` yet** — it still calls `wilson()` alone — so nothing writes the raw bound to a ledger and nothing renders the note to a report. That is the surface, deliberately after the review stop (§5). **Named here so "the output discloses it" is not read as already true.** | **Post-stop surface work** |
 | **O-19** *(new)* | **Re-pin the CI actions before GitHub drops Node 20.** `checkout` v5.0.0 and `setup-python` v5.6.0, both two majors behind, both targeting Node 20. Watched by **TW-4**, which **fired on its first check**. | Phase 3 |
@@ -544,8 +544,12 @@ would change under B.
 
 ### Q11 - Should Wilson stay the primary interval, given what its coverage does at rare-event prevalence?
 
-**Not a defect, and the director has said he is not reopening the choice.** But it is now answerable
-with evidence rather than intuition, and the evidence is uncomfortable enough to be worth a ruling.
+**RULED: C. The plan names the method and there is no default. D-37.** Three conditions attached, and
+charter section 4 needs amending -- drafted below as **A-4**, unapplied, for the director's ruling on
+the text.
+
+**Not a defect, and the director did not reopen the choice on a hunch.** It became answerable with
+evidence rather than intuition, and the evidence was uncomfortable enough to be worth a ruling.
 
 Charter §4 makes **Wilson** primary. This tool measures **rare events**. S-1.1 §4.1.1's published
 analytic result puts Wilson's coverage at **0.838** against a nominal 0.95 at `p = 0.1765/n`, and
@@ -553,7 +557,12 @@ analytic result puts Wilson's coverage at **0.838** against a nominal 0.95 at `p
 nominal (§4.2.1).
 
 **Measured by `r/coverage_fixtures.R`**, which validates itself against three of S-1.1's published
-limits first. Worst coverage over `p = gamma/n`, gamma in [0.5, 15]:
+limits first. Worst coverage over `p = gamma/n`, **gamma in [0.5, 15] at step 0.25**:
+
+*A worst-over-a-grid figure is a property of the grid, and states it like any other axis. A finer
+grid can only find a lower minimum, so **every number below is an upper bound on the worst case**,
+not the worst case. At step 0.05 the director measured **0.9537** for Clopper-Pearson at n = 1000,
+conf 0.95, where step 0.25 reports 0.9540. Both are correct for their grid.*
 
 | n | nominal | Wilson | Clopper-Pearson | Jeffreys |
 |---|---|---|---|---|
@@ -586,6 +595,56 @@ default.
 **Whatever is ruled, the table goes in the honest limits and the README.** It is the most
 decision-relevant fact this project has produced about its own output, and no reader would derive it
 unaided.
+
+---
+
+## A-4 — DRAFT for the director's ruling. Not applied.
+
+**What it changes.** Charter §4's `estimate` verb row, which currently reads:
+
+> `estimate` | Compute prevalence with a correct interval — **Wilson** (primary) or
+> **Clopper-Pearson** (conservative). Optional Rogan–Gladen correction when sensitivity and
+> specificity are supplied. **Refuse with a named reason** rather than print a silently wrong number.
+
+**Why it must change under Q11 / D-37.** The ruling is that the plan chooses the interval method with
+no default. Under that ruling **neither interval is primary**, so the row describes a tool this is no
+longer going to be.
+
+### Draft replacement text
+
+> `estimate` | Compute prevalence with a correct interval. **The plan names the method and there is no
+> default** — `interval: wilson` or `interval: clopper_pearson`. Neither is primary, because the
+> right one depends on what you are measuring and only you know that. Optional Rogan–Gladen
+> correction when sensitivity and specificity are supplied. **Refuse with a named reason** rather
+> than print a silently wrong number.
+
+### And a new bullet under §8, honest limits
+
+> **The interval you choose has a coverage cost, and at rare-event rates it is large.** A 95% Wilson
+> interval covers about **91%** of the time when the true rate is a few times 1/n — the regime this
+> tool is built for. Clopper-Pearson holds at or above its nominal level there, and is wider for it.
+> Measured, not asserted: `r/fixtures/coverage.json`, against the published limits in S-1.1
+> (Brown, Cai & DasGupta 2001) which the same instrument reproduces before reporting anything.
+> **This is why the plan must name the method.** A default would be this project choosing, for an
+> operator who did not know there was a choice.
+
+### What the director should weigh before ruling
+
+**The wording says "neither is primary" rather than silently dropping the word.** Charter §4 has said
+"Wilson (primary)" since ratification, and a reader of the old text who returns should find out that
+it changed and why, not just find the word gone.
+
+**It does not name a recommended method, deliberately.** Naming one would recreate the default in
+prose, which is what C removes. The honest-limits bullet gives the operator the number instead.
+
+**S-1.1's own recommendation is not adopted, and that is worth the director's eye.** The paper
+recommends Wilson or Jeffreys for n ≤ 40 and Agresti-Coull above. This project ships neither
+Agresti-Coull nor Jeffreys, because R2.3 requires a witness and neither is in `survey` or `svy`. So
+the charter would differ from its own anchor's advice, for a reason the anchor does not discuss:
+**we validate against libraries, and the libraries constrain what we can ship.** If the director
+would rather the charter say that out loud, it belongs here rather than buried in D-8.
+
+---
 
 ## Approval
 

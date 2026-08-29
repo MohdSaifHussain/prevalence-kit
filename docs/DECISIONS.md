@@ -1258,6 +1258,59 @@ day it does, and the deferral has to be looked at again.
 
 ---
 
+## D-37 - The plan names the interval method, and there is no default
+
+**Date:** 2026-08-29 · **Made in:** the director's Q11 ruling · **Ruled by:** director
+
+`interval: wilson` or `interval: clopper_pearson`, in the hashed plan. **No default.** Neither is
+primary any more.
+
+**What raised it.** S-1.1 was read for the first time and its published figures say Wilson's coverage
+falls to 0.838 against a nominal 0.95 at rare-event rates. Our own witness measured all three
+candidates and agreed. **An operator asking for a 95% interval on rare-event data was getting one
+that covers about 91% of the time**, and Wilson was the default because charter section 4 made it
+primary.
+
+**Three reasons, in the director's order of weight.**
+
+1. **Defaults are decisions made for people who do not decide.** Most operators take the default, and
+   this one under-covers in the exact regime the tool exists for.
+2. **It matches a pattern set twice already.** D-30 made `allocation_rounding` a required field with
+   no default; D-33 made `interval_method` keyword-only with no default. **C is the consistent
+   answer, not a new one.**
+3. **It is the most auditable.** An outsider reading a published number sees the method in the hashed
+   plan, rather than having to know what this version defaulted to.
+
+**Three conditions, as ruled.**
+
+1. **The refusal carries the trade-off in the operator's terms, with the coverage numbers in it** --
+   the way `CORRECTION_OUT_OF_RANGE` carries the specificity inequality. Not *"choose a method"*, but
+   what each one costs at rare-event rates.
+2. **Charter section 4 is amended.** It says Wilson primary, and under this ruling neither is. Drafted
+   as **A-4** for the director's ruling on the text; the builder does not apply it.
+3. **The report states the coverage property of the interval actually used, at the operating point
+   actually observed.** If a run measures 0.2% with Wilson, the report says what Wilson's coverage is
+   there. **No plan field substitutes for this** -- the plan records the choice, the report records
+   what the choice cost on this data.
+
+**Alternatives not taken.**
+
+- **Wilson stays primary**, with the table in the honest limits. Rejected: it leaves the headline
+  number with a known gap between nominal and actual, disclosed in a document the operator may not
+  read at the moment they need it. **D-20's reasoning** -- a caveat does not protect someone who never
+  reads it.
+- **Clopper-Pearson becomes primary.** Tempting, because section 4.2.1's guarantee is the only one of
+  the three that survives this regime. Rejected because it is still a default, and S-1.1 itself calls
+  Clopper-Pearson *"wastefully conservative"* for general use. Making it the default would trade one
+  unexamined choice for another.
+
+**Condition 3 is the part that outlives the ruling.** Whichever method an operator picks, the number
+that matters is what that method's coverage is **at the prevalence this run actually found**, not in
+general. That sentence is the most decision-relevant thing the report can carry, and it is owed
+whatever else changes.
+
+---
+
 ## Carried obligations opened by these decisions
 
 | # | Obligation | Owner | Opened by |

@@ -96,7 +96,10 @@ cat("\n  Instrument validated. Block B may be trusted.\n\n")
 
 cat("Block B -- the rare-event regime this tool exists for\n")
 cat("------------------------------------------------------\n")
-cat("  Worst coverage over p = gamma/n, gamma in [0.5, 15], against nominal.\n\n")
+cat("  Worst coverage over p = gamma/n, gamma in [0.5, 15] STEP 0.25, vs nominal.\n")
+cat("  A worst-over-a-grid figure is a property of the grid. A finer grid can only\n")
+cat("  find a lower minimum, so these are UPPER BOUNDS on the worst case, not it.\n")
+cat("  At step 0.05 the director measured 0.9537 where step 0.25 reports 0.9540.\n\n")
 
 methods <- list(wilson = wilson_ci, clopper_pearson = clopper_pearson_ci, jeffreys = jeffreys_ci)
 rows <- list()
@@ -152,8 +155,16 @@ fixture <- list(
   standards = list(anchor = "S-1.1 Brown, Cai & DasGupta (2001), DOI 10.1214/ss/1009213286"),
   axes = list(
     varied = c("n", "conf", "p = gamma/n for gamma in [0.5, 15]"),
+    grid_step = 0.25,
     held_fixed = c("none"),
-    note = "An agreement or coverage figure states its axes."
+    note = paste(
+      "An agreement or coverage figure states its axes, and a WORST-over-a-grid",
+      "figure states its grid too. A finer grid can only find a lower minimum, so",
+      "every number here is an UPPER BOUND on the worst case rather than the worst",
+      "case itself. At step 0.05 the director measured 0.9537 for clopper_pearson",
+      "at n=1000 conf=0.95, where step 0.25 reports 0.9540. Both are correct for",
+      "their grid, and neither is 'the' worst case."
+    )
   ),
   rare_event_worst_coverage = rows
 )
