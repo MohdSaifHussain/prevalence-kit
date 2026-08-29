@@ -110,12 +110,19 @@ confirms we implement the method as its author does. It does not independently c
    C-24's was printed on screen at the time.
 5. **End every report with what remains open, by name and severity.** C-12 is what happens otherwise.
 6. **A finding closed in one artifact can be open in another** — D-23.
-7. **A check covers less than it looks like it covers.** Nine times now: C-15, C-19, V-15, V-16,
-   C-23, `check_codes` reading one contract when there were three, D-34, C-27, and **C-34**. Ask
-   what it does **not** read, in both directions. **C-34 is the worst kind: a checker that
-   *stated* a scope it did not have.** No stated scope invites the question; a wrong one answers
-   it falsely, and the reader comes away more confident and less correct. **Make the scope the
-   object the code walks, never a sentence beside it.**
+7. **A check covers less than it looks like it covers.** Ten times now: C-15, C-19, V-15, V-16,
+   C-23, `check_codes` reading one contract when there were three, D-34, C-27, **C-34**, and
+   **F-9**. Ask what it does **not** read, in both directions. **C-34 is the worst kind: a checker
+   that *stated* a scope it did not have.** No stated scope invites the question; a wrong one
+   answers it falsely, and the reader comes away more confident and less correct. **Make the scope
+   the object the code walks, never a sentence beside it.**
+   **F-9 is the newest kind and it lies about nothing: a fixture that looks external and is not.**
+   `r/fixtures/stratified.json` holds allocation fixtures made in the pinned R image — but
+   **`survey` has no allocator**, so those rows are our own formula re-implemented in R by its own
+   author, sitting beside estimation fixtures that really are external. Every document is honest;
+   the R script says it in its own comment. **What misleads is the company the fixture keeps.**
+   A reader checks the provenance of the file, not of the row. **Ask which rows in a witness file
+   the witness actually produced.**
 8. **A worst case measured over a grid is an *upper bound* on the worst case, and a bound is
    rounded in the direction that keeps it true.** A finer grid can only find a more extreme
    value, so state the grid step like any other axis — 0.9540 at step 0.25, 0.9537 at 0.05, and
@@ -173,7 +180,7 @@ confirms we implement the method as its author does. It does not independently c
 **Phase 0** ratified. **Phase 1** closed at `d66d225`. **Phase 2 is in build**, **Q1–Q11 ruled**,
 **A-1 … A-4** applied to the charter.
 
-**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **607 tests**, seven gate
+**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **608 tests**, seven gate
 checks green. **CI last ran green at 602** on CPython 3.12.14 / 3.13.15 / 3.14.7, run
 `33241090771`, head `8565ddc`. Local and CI figures are stated apart on purpose.
 
@@ -265,6 +272,5 @@ prevalence rates this tool is for, several ordinary intuitions fail, and here th
 | **D2.11** | The witness image is rebuilt by hand; CI never runs it. Static half closed | Phase 2 |
 | **O-22, O-23** | Q7's plan-load refusal and Q6's ledger + report disclosure. **D2.6 built the estimator half only** | D2.8, post-stop |
 | **D2.14** | `check_claims` gaps: PDF paths, the CORRECTIONS counts table (**document its semantics, do not guess them**), the R artifacts. **The register gap is closed — D-34, `check_register`** | Phase 2 |
-| **Charter §6.1** | Still says Rogan-Gladen *"has no witness … validated against Lang & Reiczigel (2014)"*. **D-31 says both halves are wrong.** The charter is ratified, so it needs an **amendment-log ruling (A-3)**, not a builder edit | **Director** |
 | **O-3, O-4, O-13, O-14, O-15** | Carried, untouched | Phase 2 |
 | **28 corrections open** | C-1 … C-26. Close under **T-1 (D2.12)**, each naming its commit | D2.12 |

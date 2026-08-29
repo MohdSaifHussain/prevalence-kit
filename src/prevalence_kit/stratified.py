@@ -89,9 +89,27 @@ class Allocation:
 
 
 def neyman_raw(strata: tuple[Stratum, ...], n: int) -> tuple[float, ...]:
-    """Neyman allocation, before rounding. S-1.2, specification pinned by S-2.3.
+    """Neyman allocation, before rounding.
 
         n_h proportional to W_h * sqrt(p_h(1 - p_h))
+
+    **Specified by `PROJECT_CHARTER.md` section 6.2 and pinned by S-2.3's
+    reproduction. S-1.2 is the origin of the method, not the source of this
+    formula** -- narrowed 2026-08-29, F-9.
+
+    The 1934 paper minimises at `n_h` proportional to `M_h * S_h` with
+    `S_h ** 2 = M_h * sigma_h ** 2 / (M_h - 1)`, and develops the
+    without-replacement variance. This is `M_h * sigma_h` with the
+    with-replacement variance and no finite-population correction, so the two
+    differ by a per-stratum factor of `sqrt(M_h / (M_h - 1))`. S-1.3's Theorem
+    5.8 is stated to hold *if terms in 1/N_h are ignored relative to unity*,
+    which is exactly that limit.
+
+    **Keep it that way.** Barnett Table 2B states its design in weights, not
+    stratum sizes, so the only external anchor this allocation has cannot
+    express the factor -- adopting the paper's form would trade a witnessed
+    formula for an unwitnessable one. Pinned by
+    `test_our_neyman_is_the_large_stratum_limit_of_the_1934_form`.
 
     Returns floats on purpose. Rounding is a separate, named, pre-registered
     step -- D-30 -- and fusing the two would hide the decision the plan is

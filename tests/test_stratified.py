@@ -17,6 +17,7 @@ Every gate gets both controls. A gate that refuses everything proves nothing.
 from __future__ import annotations
 
 import json
+from math import sqrt
 from pathlib import Path
 from typing import Any, cast
 
@@ -457,3 +458,67 @@ def test_the_rounding_enum_still_has_exactly_one_member() -> None:
         "Remove its PENDING-CONTROL marker from the Phase 2 contract and give it "
         "both controls."
     )
+
+
+def _neyman_as_the_1934_paper_writes_it(strata: tuple[Stratum, ...], n: int) -> tuple[float, ...]:
+    """S-1.2's own form, for contrast only. Never the shipped allocator.
+
+    Neyman (1934) minimises at `n_h` proportional to `M_h * S_h`, and defines
+    `S_h ** 2 = M_h * sigma_h ** 2 / (M_h - 1)`. Against our `M_h * sigma_h`
+    that is a per-stratum factor of `sqrt(M_h / (M_h - 1))`.
+    """
+    frame_total = sum(s.size for s in strata)
+    weights = [s.size / frame_total for s in strata]
+    corrected = [
+        sqrt(s.variance_proxy * (1 - s.variance_proxy)) * sqrt(s.size / (s.size - 1))
+        for s in strata
+    ]
+    denominator = sum(w * d for w, d in zip(weights, corrected, strict=True))
+    return tuple(n * (w * d) / denominator for w, d in zip(weights, corrected, strict=True))
+
+
+def test_our_neyman_is_the_large_stratum_limit_of_the_1934_form() -> None:
+    """F-9. Our allocation is not the formula S-1.2 writes, and this pins the gap.
+
+    Charter section 6.2 specifies `n_h` proportional to `W_h * sqrt(p_h(1 - p_h))`
+    -- that is `M_h * sigma_h` -- with the with-replacement variance and no
+    finite-population correction. S-1.2 writes `M_h * S_h` and develops the
+    without-replacement variance at its equation (37). S-1.3 writes the optimum
+    the same way as S-1.2, and states Theorem 5.8 to hold *if terms in 1/N_h are
+    ignored relative to unity*, which is exactly the limit where the two agree.
+
+    **Ruled 2026-08-29: keep the formula, narrow S-1.2's role to origin of the
+    method.** Barnett Table 2B states its design in weights, not stratum sizes,
+    so it cannot express the factor and could never have caught this. Adopting
+    the paper's form would move allocations the only external anchor this
+    allocation has cannot re-validate.
+
+    This test fails if anyone silently switches to the paper's form. It asserts a
+    pinned recorded value and a limit, never a region -- rule 11.
+    """
+    # A recorded value, in the style of `test_draw_pinned_against_a_recorded_value`.
+    # The tiny stratum is where the factor bites: sqrt(8 / 7) = 1.069045.
+    strata = (Stratum("big", 2327, 0.0031), Stratum("tiny", 8, 0.3365))
+    ours = largest_remainder(neyman_raw(strata, 1455), 1455)
+    paper = largest_remainder(_neyman_as_the_1934_paper_writes_it(strata, 1455), 1455)
+
+    assert ours == (1414, 41), "the shipped allocator moved"
+    assert paper == (1411, 44), "the contrast form moved"
+    assert ours != paper, (
+        "Our allocation now agrees with the 1934 form on a case built to separate "
+        "them. If that was deliberate, S-1.2's register role and charter section "
+        "6.2 both have to change, and Barnett cannot re-validate either one."
+    )
+
+    # The limit, which is the half that says our form is a convention and not an
+    # error. Large strata: the factor goes to 1 and the two forms converge.
+    large = (Stratum("a", 200_000, 0.0031), Stratum("b", 300_000, 0.3365))
+    gap = max(
+        abs(x - y) / y
+        for x, y in zip(
+            neyman_raw(large, 4000),
+            _neyman_as_the_1934_paper_writes_it(large, 4000),
+            strict=True,
+        )
+    )
+    assert gap < 1e-5, f"convergence lost: {gap:.3e}"

@@ -65,8 +65,8 @@ so.** `docs/CORRECTIONS.md` C-22.
 | ID | Method | Source | Pin | Re-check |
 |---|---|---|---|---|
 | S-1.1 | Binomial interval estimation — **ships Wilson (primary) + Clopper-Pearson (conservative). Jeffreys dropped, ruling R-4.** | Brown, L.D., Cai, T.T., DasGupta, A., *Interval Estimation for a Binomial Proportion*, **Statistical Science** 16(2) | **2001**, DOI `10.1214/ss/1009213286`. **Full text read 2026-08-29** — see below. Cited unread through Phases 0-2 | never — fixed publication |
-| S-1.2 | Stratified sampling, Neyman (optimal) allocation | Neyman, J., *On the Two Different Aspects of the Representative Method: The Method of Stratified Sampling and the Method of Purposive Selection* | **Primary publication: J. R. Statist. Soc. 97(4), 1934, pp. 558-625, DOI `10.2307/2342192`** — verified against Crossref by the director 2026-08-29. Reprint DOI `10.1007/978-1-4612-4380-9_12`. *The reprint was pinned alone until 2026-08-29, so a reader was sent to a republication rather than the primary* | never |
-| S-1.3 | Sampling design reference | Cochran, W.G., *Sampling Techniques*, Wiley | **3rd edition, 1977**, ISBN `0-471-16240-X` | never |
+| S-1.2 ▸ **ROLE NARROWED 2026-08-29** | **Origin of the method, not the source of our formula.** Stratified sampling, Neyman (optimal) allocation | Neyman, J., *On the Two Different Aspects of the Representative Method: The Method of Stratified Sampling and the Method of Purposive Selection* | **Primary publication: J. R. Statist. Soc. 97(4), 1934, pp. 558-625, DOI `10.2307/2342192`** — verified against Crossref by the director 2026-08-29. Reprint DOI `10.1007/978-1-4612-4380-9_12`. *The reprint was pinned alone until 2026-08-29, so a reader was sent to a republication rather than the primary.* **Our allocation is not the formula this paper writes — see below** | never |
+| S-1.3 ▸ **READ 2026-08-29** | Sampling design reference | Cochran, W.G., *Sampling Techniques*, Wiley | **3rd edition, 1977**, ISBN `0-471-16240-X`. Sections read and the rendering route recorded below | never |
 | S-1.4 | Misclassification correction | Rogan, W.J. & Gladen, B., *Estimating Prevalence from the Results of a Screening Test*, **Am. J. Epidemiol.** | **1978**, DOI `10.1093/oxfordjournals.aje.a112510` | never |
 | S-1.5 | Confidence limits for corrected prevalence | Lang, Z. & Reiczigel, J., *Confidence limits for prevalence of disease adjusted for estimated sensitivity and specificity*, **Prev. Vet. Med.** | **2014**, DOI `10.1016/j.prevetmed.2013.09.015` | never |
 | S-1.6 | Exact limits with an imperfect test (Phase 2 cross-check) | Reiczigel, J., Földi, J., Ózsvári, L., **Epidemiol. Infect.** | **2010**, DOI `10.1017/s0950268810000385` | never |
@@ -158,6 +158,88 @@ Jeffreys is in neither witness library, so R2.3 has nothing to check it against 
 applied before Q1 existed. And Jeffreys appears in `PROJECT_CHARTER.md` only inside the **A-0
 amendment log**, a dated record of the director's ruling that is never edited. §6.1 does not mention
 it; the builder's claim that it did was wrong.
+
+### S-1.2 and S-1.3 -- read 2026-08-29, and our allocation is not the formula either one writes
+
+**Ruled by the director, 2026-08-29: keep the formula, fix the citation.** S-1.2 was cited as
+governing an allocation it states differently. The arithmetic is unchanged; the register role is
+narrowed to **origin of the method**, and the divergence is recorded here with its measured size.
+
+**What the paper says.** Neyman minimises the allocation-dependent term of his stratified variance,
+and the minimum is at stratum sample sizes **proportional to `M_h · S_h`**, where he defines
+**`S_h² = M_h σ_h² / (M_h − 1)`**. The variance he develops at his equation (37) is the
+**without-replacement** form, carrying `(M_h − 1)`; the paper admits both regimes and works the
+finite-population one.
+
+**What we specify.** `n_h ∝ W_h · √(p_h(1 − p_h))`, i.e. `∝ M_h · σ_h`, with the
+**with-replacement** stratified variance and **no finite-population correction**. That is
+`PROJECT_CHARTER.md` §6.2 in its own ratified words, and S-2.3 below pins it by reproduction.
+**The difference is a per-stratum factor of `√(M_h / (M_h − 1))`.**
+
+**S-1.3 writes it the same way as S-1.2, and names the condition under which ours coincides.**
+Cochran's §5.5 optimum is `n_h ∝ N_h S_h`; his (5.27) minimum variance carries a second term he
+labels in the text as the fpc. His **Theorem 5.8** (`V_opt ≤ V_prop ≤ V_ran`) is stated to hold
+*if terms in 1/N_h are ignored relative to unity* — **which is exactly the limit in which our
+form and theirs agree.** So ours is a stated convention consistent with the with-replacement
+variance this project uses throughout, not a misreading of either source.
+
+*Cochran also records a priority note worth keeping, since this register names the method after
+one man: he attributes the result to Neyman (1934) as the proof that gave it prominence, and
+notes an earlier proof by **Tschuprow (1923)** was later discovered.*
+
+**Why we did not adopt the paper's form**, as ruled. Barnett Table 2B — the only external anchor
+this allocation has ever had — states its design in **weights `W_h`, not stratum sizes `M_h`**, so
+it cannot express `√(M_h/(M_h − 1))` at all. Adopting Neyman's form would trade a formula
+validated against a published table computed by nobody in this chain for one no instrument here
+can check. That is Q1's argument pointing the other way.
+
+**How large the divergence is. Two measurements, kept side by side, because they disagree by 7x.**
+Neither figure means anything without the space it was measured over -- the axes rule, applied to
+the newest number in the project.
+
+| Measured by | Design space | Designs differing | Largest shift |
+|---|---|---|---|
+| Builder | 200,000 random designs; **2-6 strata**, sizes `U{2..4000}`, `p ~ U(0.001, 0.6)`, `n ~ U(2k, min(N, 5000))`, seed 20260829, largest-remainder rounding | **32,945 (16.47%)** | **3 units** (32,871 of them 1 unit) |
+| Director | 199,994 designs; **2-5 strata**, `n = N/20`, `p ∈ [0.0005, 0.3]`, largest-remainder rounding | **2.30%** | **1 unit** |
+
+**Both are kept and neither is reconciled into the other**, the same handling as the 0.9540 /
+0.9537 coverage grids. Two measurements of one quantity differing by a factor of seven is evidence
+about the measurement, and averaging it away would destroy that evidence. The director's search
+also reports the divergence is nearly flat in stratum size -- 2.65% at sizes 8-40 against 2.17% at
+1000-50000.
+
+**A maximum found by search is a lower bound on the true maximum**, which is the opposite direction
+from rule 8's usual case: a wider search can only find something larger. Neither "3 units" nor
+"1 unit" is a ceiling.
+
+**Nothing shipped is affected.** No stratified plan can be loaded today (`STRATA_UNDEFINED`), and
+`run.py` calls `wilson()` alone. This was caught before the strata layer was built on it.
+
+**The reading that produced this, and its route.**
+
+| | S-1.2 Neyman (1934) | S-1.3 Cochran (1977) |
+|---|---|---|
+| **Artifact** | The **publisher's copy**: JSTOR stable `2342192`, matching the pinned DOI `10.2307/2342192`, with the Royal Statistical Society and Wiley named as collaborating on the digitisation. **Not a course-page scan**, which is why the earlier `not read` note existed | A **scanned book with no OCR layer** -- 442 pages, 442 image XObjects, **zero font objects**, producer `libtiff / tiff2pdf`. `pdftotext` returns 442 characters for the whole book |
+| **Route to this machine** | **Not recorded -- the director's to supply.** The file carries an institutional download stamp from 2016, so the artifact's provenance is verifiable and its chain of custody to this desktop is not. Left blank rather than assumed | Supplied by the director. **Made readable locally** by rendering pages to images with `pypdfium2` **5.13.0** (2026-08-13, BSD-3-Clause / Apache-2.0) and `pillow` **12.3.0**, both version-verified live against PyPI and installed **into a scratchpad virtualenv outside the repository** |
+| **Sections read** | Contents, §III.1, and the allocation derivation at (37)-(41) | §5.1 (definition), §5.5 end / §5.6 (Neyman allocation, relative precision), §5A.7 opening, and **§5A.8 *Number of Strata* in full** |
+| **Read state** | **`partial`** | **`partial`** |
+
+**A rendered scan is a different artifact from a publisher's text layer, and a reader should know
+which they are trusting.** Cochran was read as images produced on this machine; every sentence
+attributed to it above was read off a rendered page, not extracted as text.
+
+**The zero-network guard is unaffected, and this is stated rather than left to be inferred.** The
+guard walks `[project.dependencies]` in `pyproject.toml`. Neither `pypdfium2` nor `pillow` appears
+there, in the dev extras, or in the project virtualenv -- they live only in a scratchpad
+environment that no packaging metadata references. **"The guard did not object" is not "the guard
+looked"**, so the evidence is this paragraph, not a green test.
+
+**One caveat carried into the register rather than left in a chat message.** The Neyman reading
+that bears on **Q12** -- that unrestricted sampling is the special case of stratified sampling
+with a single stratum -- rests on **OCR of a 1934 scan**, where the glyph for "= 1" is mangled.
+The sentence admits no other integer, so the meaning is robust, but a character-level claim taken
+from OCR is **C-26's class** and is flagged as OCR-dependent here, not only where it was first
+reported.
 
 ### S-1.7 -- largest-remainder rounding, quoted from the source
 
@@ -367,8 +449,8 @@ defect repeated.
 | Entry | Read state | Evidence |
 |---|---|---|
 | S-1.1 | **full** | Read 2026-08-29 from the director's copy. Three published limits reproduced |
-| S-1.2 Neyman 1934 | **`not read`** *(attempted 2026-08-29)* | JSTOR's page would not load; the Springer reprint is paywalled. A scan exists on a university course page, which is the paper's text but **not the publisher's copy**, so it is not cited as the source under Hard Rule 3. The allocation formula came from S-2.3's re-derivation, not from this text |
-| S-1.3 Cochran | **`not read`** *(2026-08-29)* | A 1977 book with no free official text. Cited by ISBN as a design reference and **nothing in the code rests on it alone** |
+| S-1.2 Neyman 1934 | **`partial`** *(read 2026-08-29)* | **The publisher's copy** — JSTOR stable `2342192`, matching the pinned DOI, RSS and Wiley named. Contents, §III.1, and the derivation at (37)-(41). **The route to this machine is not recorded and is the director's to supply.** The earlier `not read` note was correct at the time: the only text then found was a university course-page scan, the paper's text but not the publisher's copy. **Confirmed by the reading: the allocation formula came from S-2.3's re-derivation and not from this text — the paper writes it differently.** See the S-1.2 / S-1.3 section |
+| S-1.3 Cochran | **`partial`** *(read 2026-08-29)* | §5.1, §5.5 end / §5.6, §5A.7 opening, and **§5A.8 in full**. A 1977 book with no free official text and **no OCR layer**: read as pages rendered locally with pinned `pypdfium2` / `pillow` in a scratchpad virtualenv, never the project one. **A rendered scan is not a publisher's text layer**, and the entry says which was trusted |
 | **S-1.13** *(new)* | **full** | **Statistics Canada**, official methodology, read 2026-08-29. Supplies the two design rules S-1.2 and S-1.3 were standing in for: strata are *"homogeneous, **mutually exclusive** groups"* and *"**independent samples are selected from each stratum**"* |
 | S-1.4 Rogan-Gladen 1978 | `not recorded` | The estimator is one line of algebra and is checked against `epiR`, not against this text |
 | S-1.5 Lang & Reiczigel 2014 | `not read` | Deliberately not implemented (D-31). Cited to say what we do **not** do |
