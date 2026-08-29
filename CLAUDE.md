@@ -159,7 +159,13 @@ confirms we implement the method as its author does. It does not independently c
     anchors a *decision* has to be read.** S-1.4 and S-1.6 are unread and that is fine — the
     Rogan-Gladen formula either reproduces against `epiR` or it does not. **S-1.1 anchors a
     choice**, and no reproduction checks a choice. It went unread for two phases. O-24.
-18. **Never delete or overwrite the director's working directories.** `C:\Users\mohds\ts-sentry` is
+18. **A source's text is for reading, never for committing.** The director supplies papers so
+    the builder can learn from them. **They do not enter the repository** — not as a quote of
+    any length, not as a PDF, not pasted into a doc. Cite them: title, authors, journal, DOI.
+    Bibliographic metadata is not the work. **The one tracked PDF is an EU official text**,
+    cleared for reuse under Decision 2011/833/EU with the acknowledgement O-18 requires — that
+    is a licence, not a precedent for papers.
+19. **Never delete or overwrite the director's working directories.** `C:\Users\mohds\ts-sentry` is
     read-only. **Never remove a Docker image** — they belong to the director's other projects.
 
 ## Where things stand
