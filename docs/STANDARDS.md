@@ -8,7 +8,7 @@ pinned by version, date or commit. Nothing enters the code from memory or from a
 
 ---
 
-## The three rules of this register
+## The four rules of this register
 
 **1. Pin the version. Never `/latest/`, and never `/stable/` either.**
 Measured on 2026-08-28 (decision D-13):
@@ -28,7 +28,17 @@ Peer-reviewed papers, standards bodies, official documentation, statutory texts,
 registries. Nothing else can be a *method source*. Non-official material may appear as **context**,
 clearly marked, and may never be cited as the reason a method was chosen.
 
-**3. Flip-day re-check.**
+**3. How a source was obtained is not recorded.**
+Ruled by the director, 2026-08-30. This register carries the **citation**; whether the artifact is
+the **publisher's copy**, where that was in question; the **read state with its scope**; and any
+**route that changes what was read** -- a rendered scan is not a text layer, and that difference
+belongs here. It **never** carries who supplied a source or how it arrived.
+
+*Why it is a rule and not a preference.* An acquisition detail is about a **person**, not about the
+work, and it has no bearing on whether the pin is sound. It also cannot be un-published: this
+register is written to be read by a stranger, and Phase 3 is when that happens. **C-37.**
+
+**4. Flip-day re-check.**
 Every source has a **re-check date**. On that date, the pin is re-fetched and either confirmed or
 updated with a dated note. A pin nobody re-checks is a pin that quietly expires.
 
@@ -89,10 +99,8 @@ it for a claim about a source.
 plainly that their full text was not read. S-1.1 said nothing either way. It is the anchor for the
 whole interval choice -- D-8, the charter, both contracts -- and nobody had read it.
 
-Found when the director tried to check a ruling against it and hit a subscription wall on Project
-Euclid. Full text supplied by the director from
-`https://projecteuclid.org/journalArticle/Download?urlId=10.1214%2Fss%2F1009213286`, read
-2026-08-29. Statistical Science 2001, Vol. 16, No. 2, 101-133.
+Found when a ruling had to be checked against it and the text was not to hand. **Read 2026-08-29**,
+in full. Statistical Science 2001, Vol. 16, No. 2, 101-133.
 
 **Three published figures, now reproduced by our code.** This is the project's only external anchor
 for the interval *choice*, as opposed to its arithmetic, and it is the same kind of evidence as
@@ -220,7 +228,7 @@ from rule 8's usual case: a wider search can only find something larger. Neither
 | | S-1.2 Neyman (1934) | S-1.3 Cochran (1977) |
 |---|---|---|
 | **Artifact** | The **publisher's copy**: JSTOR stable `2342192`, matching the pinned DOI `10.2307/2342192`, with the Royal Statistical Society and Wiley named as collaborating on the digitisation. **Not a course-page scan**, which is why the earlier `not read` note existed | A **scanned book with no OCR layer** -- 442 pages, 442 image XObjects, **zero font objects**, producer `libtiff / tiff2pdf`. `pdftotext` returns 442 characters for the whole book |
-| **Route to this machine** | **Not recorded -- the director's to supply.** The file carries an institutional download stamp from 2016, so the artifact's provenance is verifiable and its chain of custody to this desktop is not. Left blank rather than assumed | Supplied by the director. **Made readable locally** by rendering pages to images with `pypdfium2` **5.13.0** (2026-08-13, BSD-3-Clause / Apache-2.0) and `pillow` **12.3.0**, both version-verified live against PyPI and installed **into a scratchpad virtualenv outside the repository** |
+| **What changed what was read** | -- | **Made readable locally** by rendering pages to images with `pypdfium2` **5.13.0** (2026-08-13, BSD-3-Clause / Apache-2.0) and `pillow` **12.3.0**, both version-verified live against PyPI and installed **into a scratchpad virtualenv outside the repository**. Recorded because it **changes the artifact that was read** -- rendered images, not a text layer |
 | **Sections read** | Contents, §III.1, and the allocation derivation at (37)-(41) | §5.1 (definition), §5.5 end / §5.6 (Neyman allocation, relative precision), §5A.7 opening, and **§5A.8 *Number of Strata* in full** |
 | **Read state** | **`partial`** | **`partial`** |
 
@@ -448,8 +456,8 @@ defect repeated.
 
 | Entry | Read state | Evidence |
 |---|---|---|
-| S-1.1 | **full** | Read 2026-08-29 from the director's copy. Three published limits reproduced |
-| S-1.2 Neyman 1934 | **`partial`** *(read 2026-08-29)* | **The publisher's copy** — JSTOR stable `2342192`, matching the pinned DOI, RSS and Wiley named. Contents, §III.1, and the derivation at (37)-(41). **The route to this machine is not recorded and is the director's to supply.** The earlier `not read` note was correct at the time: the only text then found was a university course-page scan, the paper's text but not the publisher's copy. **Confirmed by the reading: the allocation formula came from S-2.3's re-derivation and not from this text — the paper writes it differently.** See the S-1.2 / S-1.3 section |
+| S-1.1 | **full** | Read in full 2026-08-29. Three published limits reproduced |
+| S-1.2 Neyman 1934 | **`partial`** *(read 2026-08-29)* | **The publisher's copy** — JSTOR stable `2342192`, matching the pinned DOI, RSS and Wiley named. Contents, §III.1, and the derivation at (37)-(41). The earlier `not read` note was correct at the time: the only text then found was a university course-page scan, the paper's text but not the publisher's copy. **Confirmed by the reading: the allocation formula came from S-2.3's re-derivation and not from this text — the paper writes it differently.** See the S-1.2 / S-1.3 section |
 | S-1.3 Cochran | **`partial`** *(read 2026-08-29)* | §5.1, §5.5 end / §5.6, §5A.7 opening, and **§5A.8 in full**. A 1977 book with no free official text and **no OCR layer**: read as pages rendered locally with pinned `pypdfium2` / `pillow` in a scratchpad virtualenv, never the project one. **A rendered scan is not a publisher's text layer**, and the entry says which was trusted |
 | **S-1.13** *(new)* | **full** | **Statistics Canada**, official methodology, read 2026-08-29. Supplies the two design rules S-1.2 and S-1.3 were standing in for: strata are *"homogeneous, **mutually exclusive** groups"* and *"**independent samples are selected from each stratum**"* |
 | S-1.4 Rogan-Gladen 1978 | `not recorded` | The estimator is one line of algebra and is checked against `epiR`, not against this text |
@@ -666,8 +674,9 @@ Decision. The notice is recorded as **backup evidence**, not as the anchor.
 > (b) the obligation not to distort the original meaning or message of the documents; (c) the
 > non-liability of the Commission for any consequence stemming from the reuse."*
 
-**The backup evidence.** This is the EUR-Lex legal notice, copyright section. The director read it
-in a browser on 2026-08-29 and typed it out, because no fetcher here can reach the page:
+**The backup evidence.** This is the EUR-Lex legal notice, copyright section. **Transcribed by hand
+from a browser on 2026-08-29**, because no fetcher here can reach the page. *The transcription is
+recorded because it changes what was read -- a hand copy, not a fetched document:*
 
 > *"(c) European Union, 1998-2026 ... The Commission's document reuse policy is based on Decision
 > 2011/833/EU. Unless otherwise specified, you can re-use the legal documents published in EUR-Lex

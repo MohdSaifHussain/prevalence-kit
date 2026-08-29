@@ -174,6 +174,17 @@ confirms we implement the method as its author does. It does not independently c
     is a licence, not a precedent for papers.
 19. **Never delete or overwrite the director's working directories.** `C:\Users\mohds\ts-sentry` is
     read-only. **Never remove a Docker image** — they belong to the director's other projects.
+20. **How a source was obtained is not recorded.** The register carries the **citation**; whether
+    the artifact is the **publisher's copy**, where that was in question; the **read state with
+    its scope**; and any **route that changes what was read** — a rendered scan is not a text
+    layer, and that difference belongs in the register. **It never carries who supplied a source
+    or how it arrived.** Rule 18's sibling: 18 keeps the *work* out of the repository, 20 keeps
+    the *acquisition* out. Rule 17 asks you to read a source and this one bounds what reading it
+    may put on the record. **The line is not "no routes":** Cochran is read as locally rendered
+    images and the register says so, because that **changes what was read**. Where a copy came
+    from does not. **Every other entry already works this way** -- S-5.2 is *fetched 2026-08-28,
+    HTTP 200*, S-2.1 is *4.5, re-verified live 2026-08-29* -- and none is weaker for it. **C-37**:
+    the field was invented, not merely mis-filled, so the fix is that it does not exist.
 
 ## Where things stand
 
@@ -273,11 +284,12 @@ prevalence rates this tool is for, several ordinary intuitions fail, and here th
 | # | What | Owner |
 |---|---|---|
 | **O-19** | Re-pin `checkout` and `setup-python` before GitHub drops Node 20. **TW-4 fired** | Phase 3 |
-| **O-20** | `allocation_rounding` in the *hashed plan file*. Today it is a required API argument only | D2.8 |
 | **O-21** | The rare-event specificity fact must reach the README | Phase 3 |
 | **D2.11** | The witness image is rebuilt by hand; CI never runs it. Static half closed | Phase 2 |
-| **O-22, O-23** | Q7's plan-load refusal and Q6's ledger + report disclosure. **D2.6 built the estimator half only** | D2.8, post-stop |
+| **O-22** | **Half built, and the open half is exact:** `interval` is a required key reaching `as_record()`, so the method is in the plan hash. But `CORRECTION_INTERVAL_UNSUPPORTED` is raised **only in `estimators.py`**, never at plan load, and the schema has **no `sensitivity`/`specificity` keys** — so **exit check F8d cannot be performed today**: the plan it describes cannot be written. Unknown keys are ignored, so a plan supplying Se/Sp loads silently and **hashes identically to one that does not**. Closes with D2.8's remaining half | D2.8 |
+| **O-23** | Q6's ledger + report disclosure. **D2.6 built the estimator half only** | Post-stop |
+| **O-28** | Pre-publication review of **git history**, not only the working tree. **Must reach the Phase 3 contract before the release** | Phase 3 |
 | **D2.14** | `check_claims` gaps: PDF paths, the CORRECTIONS counts table (**document its semantics, do not guess them**), the R artifacts. **The register gap is closed — D-34, `check_register`** | Phase 2 |
 | **O-3, O-4, O-13, O-14, O-15** | Carried, untouched | Phase 2 |
 | **O-26, O-27** | The stratified interval builder (**Q7 governs it — the plan names the method**), and D-38's one-stratum disclosure. `stratified_estimate` returns an SE and **no interval** | Post-stop |
-| **37 corrections open** | C-1 … C-36 **and V-13 … V-15**, which are corrections carrying finding numbers. 39 entries, 2 `noted`. **Derived from the entries, not maintained by hand** — the previous figure was over by one, C-36. Close under **T-1 (D2.12)**, each naming its commit | D2.12 |
+| **38 corrections open** | C-1 … C-37 **and V-13 … V-15**, which are corrections carrying finding numbers. 40 entries, 2 `noted`. **Derived from the entries, not maintained by hand** — the previous figure was over by one, C-36. Close under **T-1 (D2.12)**, each naming its commit | D2.12 |

@@ -22,14 +22,14 @@ who writes the entries. The director raised that one himself and asked for it to
 | Research report (passed through unverified) | 2 | 0 | **2** |
 | Stale-at-draft-time, queued but built on anyway | 1 | 0 | **1** |
 | **Builder (Claude Code)** | **29** | **0** | **29** |
-| Reviewer instrument | **1** | 0 | **2** (1 noted) |
+| Reviewer instrument | **2** | 0 | **3** (1 noted) |
 | **Director** | **1** | 0 | **1** |
 | Tool artifact (noted, not a defect) | - | - | **1** (noted) |
-| **Total** | **37** | **0** | **39** |
+| **Total** | **38** | **0** | **40** |
 
-**Derived, not maintained — 2026-08-30, at commit `8dbfcad`'s successor.** Every figure above was
-computed from the entry blocks in this file rather than incremented as rows arrived. The previous
-version said 36 open and 3 reviewer-instrument, and both were over by one: **C-36**.
+**Derived, not maintained — 2026-08-30.** Every figure above was computed from the entry blocks in
+this file rather than incremented as rows arrived. An earlier version said 36 open and 3
+reviewer-instrument, and both were over by one: **C-36**.
 
 ### What these columns mean, written down so nobody has to re-derive them
 
@@ -1077,6 +1077,40 @@ the fix is a written definition rather than a corrected integer.
 
 **Second time in two days that the same scope question surfaced** -- the first was whether F-9
 warranted a C-number at all. A question asked twice is a specification missing once.
+
+---
+
+## C-37 - A register field that should not exist
+
+| | |
+|---|---|
+| **Claimed** | `docs/STANDARDS.md` gained a field recording **how a source reached this machine**, alongside the citation and the read state. It was filled in for S-1.2 and referred to in that entry's read-state row |
+| **Actually** | **The register has no such field.** It carries what a source **is**, when it was checked, and what came back. Every other entry is already written that way -- S-5.2 is *fetched 2026-08-28, HTTP 200*; S-2.1 is *4.5, re-verified live 2026-08-29*. **Not one of them says where a copy came from**, and none is weaker for it |
+| **Direction** | Toward recording something **about a person rather than about the work**. Nothing methodological was wrong, which is exactly what made it easy to write and easy to miss |
+| **Source** | **Reviewer instrument.** The field was the reviewer's invention; **the builder correctly declined to fill it in** and left it open rather than assuming an answer |
+| **Caught by** | The director, reading the register as a stranger would |
+| **Severity** | **Medium**, and it is about **where it landed**, not what it said. No estimate, pin or read state depended on it |
+| **Replaced by** | The register's **fourth rule** and `CLAUDE.md`'s **rule 20**, both stating the boundary so the field cannot be reinvented. The entry now carries only the citation, that the artifact is the publisher's copy, the read state with its sections, and the OCR caveat |
+| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+
+**The line the rule draws, and it is not "no routes."** Cochran's rendering route **stays**, because
+rendering a scan to images **changes what was read** -- a rendered page is not a text layer, and a
+reader must know which they are trusting. The EU legal notice's hand transcription stays for the
+same reason. **A route that changes what you read belongs in the register; a route that says where
+a copy came from does not.**
+
+**Why this is the reviewer's and not the builder's, recorded because the attribution is the
+director's to give.** The builder wrote the row, and it was the reviewer that introduced the field
+as something a register ought to have. Presented with it, the builder **refused to fill it in** and
+said the answer was not its to supply -- which was right, and which is why the entry sat visibly
+incomplete instead of quietly wrong. **An invented field with an honest blank is still an invented
+field.**
+
+**A coincidence worth flagging so nobody misreads it later.** This entry moves the
+reviewer-instrument row to **2 open, 3 total** -- the same figures the counts table carried
+*incorrectly* before **C-36** corrected them. **C-36 was still right**: at that time only two
+entries existed. The row now reads 3 because a third was added, not because the old number is
+vindicated.
 
 ---
 
