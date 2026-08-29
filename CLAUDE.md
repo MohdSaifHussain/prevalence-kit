@@ -72,7 +72,7 @@ Run **all seven** after any scripted edit, not the half that looks affected. Use
 ritual, not a CI job — a tripwire firing is a decision for the director, not a red X. **Five
 tripwires now; TW-4 is FIRED and stays fired until O-19 is acted on.**
 
-**The suite takes ~30s locally and ~7s in CI. That is not a defect** — profiled 2026-08-29: the time
+**The suite takes ~55s locally and ~10s in CI. That is not a defect** — profiled 2026-08-29: the time
 is Fernet sealing plus real filesystem writes in the Phase 1 tests, and Windows pays for both. The
 Phase 2 arithmetic tests are nearly free.
 
@@ -119,22 +119,27 @@ confirms we implement the method as its author does. It does not independently c
    controls", and it was false — C-27. Same shape in C-28. This is worse than a plain unchecked
    claim, because the half you can verify makes you stop looking. **Check the property, or split
    the sentence.**
-9. **Check an artifact the way its real consumer reads it.** Structured files — YAML, JSON, TOML,
+9. **A test asserts a defining property, or a measurement with stated scope. Never a region.**
+   A defining property is true by construction — *Clopper-Pearson covers at least 1 − α*, and
+   S-1.1 §4.2.1 says so. A region description — *narrower where k ≤ 1* — is a summary of the
+   grid you happened to sample, and it will be wrong at the corner you did not. **C-30(c) was
+   wrong three times** before the width test was deleted and replaced by a coverage test.
+10. **Check an artifact the way its real consumer reads it.** Structured files — YAML, JSON, TOML,
    CSV, XML — get the **consumer's parser**, never a regex. That is how an unparseable `gate.yml`
    passed a green checker (**C-23**). **Markdown is the exception**, and the reason is the rule: its
    consumer is a human, who reads it loosely too.
-10. **"The guard did not object" is not "the guard looked."** Know what each check does *not* read,
+11. **"The guard did not object" is not "the guard looked."** Know what each check does *not* read,
     and assert that scope rather than describe it.
-11. **A check with no artifact is a memory with a result attached.** The fixture verdict check ran
+12. **A check with no artifact is a memory with a result attached.** The fixture verdict check ran
     once as a `python -c`, was reported as "machine-checked", and left no trace. **The suite count
     not moving is what exposed it** — which is why the gate prints its own count.
-12. **The witness's documentation is not the witness. Only the pinned build is.** C-25: the manual
+13. **The witness's documentation is not the witness. Only the pinned build is.** C-25: the manual
     on CRAN described a version we do not run.
-13. **Re-run the whole gate after anything that writes to the working tree, and report *that*
+14. **Re-run the whole gate after anything that writes to the working tree, and report *that*
     run.** C-29: a mutation loop ended with `git checkout --` on a file whose real edit was
     still unstaged, so it reverted the edit. The gate had been green before the loop. I
     reported those numbers after it, and committed a tree that failed 3 tests.
-14. **Never delete or overwrite the director's working directories.** `C:\Users\mohds\ts-sentry` is
+15. **Never delete or overwrite the director's working directories.** `C:\Users\mohds\ts-sentry` is
     read-only. **Never remove a Docker image** — they belong to the director's other projects.
 
 ## Where things stand

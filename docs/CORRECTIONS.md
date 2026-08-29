@@ -810,6 +810,10 @@ restated without being re-derived from the artifact it describes.
 
 ## C-30 - Three agreement figures that were measurements at one confidence level
 
+> **See the re-recording at the end of this entry. Part (c) was corrected once and the
+> correction was also wrong.**
+
+
 | | |
 |---|---|
 | **Claimed** | Three separate claims, all from fixtures that varied `n` and held `conf.level` at 0.95. (a) *"7.1e-11 across 23 cases, n = 1 to n = 1,999,514"* -- `docs/STANDARDS.md` S-2.4, `CLAUDE.md`, `estimators.py`. (b) *"after DIGITS = 12 rounding, 6.9e-09"*. (c) The test `test_clopper_pearson_is_wider_than_wilson_except_at_zero`, whose docstring said *"narrower in exactly one, which is k = 0 at n = 4000"*. |
@@ -832,12 +836,34 @@ across the range, and our record format is the binding constraint, more so the
 smaller the number. Both still clear R2.3's four significant digits by at least
 three orders of magnitude at every level.
 
-**(c) is the second time this property was stated wrong.** The first draft said
-Clopper-Pearson is never narrower than Wilson, and the test written to assert it
-disproved it -- logged in the believed-mechanism class, no C-number, caught
-before commit. The second draft fixed the direction and got the *region* wrong,
-and that one did reach a commit. Both errors came from reasoning about a
-conservative interval instead of measuring one.
+**C-30(c) re-recorded 2026-08-29, and the first recording of it was itself wrong.**
+
+This entry originally said the exception set was `k <= 1 or k >= n - 1`. **That is false at 0.99.**
+Sweeping every k for n in {40, 100, 1000, 4000}: 0 narrower cases at 0.90, 6 at 0.95, and **44 at
+0.99, of which 28 are not near a boundary** -- k = 2..7 at n = 4000, k = 97, 98 at n = 100.
+
+So the property was stated wrong three times: never narrower, then narrower only at k = 0, then
+narrower only near the boundary. **Widening the grid and re-describing would have produced a fourth.**
+
+**The root cause is not any of the three regions. It is that a region was being asserted at all.**
+Where a derived property holds depends on n, k and confidence with no simple closed form, so every
+hand-written description is false at the next corner nobody sampled.
+
+**And it broke the axes rule in the commit that introduced it.** The rule was applied to agreement
+figures and not to property claims. *"Clopper-Pearson is narrower where k <= 1"* is exactly as
+axis-dependent as *"8.4e-11 across 69 cases"*, and it shipped without its axes. That is the single
+root cause under all three failures.
+
+**The fix is to stop testing width and test coverage.** Conservative has a definition -- coverage at
+least 1 - alpha for every true p -- and Clopper-Pearson guarantees it while Wilson does not. Width is
+a consequence, and consequences vary. The width comparison survives only as a **measurement with a
+stated scope**: 7 of the fixture's 69 cases, and nothing claimed about the 70th.
+
+**What replaced it is anchored on S-1.1**, whose full text was read the same day after two phases of
+being cited unread. Wilson's coverage falls to **0.838** at `p = 0.1765/n` against a nominal 0.95 --
+the paper's published figure, which our code reproduces as 0.8382. **That belongs in the honest
+limits and in whatever the README says about choosing an interval**, and it matters more than the
+width question ever did.
 
 ---
 

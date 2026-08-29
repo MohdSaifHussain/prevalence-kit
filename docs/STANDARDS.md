@@ -64,7 +64,7 @@ so.** `docs/CORRECTIONS.md` C-22.
 
 | ID | Method | Source | Pin | Re-check |
 |---|---|---|---|---|
-| S-1.1 | Binomial interval estimation — **ships Wilson (primary) + Clopper-Pearson (conservative). Jeffreys dropped, ruling R-4.** | Brown, L.D., Cai, T.T., DasGupta, A., *Interval Estimation for a Binomial Proportion*, **Statistical Science** 16(2) | **2001**, DOI `10.1214/ss/1009213286` | never — fixed publication |
+| S-1.1 | Binomial interval estimation — **ships Wilson (primary) + Clopper-Pearson (conservative). Jeffreys dropped, ruling R-4.** | Brown, L.D., Cai, T.T., DasGupta, A., *Interval Estimation for a Binomial Proportion*, **Statistical Science** 16(2) | **2001**, DOI `10.1214/ss/1009213286`. **Full text read 2026-08-29** — see below. Cited unread through Phases 0-2 | never — fixed publication |
 | S-1.2 | Stratified sampling, Neyman (optimal) allocation | Neyman, J., *On the Two Different Aspects of the Representative Method* | **1934**, reprint DOI `10.1007/978-1-4612-4380-9_12` | never |
 | S-1.3 | Sampling design reference | Cochran, W.G., *Sampling Techniques*, Wiley | **3rd edition, 1977**, ISBN `0-471-16240-X` | never |
 | S-1.4 | Misclassification correction | Rogan, W.J. & Gladen, B., *Estimating Prevalence from the Results of a Screening Test*, **Am. J. Epidemiol.** | **1978**, DOI `10.1093/oxfordjournals.aje.a112510` | never |
@@ -80,6 +80,61 @@ so.** `docs/CORRECTIONS.md` C-22.
 `π̂ = (p̂ + Sp − 1)/(Se + Sp − 1)`. The denominator vanishes at `Se + Sp = 1` and the estimator
 inverts sign below it. Refusing there is arithmetic, and it is marked as such so no reader mistakes
 it for a claim about a source.
+
+
+### S-1.1 -- read in full 2026-08-29, and it was cited unread for two phases
+
+**The register was silent about this, and the silence was the defect.** S-1.9 and S-1.11 both say
+plainly that their full text was not read. S-1.1 said nothing either way. It is the anchor for the
+whole interval choice -- D-8, the charter, both contracts -- and nobody had read it.
+
+Found when the director tried to check a ruling against it and hit a subscription wall on Project
+Euclid. Full text supplied by the director from
+`https://projecteuclid.org/journalArticle/Download?urlId=10.1214%2Fss%2F1009213286`, read
+2026-08-29. Statistical Science 2001, Vol. 16, No. 2, 101-133.
+
+**Three published figures, now reproduced by our code.** This is the project's only external anchor
+for the interval *choice*, as opposed to its arithmetic, and it is the same kind of evidence as
+Barnett Table 2B: numbers computed by the method's own authors with nobody in this project involved.
+
+| S-1.1 says | Section | We compute |
+|---|---|---|
+| Wilson at `p = 0.1765/n`, 95%, limit **0.838** | 4.1.1 | **0.8382** |
+| Wilson at `p = 0.1174/n`, 99%, limit **0.889** | 4.1.1 | **0.8892** |
+| Wilson `lim inf C(gamma/n, n)`, gamma >= 1, 95% = **0.92** | 3.2 | **0.9197** |
+
+**What this establishes, and it is the contrast this project had never written down.** Wilson is the
+charter's **primary** interval. At rare-event prevalence -- the regime this tool exists for -- its
+coverage falls to **0.838 against a nominal 0.95**. Clopper-Pearson does not: section 4.2.1 says it
+*"guarantees that the actual coverage probability is always equal to or above the nominal confidence
+level."*
+
+**The paper's own view of Clopper-Pearson, quoted rather than paraphrased**, because it does not
+flatter our choice:
+
+> *"The Clopper-Pearson interval is wastefully conservative and is not a good choice for practical
+> use, unless strict adherence to the prescription C(p, n) >= 1 - alpha is demanded."*
+
+For this tool, strict adherence **is** demanded -- it exists to refuse rather than to mislead -- so
+shipping it as the conservative option is defensible. But the anchor's words are recorded here rather
+than left out, because a register that only quotes the sentences supporting its choices is not a
+register.
+
+**One thing the reading unsettles, raised rather than acted on.** D-8 dropped Jeffreys, and one of
+its four stated reasons was that the Unofficial Google Data Science Blog *"criticises it for this
+exact use case."* The anchor's own assessment is close to the opposite:
+
+> *"Both the Wilson interval and the Jeffreys prior interval have excellent performance in terms of
+> the average coverage probability; that of the Jeffreys prior interval is, if anything, slightly
+> superior."*
+
+and it **recommends** Wilson or Jeffreys for n <= 40, Agresti-Coull above.
+
+**D-8's decision still stands and its other three reasons are untouched** -- the blog is unofficial
+and cannot be a method source, Clopper-Pearson is in both witness libraries, and Jeffreys is in
+neither, so it could have had only one witness. That last reason is decisive on its own under R2.3.
+**What is now known to be wrong is the characterisation, not the ruling.** Recorded as an open item
+for the director: the charter's §6.1 and D-8 cite a blog's reading of a paper nobody had read.
 
 ### S-1.7 -- largest-remainder rounding, quoted from the source
 

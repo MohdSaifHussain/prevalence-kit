@@ -24,7 +24,8 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable
-from functools import partial
+from functools import cache, partial
+from math import comb, fsum
 from pathlib import Path
 from typing import Any
 
@@ -201,55 +202,165 @@ def test_all_positives_gives_an_upper_bound_of_exactly_one(k: int, n: int) -> No
     assert 0.0 < float(interval.low) < 1.0
 
 
-@pytest.mark.parametrize("case", CASES, ids=[ident(c) for c in CASES])
-def test_clopper_pearson_is_narrower_than_wilson_only_near_the_boundary(
-    case: dict[str, Any],
-) -> None:
-    """Measured, because the obvious version of this property is false -- twice.
+@cache
+def _bounds(
+    estimator: Callable[..., Interval], n: int, confidence: float
+) -> tuple[tuple[float, float], ...]:
+    """Every interval for this (n, confidence), computed once.
 
-    **First draft:** "Clopper-Pearson is never narrower than Wilson", reasoning
-    that it is the conservative interval. Wrong. Conservative means coverage at
-    least 1 - alpha; it does not mean wider everywhere.
-
-    **Second draft, and this is the one the confidence axis caught.** The test
-    was renamed `..._except_at_zero` and its docstring said *"narrower in exactly
-    one, which is k = 0 at n = 4000"*. That was true of the 23 cases it had --
-    and all 23 were at confidence 0.95. The exception set is not k = 0. C-30.
-
-    Re-measured across all 69 cases, three confidence levels:
-
-        conf 0.90    0 narrower
-        conf 0.95    1 narrower   k=0 n=4000
-        conf 0.99    6 narrower   k=0,1 n=4000; k=1,39 n=40; k=1,99 n=100
-
-    **The real property is about the boundary, not about zero**, and the region
-    grows as confidence rises: Clopper-Pearson is narrower only when k is within
-    one of an endpoint. So that is what this asserts.
-
-    The closed forms at k = 0 still say why:
-
-        Clopper-Pearson upper = 1 - (alpha/2)^(1/n)
-        Wilson upper          = z^2 / (n + z^2)
-
-    At 0.95 those give 3.6889/n against 3.8415/n, ratio 0.960760 at n = 4000.
-    That ratio is a 0.95 statement and always was -- at 0.99 the same case is
-    0.799348. C-24 was about confusing two ratios; this is about quoting one
-    without its confidence level.
+    Cached because coverage sweeps p across a grid while the intervals depend
+    only on k. Without this the tests below recompute the same n+1 bisections
+    for every p and the suite goes from seconds to minutes.
     """
-    k, n, conf = case["k"], case["n"], case["conf"]
-    exact = clopper_pearson(k, n, confidence=conf)
-    score = wilson(k, n, confidence=conf)
+    out = []
+    for k in range(n + 1):
+        interval = estimator(k, n, confidence=confidence)
+        out.append((float(interval.low), float(interval.high)))
+    return tuple(out)
 
-    width_exact = float(exact.high) - float(exact.low)
-    width_score = float(score.high) - float(score.low)
-    near_boundary = k <= 1 or k >= n - 1
 
-    if width_exact < width_score:
-        assert near_boundary, (
-            f"Clopper-Pearson is narrower than Wilson at k={k}, n={n}, conf={conf}, "
-            "which is not near a boundary. The characterisation in this docstring "
-            "is wrong again -- re-measure before changing the assertion."
+def coverage(estimator: Callable[..., Interval], n: int, p: float, confidence: float) -> float:
+    """P(the interval covers p), computed exactly. No simulation.
+
+    Sum the binomial pmf over every k whose interval contains p. The binomial is
+    a finite sum, so this is the coverage probability itself rather than an
+    estimate of it.
+    """
+    bounds = _bounds(estimator, n, confidence)
+    return fsum(
+        comb(n, k) * p**k * (1 - p) ** (n - k)
+        for k, (low, high) in enumerate(bounds)
+        if low <= p <= high
+    )
+
+
+# --------------------------------------------------------- coverage, not width
+#
+# This section replaces a test that asserted WHERE Clopper-Pearson is narrower
+# than Wilson. That test was wrong three times running -- C-30. The root cause
+# was not any of the three regions. It was that a region was being asserted at
+# all: where a derived property holds depends on n, k and confidence with no
+# simple closed form, so every hand-written description is false at the next
+# corner nobody sampled.
+#
+# Conservative has a definition. Coverage >= 1 - alpha for every true p.
+# Clopper-Pearson guarantees it; Wilson does not. Width is a consequence, and
+# consequences vary. So the tests below assert the definition.
+#
+# The expected values are S-1.1's own published figures -- Brown, Cai &
+# DasGupta (2001), full text read 2026-08-29. Nobody in this project computed
+# them. That makes them the same kind of evidence as Barnett Table 2B, and the
+# only external anchor this project has for its INTERVAL CHOICE as opposed to
+# its arithmetic.
+
+
+@pytest.mark.parametrize("n", [10, 25, 50, 100])
+@pytest.mark.parametrize("confidence", [0.90, 0.95, 0.99])
+def test_clopper_pearson_never_covers_less_than_nominal(n: int, confidence: float) -> None:
+    """The defining property, from S-1.1 section 4.2.1, verbatim:
+
+        "The Clopper-Pearson interval guarantees that the actual coverage
+         probability is always equal to or above the nominal confidence level."
+
+    This is why the charter ships it as the conservative option. It is a
+    guarantee, not a tendency, so it is asserted over a grid of p rather than
+    described.
+    """
+    for i in range(1, 200):
+        p = i / 200
+        got = coverage(clopper_pearson, n, p, confidence)
+        assert got >= confidence - 1e-12, (
+            f"Clopper-Pearson covered {got:.4f} at n={n}, p={p}, nominal {confidence}. "
+            "That contradicts S-1.1 section 4.2.1, which is a guarantee."
         )
+
+
+def test_wilson_undercovers_in_the_rare_event_regime_as_the_anchor_says() -> None:
+    """Wilson does NOT guarantee coverage, and S-1.1 says where it fails.
+
+    Section 4.1.1, verbatim:
+
+        "The coverage has downward spikes when p is very near 0 or 1. These
+         spikes exist for all n and alpha. For example, it can be shown that,
+         when 1 - alpha = 0.95 and p = 0.1765/n, lim P(p in CIW) = 0.838 and
+         when 1 - alpha = 0.99 and p = 0.1174/n, lim = 0.889."
+
+    **This is the contrast the project had never written down, and it matters
+    more than the width question ever did.** Wilson is the charter's primary
+    interval. At rare-event prevalence -- the regime this tool exists for -- its
+    coverage drops to 0.838 against a nominal 0.95.
+
+    Reproduced here, which also makes these published numbers a third external
+    witness: computed by the method's own authors, with nobody in this project
+    involved.
+    """
+    for n in (200, 500, 1000, 2000):
+        assert coverage(wilson, n, 0.1765 / n, 0.95) == pytest.approx(0.838, abs=5e-4)
+        assert coverage(wilson, n, 0.1174 / n, 0.99) == pytest.approx(0.889, abs=5e-4)
+
+
+def test_wilsons_worst_rare_event_coverage_matches_the_published_limit() -> None:
+    """S-1.1 section 3.2, verbatim, for the Wilson interval at 1 - alpha = 0.95:
+
+        lim inf over gamma >= 1 of C(gamma/n, n) = 0.92
+
+    So across the whole rare-event regime -- p a small multiple of 1/n -- Wilson
+    bottoms out around 0.92 against a nominal 0.95. Clopper-Pearson does not,
+    which is the whole reason both ship.
+    """
+    worst = 1.0
+    for n in (500, 1000, 2000):
+        for step in range(200):
+            worst = min(worst, coverage(wilson, n, (1 + step * 0.05) / n, 0.95))
+
+    assert worst == pytest.approx(0.920, abs=2e-3), f"observed {worst:.4f}, S-1.1 says 0.920"
+
+
+def test_clopper_pearson_holds_where_wilson_does_not() -> None:
+    """The pair, side by side, at the point S-1.1 names as Wilson's worst.
+
+    The positive control for the negative result above: at exactly the p where
+    Wilson falls to 0.838, Clopper-Pearson is still at or above nominal. Without
+    this, the test above only shows that some interval undercovers somewhere.
+    """
+    n = 1000
+    p = 0.1765 / n
+
+    assert coverage(wilson, n, p, 0.95) < 0.95
+    assert coverage(clopper_pearson, n, p, 0.95) >= 0.95
+
+
+def test_the_width_comparison_is_a_measurement_with_stated_scope() -> None:
+    """What is left of the width question, stated as a fact rather than a rule.
+
+    C-30 records three attempts to say WHERE Clopper-Pearson is narrower than
+    Wilson, each falsified by widening the grid. The lesson is that a region
+    description is a summary of the grid you happened to sample.
+
+    So this records a count with its scope and asserts nothing about inputs
+    outside it. Over the fixture's 69 cases -- n in {1, 2, 10, 20, 40, 100, 4000,
+    1999514}, k across each, confidence in {0.90, 0.95, 0.99} -- Clopper-Pearson
+    was narrower than Wilson in 7. It says nothing about the 70th case, and it
+    is not supposed to.
+    """
+    narrower = [
+        case
+        for case in CASES
+        if (
+            float(clopper_pearson(case["k"], case["n"], confidence=case["conf"]).high)
+            - float(clopper_pearson(case["k"], case["n"], confidence=case["conf"]).low)
+        )
+        < (
+            float(wilson(case["k"], case["n"], confidence=case["conf"]).high)
+            - float(wilson(case["k"], case["n"], confidence=case["conf"]).low)
+        )
+    ]
+
+    assert len(narrower) == 7, (
+        f"{len(narrower)} of {len(CASES)} fixture cases have Clopper-Pearson narrower. "
+        "This is a measurement over one grid, not a rule -- if the fixture changed, "
+        "re-measure and update the number. Do not infer a region from it."
+    )
 
 
 def test_it_works_at_the_scale_that_broke_the_first_version() -> None:
