@@ -21,11 +21,44 @@ who writes the entries. The director raised that one himself and asked for it to
 | Chat reviewer (draft author) | 3 | 0 | **3** |
 | Research report (passed through unverified) | 2 | 0 | **2** |
 | Stale-at-draft-time, queued but built on anyway | 1 | 0 | **1** |
-| **Builder (Claude Code)** | **27** | **0** | **27** |
-| Reviewer instrument | **2** | 0 | **3** (1 noted) |
+| **Builder (Claude Code)** | **29** | **0** | **29** |
+| Reviewer instrument | **1** | 0 | **2** (1 noted) |
 | **Director** | **1** | 0 | **1** |
-| Tool artifact (noted, not a defect) | - | - | **1** |
-| **Total** | **36** | **0** | **37** |
+| Tool artifact (noted, not a defect) | - | - | **1** (noted) |
+| **Total** | **37** | **0** | **39** |
+
+**Derived, not maintained — 2026-08-30, at commit `8dbfcad`'s successor.** Every figure above was
+computed from the entry blocks in this file rather than incremented as rows arrived. The previous
+version said 36 open and 3 reviewer-instrument, and both were over by one: **C-36**.
+
+### What these columns mean, written down so nobody has to re-derive them
+
+**This is D2.14(b)'s specification.** The check is still owed; the definition is not, and the
+ambiguity below is what produced C-36.
+
+| Term | Definition |
+|---|---|
+| **An entry** | One `## C-n` or `## V-n` heading in this file. **Three corrections carry `V-` numbers** — V-13, V-14, V-15 — because they were found as review findings and recorded here as wrong claims. They count in this table exactly like a `C-`; the letter records where they were found, not what they are |
+| **Total** | Entries with that source. **Not class instances** |
+| **Open** | Entries whose `Status` row is `OPEN`. They close under **T-1 (D2.12)**, each naming its discharging commit |
+| **Closed** | `Status` is neither `OPEN` nor `noted`. **Zero so far, and the zero is real** — nothing has been closed yet |
+| **noted** | A permanent record that is not a defect to fix. Two: **C-18** (a ruff artifact, not this project's defect) and **C-21** (a reviewer-instrument accident that demonstrated a gate firing). Counted in Total, excluded from Open |
+| **Source** | The `Source` row, bucketed. A source row naming the director as the person who *caught* something is **not** a director-sourced entry — C-18 says "the director's own hand-run" and belongs to *Tool artifact* |
+
+**The distinction that C-36 turned on, and the one to hold on to:**
+
+> **A class tally and this table count different things.** The *Classes* section below tracks every
+> instance of a pattern **including ones that never got a C-number**, and says so per row. This
+> table counts **entries**. C-21's own text reads *"Second recorded instance; fifth overall in the
+> class"* — two numbers in one sentence, measuring two different populations. **Reading the class
+> figure into the table is the most likely way the reviewer-instrument row reached 3.**
+
+**And the scope, restated from the header because it is the question that keeps arising:** this
+table counts claims that **reached a commit, or changed a ruling**. A finding in
+`docs/FINDINGS.md` and a correction here are **not double-counting** — the finding is the defect,
+the correction is the sentence that defect put into a commit. **F-9 and C-35 are one such pair**,
+and the question of whether they were double-counted came up twice in two days, which is why the
+definition is now written rather than ruled again.
 
 C-1 … C-6 are Phase 0: defects in the chat-drafted vision, all caught before any code, none reaching
 an artifact. **C-7 … C-13 are Phase 1, and all seven are mine.** Five were caught by the director's
@@ -994,6 +1027,56 @@ code walks**, so there is no second copy to go stale.
 **A documented scope is a claim, and claims get checked.** That is rule 9 -- a checked number can
 carry an unchecked claim -- applied to the one place nobody thought to apply it: the checker's own
 description of itself.
+
+---
+
+## C-35 - S-1.2 was cited as governing a formula it states differently
+
+| | |
+|---|---|
+| **Claimed** | `src/prevalence_kit/stratified.py`, `neyman_raw` docstring: *"Neyman allocation, before rounding. **S-1.2**, specification pinned by S-2.3."* And `docs/contracts/PHASE-2-CONTRACT.md`'s D2.3 row, governing standard: *"**S-1.2** Neyman (1934) · S-1.3 Cochran 3rd ed."* |
+| **Actually** | **Neither source writes our formula.** S-1.2 minimises at `n_h` proportional to `M_h * S_h` with `S_h^2 = M_h * sigma_h^2 / (M_h - 1)`, and develops the **without-replacement** variance at its (37). S-1.3 writes the optimum the same way and carries an explicit fpc term at (5.27). Ours is `M_h * sigma_h`, with-replacement, no fpc -- charter §6.2. The two differ by a per-stratum `sqrt(M_h / (M_h - 1))` |
+| **Direction** | Against the citation, not the arithmetic. It named a primary source as the origin of a formula that source does not contain, in the deliverable whose whole shape is *the expected value predates the implementation* |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | Reading S-1.2 and S-1.3, on the director's instruction, before building the strata layer. **Nothing else could have caught it**: Barnett Table 2B states its design in **weights, not stratum sizes**, so the only external anchor this allocation has cannot express the factor |
+| **Severity** | **Medium.** No shipped number is wrong and none changes. What was wrong is a citation, in the register that exists so a reader can check a method against its source |
+| **Replaced by** | S-1.2's register role narrowed to **origin of the method**; the divergence recorded with both measurements and their design spaces; D2.3's row and docstring reciting **charter §6.2 and S-2.3** as governing. Ruled 2026-08-29: **keep the formula, fix the citation** -- adopting the paper's form would trade a witnessed formula for one no instrument here can check |
+| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+
+**This is the wrong claim that F-9 exposed, and the two are not double-counting.** F-9 is the
+finding -- the record cited a source it had not read against the code it governs. C-35 is the
+**claim that reached a commit** because of it. The register holds the defect; this table holds the
+sentence.
+
+**The uncomfortable half is how long it was checkable and unchecked.** S-1.2 sat at `not read` for
+two phases while being cited as a governing standard, which is exactly **O-24's distinction**: a
+source that anchors an **arithmetic** can be validated by reproduction, and a source that anchors a
+**formula's provenance** has to be read. The reproduction against Barnett was real and it was never
+evidence about S-1.2's text.
+
+---
+
+## C-36 - The table that counts our counting errors was over by one
+
+| | |
+|---|---|
+| **Claimed** | The counts table above, committed: **Reviewer instrument `2` open, `3` total**, and **Total `36` open, `37` total** |
+| **Actually** | **Two** reviewer-instrument entries exist, not three: **C-21** (noted) and **C-26** (open). So that row is `1` open, `2` total. The open total is **35**, not 36. The `37` total was right, and the Total column's own figures summed to **38** rather than 37 -- the overstatement was visible on the face of the table to anyone who added it up |
+| **Direction** | Against the artifact, and **toward the less flattering answer for once**: it counted one more reviewer-instrument error than the record contains. The open total moved down, not up |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | **Deriving the table from the entries instead of guessing them**, on the director's instruction to prioritise D2.14(b). The derivation was written before the numbers were read |
+| **Severity** | **Low in magnitude, and it is the location that earns the entry.** This is the count treadmill inside the table that records the count treadmill |
+| **Replaced by** | The recomputed table, plus **the semantics written down** below it so the next reader does not have to re-derive them, and so D2.14(b) has a specification to check against rather than a number to copy |
+| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+
+**Why the number was wrong is worth more than the number.** C-21's own text says *"Second recorded
+instance; **fifth overall in the class**."* The **class** tracks instances that never got a
+C-number; the **table** counts entries. Someone reading a class tally into a table of entries is the
+most likely way this arose. **That ambiguity is the thing D2.14(b) has to remove**, and it is why
+the fix is a written definition rather than a corrected integer.
+
+**Second time in two days that the same scope question surfaced** -- the first was whether F-9
+warranted a C-number at all. A question asked twice is a specification missing once.
 
 ---
 

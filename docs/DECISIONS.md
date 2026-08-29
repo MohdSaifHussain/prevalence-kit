@@ -1311,6 +1311,81 @@ whatever else changes.
 
 ---
 
+## D-38 - A one-stratum plan is accepted and disclosed, not refused
+
+**Date:** 2026-08-30 · **Made in:** the director's Q12 ruling · **Ruled by:** director
+
+`design: stratified` with a single stratum **loads, runs, and is recorded as what it is.** The run
+records, and the report states, three things: that the design has one stratum, that stratification
+therefore delivered **no precision gain**, and that the interval rests on a **stratified variance
+basis** rather than a binomial inversion.
+
+**The builder recommended refusing and the recommendation was wrong.** Its load-bearing claim was
+that accepting is *"V-1, V-7 and Q7's class exactly -- the plan says one thing and the run does
+another."* **It is not that class**, and the director's distinction is the reason this entry
+exists:
+
+> In **V-1** the tool re-registered a plan silently. In **V-7** it changed the denominator
+> silently. In **Q7** it would have substituted an interval method silently. In all three, **the
+> tool did something the plan did not say.** Here the plan says stratified and the tool runs
+> stratified. **It does exactly what it was told.**
+
+The surprise belongs to an operator who believed a one-stratum stratified design equals SRS. That
+belief is wrong, and nothing in the tool encourages it. Remove the false parallel and argument 1
+reduces to *an operator might be surprised* -- **which is an argument for telling them, not for
+refusing.**
+
+**The precedent that does apply is D-21**, the frame de-duplication. That ruling was: de-duplicating
+is **correct**; doing it **silently** was the defect. Identical shape. Accepting a one-stratum plan
+is correct -- both anchors say so -- and accepting it silently would be the defect.
+
+**Three reasons refusal loses, in the director's order of weight.**
+
+1. **Both anchors treat `L = 1` as admissible.** S-1.2 includes it explicitly as the special case
+   where stratified sampling becomes unrestricted sampling. S-1.3 sets no lower bound, and its
+   whole §5A.8 *measures from* `L = 1`: every figure in Table 5A.12 is `V(y_st)/V(y)`, normalised
+   against the unstratified variance, and the table starts at `L = 2` because `L = 1` is the
+   baseline with ratio 1 by construction. **Refusing would be this tool asserting a rule neither
+   source supports** -- rule 9's shape, in a design decision rather than a witness claim. *The
+   builder named this cost itself, and it is the decisive one.*
+2. **The precedents do not reach.** `ALLOCATION_TOO_THIN` refuses a stratum with zero degrees of
+   freedom -- **genuinely undefined arithmetic**. A one-stratum design is fully defined: at
+   `n = 40` it has **39 degrees of freedom**. There is no refusal anywhere in this tool for
+   something merely **pointless**.
+3. **It would rule a permanent question on a temporary state.** The builder's strongest fact was
+   that the stratified path returns no interval today. **That is a gap in the interval builder, not
+   a property of `L = 1`.** Once the builder exists the question collapses to *which interval*,
+   which **Q7 already answered**: the plan names it. **Do not build a permanent refusal on
+   scaffolding that is scheduled to come down.**
+
+**What the evidence did establish, and it is why disclosure is required rather than optional.** Q12
+option B rested on *"a one-stratum stratified estimate **is** the SRS estimate, with weight 1."*
+That is **true of the point estimate and false of the variance**. At the shipped example's own
+numbers -- `n = 40`, 9 positives -- both paths give exactly `0.225`, but `stratified_estimate`
+returns `s^2 = 0.178846` and **SE `0.066867` with 39 degrees of freedom**, while the SRS path
+inverts a binomial to Wilson `[0.123161, 0.375031]`. Verified independently by the director.
+
+**The 2.92 pp figure is a constructed comparison and is recorded as one.** Putting a normal
+approximation on that SE gives `[0.093944, 0.356056]`, whose lower bound sits **2.92 percentage
+points** below Wilson's. **No such interval is shipped**: the stratified path builds no interval at
+all today, and the normal approximation was the builder's, chosen to show the bases differ. **What
+is proven is that the two paths compute different quantities.** How far the *shipped* intervals
+diverge is **unknown until the builder exists** -- **O-26**.
+
+**Alternatives not taken.**
+
+- **Refuse at `plan` (option A).** Rejected on the three grounds above. Its one real merit --
+  an operator who did it by mistake is stopped before spending label budget -- is answered by
+  disclosure at the moment they read the number, at no cost to an operator who meant it.
+- **Accept silently (option C).** Rejected without argument in the contract and here: it is the
+  silent-substitution class, and D-21 says the silence is the defect even when the act is right.
+
+**Two obligations follow, opened separately on purpose** -- O-25's reasoning, that two obligations
+living in one post-stop surface is how one of them quietly does not happen. **O-26** builds the
+stratified interval, governed by Q7. **O-27** carries this disclosure.
+
+---
+
 ## Carried obligations opened by these decisions
 
 | # | Obligation | Owner | Opened by |
@@ -1326,3 +1401,5 @@ whatever else changes.
 | O-22 | **Q7 / D-33 at the plan file.** `interval_method` is a required keyword argument with no default today; still owed is an `interval` field in the hashed plan and `CORRECTION_INTERVAL_UNSUPPORTED` refusing at load. O-20's shape exactly. | D2.8 | **D-33** |
 | O-23 | **Q6 / D-32 conditions 2 and 3 in an artifact.** `note` and the raw bounds exist on the estimate; no Phase 2 estimator is wired into `run.py`, so nothing writes them to a ledger or a report yet. | Post-stop surface | **D-32** |
 | O-14 | Build the keyless structural audit mode `verify_structure`'s docstring described but `verify_run` never offered. Genuinely valuable: an auditor without the key could still check sequence integrity. | Phase 2 | **V-10** |
+| **O-26** | **The stratified interval builder, and `Q7 / D-33` governs it: the plan names the method and there is no default.** `stratified_estimate` returns a `standard_error` and **no interval**, so the stratified path today produces a quantity nothing turns into a printed bound. **A hole with no name until now.** Until it exists, how far a one-stratum stratified interval diverges from Wilson is **unmeasured, not merely unmeasured-here** | Post-stop surface | **D-38** |
+| **O-27** | **D-38's disclosure.** A run whose design has one stratum records, and its report states: that the design has one stratum, that stratification therefore delivered **no precision gain** (S-1.3's ratio-1 baseline is exactly this), and that the interval rests on a **stratified variance basis** rather than a binomial inversion. **Opened separately from O-26 deliberately** -- O-25's reasoning about two obligations sharing one surface | Post-stop surface | **D-38** |

@@ -177,7 +177,7 @@ confirms we implement the method as its author does. It does not independently c
 
 ## Where things stand
 
-**Phase 0** ratified. **Phase 1** closed at `d66d225`. **Phase 2 is in build**, **Q1–Q11 ruled**,
+**Phase 0** ratified. **Phase 1** closed at `d66d225`. **Phase 2 is in build**, **Q1–Q12 ruled**,
 **A-1 … A-4** applied to the charter.
 
 **Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **608 tests**, seven gate
@@ -273,4 +273,5 @@ prevalence rates this tool is for, several ordinary intuitions fail, and here th
 | **O-22, O-23** | Q7's plan-load refusal and Q6's ledger + report disclosure. **D2.6 built the estimator half only** | D2.8, post-stop |
 | **D2.14** | `check_claims` gaps: PDF paths, the CORRECTIONS counts table (**document its semantics, do not guess them**), the R artifacts. **The register gap is closed — D-34, `check_register`** | Phase 2 |
 | **O-3, O-4, O-13, O-14, O-15** | Carried, untouched | Phase 2 |
-| **28 corrections open** | C-1 … C-26. Close under **T-1 (D2.12)**, each naming its commit | D2.12 |
+| **O-26, O-27** | The stratified interval builder (**Q7 governs it — the plan names the method**), and D-38's one-stratum disclosure. `stratified_estimate` returns an SE and **no interval** | Post-stop |
+| **37 corrections open** | C-1 … C-36 **and V-13 … V-15**, which are corrections carrying finding numbers. 39 entries, 2 `noted`. **Derived from the entries, not maintained by hand** — the previous figure was over by one, C-36. Close under **T-1 (D2.12)**, each naming its commit | D2.12 |

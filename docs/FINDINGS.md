@@ -50,7 +50,7 @@ the same wrong reason.
 | F-6 | low | closed | `test_labels_for_a_different_sample_are_refused` | — |
 | F-7 | low | closed | `test_a_different_id_in_the_same_directory_is_refused` | — |
 | F-8 | high | closed | `test_a_confidence_outside_zero_to_one_is_refused_by_name` | D2.7 |
-| F-9 | medium | closed | `test_our_neyman_is_the_large_stratum_limit_of_the_1934_form` | S-1.2 |
+| F-9 | medium | closed | `test_our_neyman_is_the_large_stratum_limit_of_the_1934_form` | C-35 |
 | V-1 | critical | closed | `test_replanning_into_an_open_workspace_is_refused` | D-17 |
 | V-2 | high | closed | `test_replan_without_rerunning_names_the_plan_not_the_estimate` | C-10 |
 | V-3 | high | closed | `test_an_unrecognised_comparison_is_refused` | — |

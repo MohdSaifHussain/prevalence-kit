@@ -106,7 +106,7 @@ Each names the top standard it must follow.
 | D2.11 | CI wiring: fixtures in the gate, R image pinned by digest | S-6 toolchain |
 | **D2.12** | **T-1.** Close every discharged correction, each naming the commit that discharged it | Tier trim, ruled 2026-08-29 |
 | **D2.13** | **T-2.** Apply the decision-entry rule to the log, and state it in `docs/DECISIONS.md`. **The rule governs choices the builder makes alone. A question put to the director and ruled is recorded because it was ruled, whatever its operator visibility.** Without that line, Q3 — same CLI, same codes, invisible to an operator — would be suppressed by the first rule written to shrink the log, which is the one thing it must never do. | Tier trim, ruled 2026-08-29 |
-| D2.14 | Extend `check_claims` to the new artifacts (fixtures directory, R script). **Two more gaps found 2026-08-29, ruled into this deliverable:** (a) `check_paths` does not cover either PDF — wrong directory prefix *and* wrong extension; (b) **the counts table in `docs/CORRECTIONS.md` is not covered by `check_figures`, and was updated by hand.** That is the count treadmill, in the table that counts our own counting errors. **(c) Ruled in 2026-08-29, by the director, from four stale rows found by reading: an open-items row naming an item the record says is discharged must fail the gate.** `CLAUDE.md`'s "Open, by name" table is a **live figure written in prose**, and nothing checks it. Its three machine-checked figures were current while four hand-maintained rows in the same file had drifted, **inside about six hours** — §6.1 (discharged by A-3), O-20 and O-22 (both moved at `d25e6fe`), and the corrections range. **The minimum condition: an obligation or correction identifier in an open-items row, whose owning record marks it discharged, is a failure.** The three figures are checked because they went stale once and nobody noticed; this table went stale the same way and was caught only by a session that read carefully. **That assumption is the one `check_figures` exists to remove** | D-23's stated limit |
+| D2.14 | Extend `check_claims` to the new artifacts (fixtures directory, R script). **Two more gaps found 2026-08-29, ruled into this deliverable:** (a) `check_paths` does not cover either PDF — wrong directory prefix *and* wrong extension; (b) **the counts table in `docs/CORRECTIONS.md` is not covered by `check_figures`, and was updated by hand.** That is the count treadmill, in the table that counts our own counting errors. ▸ **The semantics are now written down — `docs/CORRECTIONS.md`, "What these columns mean" — so the check has a specification rather than a number to copy, ruled 2026-08-30. The table was derived and found over by one: C-36. What remains owed is the machine check.** The definition it must encode: an **entry** is a `## C-n` or `## V-n` heading, `Open` counts `Status: OPEN`, `noted` is excluded from Open and included in Total, and **a class tally is a different population from this table** — which is how the reviewer-instrument row reached 3. **(c) Ruled in 2026-08-29, by the director, from four stale rows found by reading: an open-items row naming an item the record says is discharged must fail the gate.** `CLAUDE.md`'s "Open, by name" table is a **live figure written in prose**, and nothing checks it. Its three machine-checked figures were current while four hand-maintained rows in the same file had drifted, **inside about six hours** — §6.1 (discharged by A-3), O-20 and O-22 (both moved at `d25e6fe`), and the corrections range. **The minimum condition: an obligation or correction identifier in an open-items row, whose owning record marks it discharged, is a failure.** The three figures are checked because they went stale once and nobody noticed; this table went stale the same way and was caught only by a session that read carefully. **That assumption is the one `check_figures` exists to remove** | D-23's stated limit |
 | **D2.16** *(new, 2026-08-29)* | **`stratallo` fixtures. FIXTURE-ONLY — no new estimator.** A second independent witness for D2.3's stratified variance (`var_st` / `var_stsi`) and the **first** for D-30's rounding (`round_oric` / `round_ran`). Strengthens work already built at the cost of a fixture. **The `epiR` narrowing travels with it**: these are the algorithm authors' own implementation, so it confirms we compute what they compute and does **not** independently confirm the method | **S-1.12** |
 | D2.15 | Discharge or restate O-3, O-14, O-15 | rule 11 |
 
@@ -318,6 +318,8 @@ exists so that is a scheduled decision rather than a remembered intention.
 | **O-24** *(new, 2026-08-29)* | **Every S-entry must carry a read state, checked by machine.** The sweep is done and recorded in `docs/STANDARDS.md`, but nothing stops a new entry being added without one -- which is exactly how S-1.1 stayed silent for two phases. `check_claims` should require one of `full` / `partial` / `not read` / `not recorded` per entry. **And it carries a distinction, not just a mechanism:** *a source that anchors an arithmetic can be validated by reproduction; a source that anchors a decision has to be read.* S-1.4 and S-1.6 are `not recorded` and that is defensible -- the Rogan-Gladen formula either reproduces against `epiR` or it does not. S-1.1 was dangerous precisely because it anchors a **choice**, and no amount of reproduction can check a choice | **D2.14** |
 | **O-22** *(new, 2026-08-29)* | **Q7 / D-33 is honoured at the API and not yet at the plan file.** `rogan_gladen_interval()` takes `interval_method` as a **keyword-only argument with no default**, and `test_the_interval_method_cannot_be_defaulted` pins that, so the choice cannot become a constant in the source. Still owed: an `interval` field in the hashed plan record, and `CORRECTION_INTERVAL_UNSUPPORTED` firing **at `plan`** as exit check **F8d** specifies. **Exactly O-20's shape**, opened the same way and for the same reason -- everything built is real, and the omission is what would mislead if it went unnamed. C-12's class | **D2.8** |
 | **O-23** *(new, 2026-08-29)* | **Q6 / D-32's conditions 2 and 3 are carried by the estimate and not yet by an artifact.** `CorrectedInterval.note` produces the disclosure and `as_record()` carries `low_raw`, `high_raw` and `clamped`. But **no Phase 2 estimator is wired into `run.py` yet** — it still calls `wilson()` alone — so nothing writes the raw bound to a ledger and nothing renders the note to a report. That is the surface, deliberately after the review stop (§5). **Named here so "the output discloses it" is not read as already true.** | **Post-stop surface work** |
+| **O-26** *(new, 2026-08-30)* | **The stratified interval builder, governed by Q7 / D-33 — the plan names the method, no default.** `stratified_estimate` returns a `standard_error` and **no interval**. Until it exists, the stratified path computes a quantity nothing turns into a printed bound, and how far a stratified interval diverges from the binomial inversion is **unmeasured**. Named because Q12 exposed it as a hole with no name | **Post-stop surface** |
+| **O-27** *(new, 2026-08-30)* | **D-38's one-stratum disclosure.** The run records and the report states: one stratum, therefore **no precision gain** from stratification, and an interval resting on a **stratified variance basis** rather than a binomial inversion. **Separate from O-26 on purpose** — O-25's reasoning | **Post-stop surface** |
 | **O-19** *(new)* | **Re-pin the CI actions before GitHub drops Node 20.** `checkout` v5.0.0 and `setup-python` v5.6.0, both two majors behind, both targeting Node 20. Watched by **TW-4**, which **fired on its first check**. | Phase 3 |
 
 Each reported at close as **discharged**, or **unmet with a named blocker**.
@@ -678,18 +680,46 @@ and the draft that refused at one was written before S-1.2 and S-1.3 were obtain
 | B | Accept it, and record in the ledger that the design degenerated to SRS | Nothing is refused that is arithmetically fine — a one-stratum stratified estimate *is* the SRS estimate, with weight 1. But the plan then says `stratified` while the run did SRS, and reconciling those is the reader's problem |
 | C | Accept silently | Rejected without argument. It is the silent-substitution class this project has refused three times — V-1, V-7, Q7 |
 
-**Recommendation: A**, weakly, and the weakness is the point. It is consistent with how this project
-has ruled every other case where the plan says one thing and the run does another. But **it refuses a
-plan that is not wrong**, only redundant, and that is a different act from every other refusal here —
-the rest fire on measurements that cannot be defended, this one on a measurement that can.
+**RULED: B — 30 August 2026. Accept the one-stratum plan and disclose it. D-38.**
 
-**A one-line question that decides it:** does `design` name *what the operator committed to*, or
-*what the arithmetic did*? If the first, A. If the second, B.
+**S-1.3 was read before this was ruled, and it does not answer it.** §5A.7 poses three questions —
+best stratifying characteristic, boundary placement, and *how many strata should there be* — and
+hands the third to **§5A.8 *Number of Strata***, which was read in full. **Cochran states no
+minimum.** His two questions are the rate at which variance falls as `L` grows and what a larger
+`L` costs; his conclusion is an **upper** bound (little gain beyond `L = 6` unless the correlation
+exceeds 0.95). **Table 5A.12 runs `L` = 2 to 6 and ∞ because `L = 1` is its denominator** — every
+figure is `V(y_st)/V(y)`, normalised against the unstratified variance, ratio 1 by construction.
+§5.1 defines stratification over `L` nonoverlapping exhaustive subpopulations with no constraint on
+`L`. **S-1.2 goes further and includes `L = 1` explicitly** as the special case where stratified
+sampling becomes unrestricted sampling.
 
-**Do not rule this from reasoning alone if S-1.3 answers it.** Cochran's chapter on stratified
-sampling is the natural place for a statement about the minimum useful number of strata, and it is
-now obtainable. **This question should be re-read against it before it is ruled** — which is the
-whole reason the strata layer stopped rather than shipped.
+So the question was a judgment call, **and it is recorded as ours rather than as a reading.**
+
+**The builder recommended A and its load-bearing claim was false.** It argued that accepting is
+*"V-1, V-7 and Q7's class exactly."* It is not: in all three of those **the tool did something the
+plan did not say**, and here the plan says stratified and the tool runs stratified. Without that
+parallel, argument 1 reduces to *an operator might be surprised* — **an argument for telling them,
+not for refusing.**
+
+**The precedent that applies is D-21**: de-duplicating the frame was correct, and doing it silently
+was the defect. **Accepting is correct; accepting silently would be the defect.**
+
+**Three reasons A lost.** Both anchors treat `L = 1` as admissible, so refusing asserts a rule
+neither source supports — **rule 9's shape in a design decision**. The precedents do not reach:
+`ALLOCATION_TOO_THIN` refuses **undefined arithmetic**, while a one-stratum design is fully defined
+with 39 degrees of freedom at `n = 40`, and nothing here refuses the merely **pointless**. And it
+would rule a permanent question on a **temporary state** — the builder's strongest fact was that
+the stratified path returns no interval today, which is a gap in the interval builder, not a
+property of `L = 1`. **Do not build a permanent refusal on scaffolding scheduled to come down.**
+
+**What the evidence did establish**, and why disclosure is mandatory: option B's premise — *a
+one-stratum stratified estimate **is** the SRS estimate* — is **true of the point estimate and false
+of the variance**. At `n = 40`, 9 positives: both give `0.225`, but the stratified path returns
+`s^2 = 0.178846`, **SE `0.066867`**, df 39, while SRS inverts a binomial to Wilson
+`[0.123161, 0.375031]`. **The 2.92 pp gap quoted in the ruling is a constructed comparison** — a
+normal approximation the builder put on that SE to show the bases differ — and **no such interval
+is shipped**. What is proven is that the two paths compute different quantities. **O-26** and
+**O-27** carry the builder and the disclosure.
 
 ## Approval
 
