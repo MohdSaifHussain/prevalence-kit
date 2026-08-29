@@ -21,11 +21,11 @@ who writes the entries. The director raised that one himself and asked for it to
 | Chat reviewer (draft author) | 3 | 0 | **3** |
 | Research report (passed through unverified) | 2 | 0 | **2** |
 | Stale-at-draft-time, queued but built on anyway | 1 | 0 | **1** |
-| **Builder (Claude Code)** | **29** | **0** | **29** |
+| **Builder (Claude Code)** | **30** | **0** | **30** |
 | Reviewer instrument | **2** | 0 | **3** (1 noted) |
 | **Director** | **1** | 0 | **1** |
 | Tool artifact (noted, not a defect) | - | - | **1** (noted) |
-| **Total** | **38** | **0** | **40** |
+| **Total** | **39** | **0** | **41** |
 
 **Derived, not maintained — 2026-08-30.** Every figure above was computed from the entry blocks in
 this file rather than incremented as rows arrived. An earlier version said 36 open and 3
@@ -1111,6 +1111,46 @@ reviewer-instrument row to **2 open, 3 total** -- the same figures the counts ta
 *incorrectly* before **C-36** corrected them. **C-36 was still right**: at that time only two
 entries existed. The row now reads 3 because a third was added, not because the old number is
 vindicated.
+
+---
+
+## C-38 - "A published number carries its own evidence of which method produced it"
+
+| | |
+|---|---|
+| **Claimed** | Commit `d25e6fe`, the D2.8 message: *"`interval` is a required key with no default, validated against wilson / clopper_pearson, and it reaches as_record() -- so changing the interval changes the plan hash and **a published number carries its own evidence of which method produced it**."* Recorded as discharging **O-22** at the plan file |
+| **Actually** | **Both clauses are true and the conclusion does not follow.** `plan.interval` was read by **nothing**: it appeared once in `src/`, inside `as_record()`. `_estimate_from` ended in `return wilson(positives, len(labels))`, unconditionally. **A plan naming `clopper_pearson` was answered with a Wilson interval** -- `[0.123160913235, 0.375030967423]` where Clopper-Pearson gives `[0.108396638984, 0.384511677303]`. The published number carried evidence of a method it did not use |
+| **Direction** | Against the operator, in the one field **D-37** exists to protect. Q7 refused a *silent substitution* of interval method as **V-1's and V-7's class**; this was the same substitution, shipped, in the ordinary path |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | The builder, reading `_estimate_from` before wiring the stratified draw into it -- and **confirmed by the director independently**, who reproduced it end to end: CLI prints `method wilson`, `verify` reports the estimate reproduced |
+| **Severity** | **High.** It reached a commit and a push, it was live on the only design that runs end to end, and **`verify` could not see it** |
+| **Replaced by** | Two fixes. `_estimate_from` dispatches on `plan.interval` through `INTERVAL_METHOD`. And `verify` **cross-checks `estimate.json`'s method against the plan** -- `ESTIMATE_METHOD_MISMATCH`, both controls. **F-10** |
+| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+
+**Why `verify` agreed with the defect, which is the part that outlives the fix.** `verify` recomputes
+the estimate by calling **the same `_estimate_from`**. So it reproduced the same Wilson interval,
+compared it to the recorded Wilson interval, and reported the estimate reproduced. **The instrument
+agreed with the defect because it shared the defect** -- and `estimate.json` recorded
+`method: "wilson"` beside a plan saying `clopper_pearson`, two artifacts in one run directory
+contradicting each other, with nothing comparing them.
+
+**That is Q-2 arriving as a live failure rather than a caveat.** Q-2 is registered permanently
+`noted`: the suite is the builder's, written from one understanding, wrong in both places when that
+understanding is wrong. It has now produced a live defect twice.
+
+**The durable fix is the cross-check, not the dispatch, and the director's reasoning is why.**
+Dispatch makes the two artifacts agree **today**. It does nothing about the next field added to the
+plan going inert the same way. The comparison is one line, has a distinct code and both controls,
+and **does not depend on the dispatch being right**.
+
+**This is O-20 and O-22's shape running backwards.** Those were *honoured at the API, still owed at
+the plan file* -- and both were **written down as obligations**. This one was honoured at the plan
+file, never wired to the estimator, and recorded as **discharged**. A half-built commitment that is
+named stays visible; one that is announced complete does not.
+
+**The class it belongs to is already in this file: a checked figure carrying an unchecked claim.**
+`test_core.py:168` asserts `interval` reaches `as_record()`. That is the half that worked. Nothing
+asserted the field was **used**, and the passing test is why nothing looked.
 
 ---
 

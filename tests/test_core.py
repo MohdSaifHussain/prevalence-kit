@@ -94,18 +94,21 @@ def test_unsupported_design_refused() -> None:
     assert exc.value.reason is Reason.PLAN_INVALID
 
 
-def test_a_stratified_plan_refuses_rather_than_drawing_a_simple_random_sample() -> None:
-    """The hazard D2.8 created and had to close in the same breath.
+def test_a_stratified_plan_with_no_strata_block_is_refused() -> None:
+    """STRATA_UNDEFINED, and the history is worth keeping.
 
-    Adding `stratified` to the supported designs made it loadable. `do_sample`
-    still calls `draw_srs` unconditionally, so a plan saying stratified would
-    have been answered with a SIMPLE RANDOM DRAW -- a number the plan does not
-    describe, produced silently. That is the defect class this whole tool exists
-    to refuse, and it would have been introduced by a schema change.
+    This test was written when `stratified` became a loadable design while
+    `do_sample` still called `draw_srs` unconditionally -- so a plan saying
+    stratified would have been answered with a simple random draw, silently.
+    The refusal was the placeholder that held that hazard shut.
 
-    `STRATA_UNDEFINED` is the honest code: the contract documents it as
-    "design: stratified with no strata definition", and that is literally the
-    state -- the strata field is the rest of D2.8.
+    **The hazard is now closed properly**: the stratified draw exists (D2.8), and
+    `do_sample` dispatches on the design. What survives is the real check --
+    a stratified plan that declares no strata cannot be sampled, because nothing
+    says which unit is in which stratum.
+
+    Its sibling is `STRATUM_UNDECLARED`, which fires when the *frame* names a
+    stratum the plan does not. Two artifacts, two codes -- D-22.
     """
     with pytest.raises(Refusal) as exc:
         Plan.from_mapping(
@@ -113,8 +116,8 @@ def test_a_stratified_plan_refuses_rather_than_drawing_a_simple_random_sample() 
         )
 
     assert exc.value.reason is Reason.STRATA_UNDEFINED
-    assert "simple random draw" in exc.value.detail
-    assert "design: srs" in exc.value.fix
+    assert "declares no strata" in exc.value.detail
+    assert "stratum" in exc.value.fix
 
 
 def test_a_stratified_plan_without_a_rounding_rule_refuses_first() -> None:

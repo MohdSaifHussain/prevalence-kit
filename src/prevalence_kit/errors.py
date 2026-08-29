@@ -52,6 +52,35 @@ class Reason(StrEnum):
     ALLOCATION_TOO_THIN = "ALLOCATION_TOO_THIN"
     ALLOCATION_ROUNDING_UNDECLARED = "ALLOCATION_ROUNDING_UNDECLARED"
 
+    # Q14 / D-40. A frame unit whose stratum the plan does not declare. S-1.13
+    # makes strata mutually exclusive and covering, so this cannot be ignored:
+    # dropping those units would change the denominator silently, which is
+    # V-7's class in the one number this tool exists to produce.
+    #
+    # A .txt frame under `design: stratified` lands here too. It carries no
+    # stratum column, so every unit is undeclared -- same artifact to open, same
+    # remedial act, and the direction travels in the detail text. That is
+    # PLAN_THRESHOLD_INVALID's precedent under D-22, on its second outing.
+    STRATUM_UNDECLARED = "STRATUM_UNDECLARED"
+
+    # F-10's durable half. `estimate.json` records the method that produced the
+    # number; the hashed plan records the method the operator pre-registered.
+    # Nothing compared them, so `interval` sat inert for a commit while `verify`
+    # reported the estimate reproduced -- because it recomputed through the same
+    # function that ignored the field.
+    #
+    # This code does NOT depend on the dispatch being right. That is the point:
+    # dispatch makes the two agree today, and this catches the next field that
+    # goes inert the same way.
+    ESTIMATE_METHOD_MISMATCH = "ESTIMATE_METHOD_MISMATCH"
+
+    # The stratified path draws but does not yet estimate: `stratified_estimate`
+    # returns a standard error and no interval, and building one is O-26 under
+    # Q7 -- the plan names the method. Until it exists this refuses BY NAME
+    # rather than letting `_estimate_from` answer a stratified draw with SRS
+    # Wilson, which would be a number that looks fine and is not the design.
+    DESIGN_NOT_ESTIMABLE = "DESIGN_NOT_ESTIMABLE"
+
     # Rogan-Gladen. Two codes, not three: CORRECTION_DEGENERATE was struck
     # 2026-08-29 because AP = 0 or 1 is either already out of range or perfectly
     # well defined, and the contract's description of it was wrong.

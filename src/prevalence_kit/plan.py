@@ -47,6 +47,87 @@ agree get something making them agree -- D-28.
 """
 
 
+def _read_strata(block: Any) -> tuple[PlanStratum, ...]:
+    """Validate the plan's strata block. Q13 / D-39.
+
+    Refuses `STRATA_UNDEFINED` when the block is absent or empty, and
+    `PLAN_INVALID` when it is present but malformed -- D-22, because those send
+    the operator to different acts: write a strata block, versus fix the one you
+    wrote.
+
+    **A single stratum is accepted.** D-38: both anchors admit it, and refusing
+    a design that is redundant rather than wrong would assert a rule neither
+    source supports. What it must not be is silent, which is O-27.
+    """
+    if block is None or (isinstance(block, list) and not block):
+        raise Refusal(
+            Reason.STRATA_UNDEFINED,
+            "This plan uses design: stratified but declares no strata.",
+            "Add a `strata:` list, each entry with a `name` and an "
+            "`expected_rate`. The frame says which unit is in which stratum, "
+            "via a `stratum` column; the plan says which strata exist and what "
+            "rate to allocate by.",
+        )
+    if not isinstance(block, list):
+        raise Refusal(
+            Reason.PLAN_INVALID,
+            f"`strata` is {type(block).__name__}, not a list.",
+            "Write `strata:` as a list of entries, each with `name` and `expected_rate`.",
+        )
+
+    parsed: list[PlanStratum] = []
+    seen: set[str] = set()
+    for index, entry in enumerate(block):
+        if not isinstance(entry, dict):
+            raise Refusal(
+                Reason.PLAN_INVALID,
+                f"Stratum {index} is {type(entry).__name__}, not a mapping.",
+                "Each stratum needs a `name` and an `expected_rate`.",
+            )
+        missing = [k for k in ("name", "expected_rate") if k not in entry]
+        if missing:
+            raise Refusal(
+                Reason.PLAN_INVALID,
+                f"Stratum {index} is missing {', '.join(missing)}.",
+                "Each stratum needs a `name` and an `expected_rate`.",
+            )
+        name = str(entry["name"]).strip()
+        if not name:
+            raise Refusal(
+                Reason.PLAN_INVALID,
+                f"Stratum {index} has an empty name.",
+                "Give every stratum a name that matches the frame's `stratum` column.",
+            )
+        # S-1.13: strata are mutually exclusive. Two entries with one name would
+        # make membership ambiguous before a single unit was read.
+        if name in seen:
+            raise Refusal(
+                Reason.PLAN_INVALID,
+                f"Stratum {name!r} is declared more than once.",
+                "Strata are mutually exclusive, so each name appears once.",
+            )
+        seen.add(name)
+
+        rate_text = str(entry["expected_rate"]).strip()
+        rate = _as_number(rate_text)
+        if isinstance(entry["expected_rate"], bool) or rate is None:
+            raise Refusal(
+                Reason.PLAN_INVALID,
+                f"Stratum {name!r} has expected_rate {entry['expected_rate']!r}, "
+                "which is not a number.",
+                "`expected_rate` is the rate you expect in that stratum, "
+                "between 0 and 1. It allocates the sample and never touches the estimate.",
+            )
+        if not 0.0 <= rate <= 1.0:
+            raise Refusal(
+                Reason.PLAN_INVALID,
+                f"Stratum {name!r} has expected_rate {rate_text}, outside [0, 1].",
+                "`expected_rate` is a proportion, so it lies between 0 and 1.",
+            )
+        parsed.append(PlanStratum(name=name, expected_rate=rate_text))
+    return tuple(parsed)
+
+
 def _as_number(text: str) -> float | None:
     """The number this text denotes, or None if it does not denote one."""
     try:
@@ -96,6 +177,39 @@ class Estimand:
 
 
 @dataclass(frozen=True, slots=True)
+class PlanStratum:
+    """One stratum as the plan declares it: a name, and a rate to allocate by.
+
+    **`expected_rate` is a prior, and a wrong one costs efficiency, not
+    validity.** It enters Neyman allocation and nothing else -- it never touches
+    the estimate, the interval, or the labels. A badly chosen rate produces a
+    suboptimal allocation and a perfectly valid number, slightly wider than it
+    could have been. The opposite belief is the natural reading and it would
+    make an operator afraid of a field that cannot hurt them. Q13 / D-39.
+
+    **The stratum's size is not here.** `M_h` is counted from the frame, and
+    under **D-21** the frame is de-duplicated, so `M_h` is the count of
+    **unique** ids in that stratum, not of rows. Both frame counts already reach
+    the record; stratum sizes inherit that rule rather than restating it.
+    """
+
+    name: str
+    expected_rate: str
+    """A **decimal string**, for `Estimand.threshold`'s reason exactly: floats do
+    not round-trip identically across platforms, and this value goes into the
+    pre-registration hash. `canonical()` refuses floats outright, which is how
+    this was caught -- by running the draw, not by reading the schema."""
+
+    @property
+    def rate(self) -> float:
+        """The numeric rate, for allocation only. Never for the estimate."""
+        return float(self.expected_rate)
+
+    def as_record(self) -> JSONObject:
+        return {"name": self.name, "expected_rate": self.expected_rate}
+
+
+@dataclass(frozen=True, slots=True)
 class Plan:
     """A pre-registered measurement plan. Immutable by construction."""
 
@@ -106,11 +220,24 @@ class Plan:
     labels: str
     seed: str
     interval: str
-    """`wilson` or `clopper_pearson`. Required, no default. Q11 / D-37."""
+    """`wilson` or `clopper_pearson`. Required, no default. Q11 / D-37.
+
+    **Read by `run._estimate_from`.** It was inert for one commit -- validated,
+    hashed, and never consulted, so a plan naming `clopper_pearson` was answered
+    with Wilson. F-10 / C-38.
+    """
     allocation_rounding: str | None = None
     """Required under `design: stratified`, absent otherwise. Q4 / D-30
     condition 1: the rounding rule is a commitment the operator makes, so it
     cannot be defaulted or live as a constant in the source."""
+    strata: tuple[PlanStratum, ...] | None = None
+    """Required under `design: stratified`, absent otherwise. Q13 / D-39.
+
+    The plan declares strata by **name and expected rate**; the **frame** says
+    which unit is in which stratum, via a `stratum` column. The population does
+    not go in the plan: the plan is hashed **before any data file is opened**,
+    so a plan carrying the frame would be a category error against R1 itself.
+    """
     source_path: Path | None = None
 
     @classmethod
@@ -174,6 +301,7 @@ class Plan:
         # commit to a rounding rule -- requiring it of an SRS plan would be
         # asking the operator to pre-register a decision the run never makes.
         rounding = raw.get("allocation_rounding")
+        strata: tuple[PlanStratum, ...] | None = None
         if design == "stratified":
             if rounding is None or str(rounding).strip() == "":
                 raise Refusal(
@@ -193,37 +321,28 @@ class Plan:
                     f"Rounding rule {rounding!r} is not one this tool implements.",
                     f"Use one of: {', '.join(sorted(SUPPORTED_ROUNDING))}.",
                 )
-            # A stratified plan is loadable and its allocation commitment is
-            # checked above -- but `do_sample` still calls `draw_srs`. Letting it
-            # through would draw a SIMPLE RANDOM SAMPLE from a plan that says
-            # stratified, which is a silently wrong number: the exact thing this
-            # tool exists to refuse.
-            #
-            # `STRATA_UNDEFINED` is the honest code and the contract already
-            # documents it as "design: stratified with no strata definition".
-            # That is literally true today -- the schema has no strata field yet,
-            # because it is the rest of D2.8.
-            if "strata" not in raw:
+            strata = _read_strata(raw.get("strata"))
+        else:
+            if rounding is not None:
                 raise Refusal(
-                    Reason.STRATA_UNDEFINED,
-                    "This plan uses design: stratified but defines no strata, and "
-                    "this version has no field for them yet. Sampling would fall "
-                    "back to a simple random draw, which is not the design you "
-                    "pre-registered and would give you a number your plan does "
-                    "not describe.",
-                    "Use `design: srs` for now. Stratified sampling is built and "
-                    "checked against R `survey` (D2.3) but is not yet wired to "
-                    "the plan; until it is, the tool refuses rather than draw the "
-                    "wrong design.",
+                    Reason.PLAN_INVALID,
+                    f"This plan sets allocation_rounding but its design is {design!r}, "
+                    "which never allocates across strata, so the rule would have "
+                    "nothing to round.",
+                    "Remove allocation_rounding, or set design: stratified.",
                 )
-        elif rounding is not None:
-            raise Refusal(
-                Reason.PLAN_INVALID,
-                f"This plan sets allocation_rounding but its design is {design!r}, "
-                "which never allocates across strata, so the rule would have "
-                "nothing to round.",
-                "Remove allocation_rounding, or set design: stratified.",
-            )
+            # Symmetric to the rounding rule above: a design that never
+            # stratifies has nothing to declare strata for, and accepting the
+            # block would put a commitment in the hash that no step honours.
+            # That is exactly how `interval` went inert -- F-10.
+            if raw.get("strata") is not None:
+                raise Refusal(
+                    Reason.PLAN_INVALID,
+                    f"This plan declares strata but its design is {design!r}, "
+                    "which draws one sample from the whole frame, so the strata "
+                    "would be hashed into the plan and never used.",
+                    "Remove the strata block, or set design: stratified.",
+                )
 
         # F-3: sample_size is in REQUIRED, so its absence is a missing field rather
         # than an empty sample wearing the wrong code. And a fractional size is
@@ -301,6 +420,7 @@ class Plan:
             seed=str(seed),
             interval=interval,
             allocation_rounding=rounding,
+            strata=strata,
             source_path=source_path,
         )
 
@@ -324,6 +444,7 @@ class Plan:
             "seed": self.seed,
             "interval": self.interval,
             "allocation_rounding": self.allocation_rounding,
+            "strata": (None if self.strata is None else [s.as_record() for s in self.strata]),
         }
 
     @property

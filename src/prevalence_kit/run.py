@@ -24,15 +24,21 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from .canonical import JSONValue, canonical, digest, digest_bytes
 from .errors import Reason, Refusal
-from .estimators import Interval, wilson
+from .estimators import Interval, clopper_pearson, wilson
 from .ledger import Ledger
-from .plan import Plan
-from .sampling import draw_srs, sample_record
+from .plan import SUPPORTED_INTERVALS, Plan
+from .sampling import (
+    draw_srs,
+    draw_stratified,
+    sample_record,
+    stratified_sample_record,
+)
 from .seal import Manifest, SealedStore
+from .stratified import Rounding, Stratum, allocate
 
 PLAN_ITEM = "__plan__"
 
@@ -153,7 +159,16 @@ def do_plan(ws: Workspace, plan: Plan) -> str:
 
 
 def do_sample(ws: Workspace, plan: Plan, frame_path: Path) -> tuple[str, ...]:
-    """Draw the sample. Records the frame too, so the draw stays re-derivable."""
+    """Draw the sample. Records the frame too, so the draw stays re-derivable.
+
+    **Dispatches on the design.** It used to call `draw_srs` unconditionally,
+    which was correct while `srs` was the only design and became a hazard the
+    moment `stratified` was loadable: a stratified plan answered with a simple
+    random draw is a number the plan does not describe. F-10's family.
+    """
+    if plan.design == "stratified":
+        return _sample_stratified(ws, plan, frame_path)
+
     ids = _read_frame(frame_path)
     drawn = draw_srs(ids, seed=plan.seed, n=plan.sample_size)
 
@@ -223,6 +238,7 @@ def do_estimate(ws: Workspace, plan: Plan) -> Interval:
 
 
 def _estimate_from(plan: Plan, labels: dict[str, str]) -> Interval:
+    _refuse_unestimable_design(plan)
     positives = 0
     for item_id, raw in labels.items():
         try:
@@ -231,10 +247,216 @@ def _estimate_from(plan: Plan, labels: dict[str, str]) -> Interval:
             # Re-raised with the item id so the operator can find the row. The
             # label value is a label, not content, so naming it leaks nothing.
             raise Refusal(exc.reason, f"Item {item_id}: {exc.detail}", exc.fix) from exc
-    return wilson(positives, len(labels))
+    return _interval_for(plan, positives, len(labels))
+
+
+def _refuse_unestimable_design(plan: Plan) -> None:
+    """A design that draws but cannot yet be estimated refuses BY NAME.
+
+    `stratified_estimate` returns a standard error and no interval, and building
+    the interval is **O-26** under **Q7** -- the plan names the method. Until it
+    exists, the alternative to this refusal is `_estimate_from` answering a
+    stratified draw with SRS Wilson: a number that looks fine, ignores the
+    strata, and contradicts the design its own plan pre-registered.
+
+    **A half-wired path that produces a number is worse than a refusal.** This is
+    the same hazard as adding `stratified` to `SUPPORTED_DESIGNS` while
+    `do_sample` still called `draw_srs`, and it is closed the same way -- named,
+    not defaulted.
+
+    Placed in `_estimate_from` rather than in `do_estimate` on purpose: `verify`
+    recomputes through this function, so the refusal covers the auditor's path
+    too and cannot be bypassed by re-verifying a run created by an older build.
+    """
+    if plan.design == "stratified":
+        raise Refusal(
+            Reason.DESIGN_NOT_ESTIMABLE,
+            "This plan uses design: stratified. The sample is drawn correctly, "
+            "per stratum, but this version has no stratified interval yet -- the "
+            "stratified estimator returns a standard error and nothing turns it "
+            "into a bound.",
+            "Use `design: srs` to get a number now. The stratified interval is "
+            "obligation O-26 and is governed by Q7: the plan will name the "
+            "method, with no default. Refusing is deliberate -- estimating a "
+            "stratified draw as a simple random sample would print a number your "
+            "plan does not describe.",
+        )
+
+
+INTERVAL_METHOD = {
+    "wilson": "wilson",
+    "clopper_pearson": "clopper-pearson",
+}
+"""Plan vocabulary -> the `method` string the estimator stamps on its result.
+
+**Two vocabularies that must agree, so something makes them agree** -- D-28.
+The plan says `clopper_pearson` and the estimator stamps `clopper-pearson`, and
+`verify`'s cross-check compares those two strings. Comparing them directly would
+have fired `ESTIMATE_METHOD_MISMATCH` on every correct Clopper-Pearson run.
+
+Found by running the dispatch rather than reading it, which is the only way this
+class is ever found. `test_every_supported_interval_stamps_the_method_the_map_claims`
+walks `SUPPORTED_INTERVALS` and checks each value against what the estimator
+actually returns, so the map cannot drift from the behaviour it describes.
+"""
+
+
+def _interval_for(plan: Plan, positives: int, n: int) -> Interval:
+    """The interval the plan pre-registered. Q11 / D-37, wired.
+
+    **This dispatch is F-10's fix.** `plan.interval` was validated at load,
+    hashed into the pre-registration record, and then read by nothing: a plan
+    naming `clopper_pearson` was answered with Wilson, and `verify` agreed
+    because it recomputes through this same function. The field reached the hash
+    and changed no number.
+
+    There is no default here and no fallback branch. `SUPPORTED_INTERVALS`
+    already refused anything else at load, so an unknown method at this point
+    means the two vocabularies have drifted, and that is worth a refusal rather
+    than a quiet choice.
+    """
+    if plan.interval == "wilson":
+        return wilson(positives, n)
+    if plan.interval == "clopper_pearson":
+        return clopper_pearson(positives, n)
+    raise Refusal(
+        Reason.PLAN_INVALID,
+        f"The plan names interval {plan.interval!r}, which this version cannot compute.",
+        f"Use one of: {', '.join(sorted(SUPPORTED_INTERVALS))}.",
+    )
 
 
 # ----------------------------------------------------------------- input I/O
+
+
+def _sample_stratified(ws: Workspace, plan: Plan, frame_path: Path) -> tuple[str, ...]:
+    """Allocate by Neyman, round by the plan's rule, then draw within each stratum.
+
+    Order of operations is **D-30 condition 4**: allocate, round, *then* apply
+    Q2's floor. `ALLOCATION_TOO_THIN` fires on the rounded number, because
+    largest remainder can still leave a stratum at 0 or 1.
+
+    `M_h` is the count of **unique** ids in the stratum. D-21 de-duplicates the
+    frame and records both counts; stratum sizes inherit that rather than
+    restating it, and both totals still reach the ledger.
+    """
+    rows = _read_stratified_frame(frame_path)
+    assert plan.strata is not None  # guaranteed by Plan.from_mapping
+
+    declared = {s.name: s for s in plan.strata}
+    members: dict[str, list[str]] = {name: [] for name in declared}
+    seen_rows = 0
+    for item_id, stratum in rows:
+        seen_rows += 1
+        if stratum not in declared:
+            # Q14 / D-40. S-1.13 makes strata mutually exclusive and covering, so
+            # a unit outside every declared stratum cannot be silently dropped:
+            # the frame is the denominator, and dropping is V-7's class.
+            raise Refusal(
+                Reason.STRATUM_UNDECLARED,
+                f"Frame unit {item_id!r} is in stratum {stratum!r}, which the plan "
+                f"does not declare. The plan declares: "
+                f"{', '.join(sorted(declared))}.",
+                "Add that stratum to the plan, or correct the frame's `stratum` "
+                "column. Every frame unit must fall in exactly one declared "
+                "stratum -- dropping the rest would change the denominator.",
+            )
+        members[stratum].append(item_id)
+
+    unique = {name: sorted(set(ids)) for name, ids in members.items()}
+    for name in sorted(unique):
+        if not unique[name]:
+            raise Refusal(
+                Reason.STRATUM_EMPTY,
+                f"Stratum {name!r} is declared in the plan but no frame unit is in it.",
+                "Remove the stratum from the plan, or supply a frame that has "
+                "units in it. This sends you to the frame; STRATUM_UNSAMPLED "
+                "would send you to the sample.",
+            )
+
+    strata = tuple(
+        Stratum(name=name, size=len(unique[name]), variance_proxy=declared[name].rate)
+        for name in sorted(unique)
+    )
+    assert plan.allocation_rounding is not None  # required under stratified
+    allocation = allocate(strata, plan.sample_size, Rounding(plan.allocation_rounding))
+    per_stratum = dict(zip(allocation.strata, allocation.units, strict=True))
+
+    drawn = draw_stratified(unique, seed=plan.seed, allocation=per_stratum)
+    for name in sorted(drawn):
+        if not drawn[name]:
+            # Unreachable while ALLOCATION_TOO_THIN holds the floor at 2, and
+            # kept because that floor is Q2's ruling rather than an invariant of
+            # this function. If the floor is ever relaxed, this is the honest
+            # code: it sends the operator to the sample, not the frame.
+            raise Refusal(
+                Reason.STRATUM_UNSAMPLED,
+                f"Stratum {name!r} received no sampled units.",
+                "Raise sample_size, or merge this stratum into a neighbour.",
+            )
+
+    total_rows = seen_rows
+    total_unique = sum(len(ids) for ids in unique.values())
+    frame_digest = ws.write_json("frame.json", {name: unique[name] for name in sorted(unique)})
+    record = stratified_sample_record(
+        plan.plan_hash, plan.seed, total_unique, drawn, allocation.as_record()
+    )
+    drawn_ids = tuple(str(i) for i in cast("list[str]", record["item_ids"]))
+    sample_digest = ws.write_json("sample.json", record)
+
+    ws.ledger.append(
+        "sample",
+        {
+            "frame_digest": frame_digest,
+            "sample_digest": sample_digest,
+            "frame_rows_read": total_rows,
+            "frame_unique_ids": total_unique,
+            "n": len(drawn_ids),
+            "design": "stratified",
+            "strata": len(strata),
+        },
+    )
+    return drawn_ids
+
+
+def _read_stratified_frame(path: Path) -> list[tuple[str, str]]:
+    """(item_id, stratum) per row. Q13 / D-39: the frame says which unit is where.
+
+    A `.txt` frame carries no stratum column, so **every** unit in it is
+    undeclared. That lands on `STRATUM_UNDECLARED` rather than a code of its own:
+    same artifact to open, same remedial act, and the direction travels in the
+    detail text. D-22, and PLAN_THRESHOLD_INVALID's precedent.
+    """
+    if not path.exists():
+        raise Refusal(
+            Reason.EMPTY_SAMPLE,
+            f"No population frame at {path}.",
+            "Point the plan's `population` at a CSV with `item_id` and `stratum` columns.",
+        )
+    if path.suffix.lower() != ".csv":
+        raise Refusal(
+            Reason.STRATUM_UNDECLARED,
+            f"{path.name} is not a CSV, so it carries no `stratum` column and no "
+            "frame unit is in a declared stratum.",
+            "A stratified design needs a CSV frame with `item_id` and `stratum` "
+            "columns. A plain id list cannot say which unit is in which stratum.",
+        )
+    with path.open(newline="", encoding="utf-8") as fh:
+        reader = csv.DictReader(fh)
+        columns = reader.fieldnames or []
+        if "stratum" not in columns:
+            raise Refusal(
+                Reason.STRATUM_UNDECLARED,
+                f"{path.name} has no `stratum` column, so no frame unit is in a "
+                f"declared stratum. Columns found: {', '.join(columns) or 'none'}.",
+                "Add a `stratum` column naming, for each unit, which stratum it "
+                "belongs to. The names must match the plan's `strata` block.",
+            )
+        # Both readers strip, for V-7's reason: " item-1" and "item-1" are one
+        # unit, and two readers disagreeing about that is the same defect as
+        # silence about de-duplication.
+        rows = [(str(r["item_id"]).strip(), str(r["stratum"]).strip()) for r in reader]
+    return [(i, s) for i, s in rows if i]
 
 
 def _read_frame(path: Path) -> list[str]:

@@ -1386,6 +1386,67 @@ stratified interval, governed by Q7. **O-27** carries this disclosure.
 
 ---
 
+## D-39 - The plan declares strata by name and rate; the frame says which unit is where
+
+**Date:** 2026-08-30 · **Made in:** the director's Q13 ruling · **Ruled by:** director
+
+`strata:` is a list of `{name, expected_rate}` in the hashed plan. **Membership comes from the
+frame**, via a `stratum` column in a CSV. `M_h` is counted from the frame, not declared.
+
+**Why not put the ids in the plan.** The plan is hashed **before any data file is opened** -- that
+ordering is R1, and it is the property pre-registration rests on. A plan that enumerated its
+population would **carry the frame**, which is a category error against R1 itself, and would make
+plans the size of the data. *The director: "B is not close and your reason is the right one."*
+
+**Why not a predicate language.** Expressions over frame columns would put a small interpreter in
+the evidence path and grow the phase. **NEXT queue by name if anyone asks for it**, not v1.0.
+
+**Two things the ruling attached, and both are about what an operator will believe.**
+
+1. **`expected_rate` is a prior, and a wrong one costs efficiency, not validity.** It enters Neyman
+   allocation and nothing else. A badly chosen rate gives a suboptimal allocation and a **perfectly
+   valid number**, slightly wider than it could have been. **The opposite belief is the natural
+   reading**, and it would make an operator afraid of a field that cannot hurt them. Stated in the
+   schema documentation, in `PlanStratum`'s docstring, and in the limits.
+2. **`M_h` is the count of *unique* ids in the stratum.** **D-21** already de-duplicates the frame
+   and records both counts; stratum sizes **inherit** that rather than restating it. Said out loud
+   rather than left for someone to derive.
+
+**One thing the build found that no reading would have.** `expected_rate` is stored as a **decimal
+string**, not a float -- `Estimand.threshold`'s precedent. `canonical()` refuses floats outright,
+because they do not round-trip identically across platforms and this value is in the
+pre-registration hash. **Found by running the draw, which refused to hash the record.**
+
+---
+
+## D-40 - A frame unit in an undeclared stratum is refused, not dropped
+
+**Date:** 2026-08-30 · **Made in:** the director's Q14 ruling · **Ruled by:** director
+
+New code **`STRATUM_UNDECLARED`**, raised at `sample`.
+
+**S-1.13** makes strata *mutually exclusive* and covering the population, so a unit outside every
+declared stratum is not a case to absorb.
+
+**Alternatives not taken.**
+
+- **Drop those units.** Rejected outright: it changes the **denominator** of a prevalence estimate
+  with nothing in the record saying so. **V-7's class**, in the one number this tool exists to
+  produce.
+- **Reuse `STRATA_UNDEFINED`.** Rejected: *the plan declares none* and *the frame names one the plan
+  does not* send the operator to **different artifacts**, and **D-22** says that means two codes.
+
+**A `.txt` frame under `design: stratified` lands on the same code, and that is the ruling rather
+than a shortcut.** It carries no `stratum` column, so **every** unit in it is undeclared -- the same
+artifact to open, the same remedial act, with the direction carried in the detail text. *The
+director: that is `PLAN_THRESHOLD_INVALID`'s precedent applied correctly on its second outing.*
+
+**The pair is now complete.** `STRATUM_EMPTY` is a stratum the plan declares with no units in the
+frame; `STRATUM_UNDECLARED` is a unit in the frame with no stratum in the plan. Between them, the
+plan and the frame must describe the same population.
+
+---
+
 ## Carried obligations opened by these decisions
 
 | # | Obligation | Owner | Opened by |

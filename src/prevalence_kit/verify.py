@@ -14,13 +14,19 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from typing import cast
 
 from .canonical import digest
 from .errors import Reason, Refusal
 from .ledger import Entry
 from .plan import Plan
-from .run import Workspace, _estimate_from
-from .sampling import draw_srs, sample_record
+from .run import INTERVAL_METHOD, Workspace, _estimate_from
+from .sampling import (
+    draw_srs,
+    draw_stratified,
+    sample_record,
+    stratified_sample_record,
+)
 from .seal import Manifest
 
 EVIDENCE_STEPS = ("plan", "sample", "ingest-labels", "estimate")
@@ -267,16 +273,47 @@ def _verify_sample(ws, by_step, plan, checks) -> None:  # type: ignore[no-untype
             "sample.json does not match the digest in the ledger.",
             "The recorded sample was edited after it was drawn.",
         )
-    redrawn = draw_srs(frame, seed=plan.seed, n=plan.sample_size)
-    if digest(sample_record(plan.plan_hash, plan.seed, len(set(frame)), redrawn)) != digest(
-        recorded
-    ):
+    # Redraw the design the plan pre-registered, not the one this function used
+    # to assume. `draw_srs` was called unconditionally here, so a stratified run
+    # would have been checked against a simple random redraw -- the auditor's
+    # tool making the same substitution the estimator was making. F-10's family,
+    # third site.
+    if plan.design == "stratified":
+        assert plan.strata is not None  # guaranteed by Plan.from_mapping
+        per_stratum = {
+            str(name): int(count)
+            for name, count in zip(
+                recorded["allocation"]["strata"],
+                recorded["allocation"]["units"],
+                strict=True,
+            )
+        }
+        redrawn_by_stratum = draw_stratified(
+            {str(k): list(v) for k, v in frame.items()},
+            seed=plan.seed,
+            allocation=per_stratum,
+        )
+        total_unique = sum(len(set(v)) for v in frame.values())
+        rebuilt = stratified_sample_record(
+            plan.plan_hash,
+            plan.seed,
+            total_unique,
+            redrawn_by_stratum,
+            recorded["allocation"],
+        )
+        n_redrawn = len(cast("list[str]", rebuilt["item_ids"]))
+    else:
+        redrawn = draw_srs(frame, seed=plan.seed, n=plan.sample_size)
+        rebuilt = sample_record(plan.plan_hash, plan.seed, len(set(frame)), redrawn)
+        n_redrawn = len(redrawn)
+
+    if digest(rebuilt) != digest(recorded):
         raise Refusal(
             Reason.ESTIMATE_MISMATCH,
             "Redrawing the sample from the recorded plan and frame gives a different sample.",
             "The sample was not drawn by the plan it claims. Do not publish this number.",
         )
-    checks.append(Check("sample", True, f"{len(redrawn)} ids redrawn from the frame, identical"))
+    checks.append(Check("sample", True, f"{n_redrawn} ids redrawn from the frame, identical"))
 
 
 def _verify_seals(ws, by_step, checks) -> None:  # type: ignore[no-untyped-def]
@@ -336,6 +373,38 @@ def _verify_estimate(ws, by_step, plan, checks) -> None:  # type: ignore[no-unty
             "estimate.json does not match the digest in the ledger.",
             "The estimate was edited after it was computed.",
         )
+    # F-10's durable half, and it runs BEFORE the recomputation on purpose.
+    #
+    # Recomputing proves the number follows from the labels. It cannot prove the
+    # number was produced by the method the operator pre-registered, because it
+    # recomputes through the same function -- so when `plan.interval` sat inert,
+    # `verify` reproduced the same Wilson interval and reported the estimate
+    # reproduced. The instrument agreed with the defect because it shared the
+    # defect. Q-2, arriving as a live failure rather than a caveat.
+    #
+    # This comparison does not depend on the dispatch being right. That is the
+    # whole point: dispatch makes the two artifacts agree today, and this catches
+    # the next plan field that goes inert the same way.
+    expected_method = INTERVAL_METHOD.get(plan.interval)
+    if expected_method is not None and str(recorded["method"]) != expected_method:
+        raise Refusal(
+            Reason.ESTIMATE_METHOD_MISMATCH,
+            f"The plan pre-registers interval {plan.interval!r}, which this tool "
+            f"records as {expected_method!r} -- but estimate.json records method "
+            f"{str(recorded['method'])!r}. Two artifacts in this run "
+            "disagree about how the number was produced.",
+            "Do not publish this number. The plan is the commitment, so either the "
+            "estimate was produced by a different method than the one registered, "
+            "or one of the two files has been edited. Re-run the chain from `plan`.",
+        )
+    checks.append(
+        Check(
+            "estimate method",
+            True,
+            f"estimate.json records {recorded['method']}, matching the plan",
+        )
+    )
+
     recomputed = _estimate_from(plan, ws.read_json("labels.json")).as_record()
     if recomputed != recorded:
         raise Refusal(
