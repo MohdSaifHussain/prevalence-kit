@@ -499,7 +499,7 @@ cannot be added without one. Opened as **O-24**.
 | S-2.1 | Numerical cross-check for every estimator | R **`survey`** (Lumley) | **4.5**, published **2026-02-24**; re-verified live **2026-08-29**. **Upstream:** `https://cran.r-project.org/src/contrib/survey_4.5.tar.gz` (HTTP 200). **Retrieved from:** the p3m mirror, S-8.4 -- the two were compared byte for byte, V-17. GPL-2 \| GPL-3 | **2026-11-28** |
 | S-2.1a | The R environment the witness runs in | `rocker/r-ver`, **pinned by digest, not by tag** | **`rocker/r-ver@sha256:c3f39b365d1077fe24f8e9ab2742e352b6d3950897f51af1624a5bb5550c21c0`** (tag `4.5.3`, pushed 2026-06-24). Docker 29.7.2 on this machine. | **2026-11-29** |
 | S-2.1b | The witness **as actually executed**, 2026-08-29 (O-3) | `r/Dockerfile` builds on S-2.1a | **R 4.5.3 (2026-03-11)**, **`survey` 4.5**, `jsonlite` 2.0.0. CRAN frozen at the base image's snapshot `https://p3m.dev/cran/__linux__/noble/2026-04-23`, so the install is deterministic and serves the version S-2.1 pins. **The exact call:** `svydesign(ids = ~1, strata = ~stratum, weights = ~w, data = sample_rows)` — no `fpc`, which is what makes it the with-replacement form S-2.3 specifies | **2026-11-29** |
-| S-2.2 | Second independent cross-check where coverage overlaps | Python **`svy`** (Samplics LLC) | **0.25.0**, uploaded **2026-08-26**; MIT | **2026-09-28** — fast-moving, 48 releases |
+| S-2.2 ▸ **USED 2026-08-30, D2.9** | Second independent cross-check **where its estimator is the same estimator** — which is **allocation only**, see below | Python **`svy`** (Samplics LLC) | **0.25.0**, uploaded **2026-08-26**; MIT. **`0.26.0` is current on PyPI as of 2026-08-30 and we do not run it** — the witness is the pinned build (C-25), and TW-2 watches the gap | **2026-09-28** — fast-moving, 48 releases |
 | **S-2.4** | **The Clopper-Pearson witness** | R **`stats::binom.test`**, base R -- a different implementation lineage from `survey` | **R 4.5.3**, in the S-2.1a image. Call: `binom.test(k, n, conf.level = 0.95)$conf.int`. 23 cases in `r/fixtures/clopper_pearson.json` | **2026-11-29** |
 | S-2.3 | Stratified/Neyman allocation reproduction | Barnett, A., *YouTube's Violative View Rate Methodology: A Statistical Assessment*, MIT | **September 2021**, Tables 2A / 2B | never — fixed publication |
 
@@ -594,6 +594,65 @@ to 3000x.** `DIGITS = 12` costs a fixed *absolute* precision; higher confidence 
 lower bounds smaller, so the same absolute error is a larger relative one. The 2.7e-07 is our
 record format, not our estimator. R2.3 asks for four significant digits; both clear
 it by orders of magnitude.
+
+### S-2.2 -- what `svy` witnesses, and what it turns out not to
+
+**D2.9, 2026-08-30.** **D-18** narrowed O-4 to *only where its estimator is the same
+estimator*, and D2.9 is where that rule was applied by reading the source and running it
+rather than by assuming an overlap.
+
+**Every interval `svy` 0.25.0 offers is design-based, so none of them witnesses ours.**
+Read from `svy/estimation/base.py` in the pinned build:
+
+| `svy` method | What it computes |
+|---|---|
+| `logit` *(its default)* | Wald-type interval on the logit scale, back-transformed |
+| `beta` | Korn-Graubard with a **df-adjusted effective sample size**, via the incomplete beta |
+| `korn-graubard` | The same, plus truncation of the effective sample size at `n` (NCHS) |
+| `wilson` | The design-based Wilson **D-18** already recorded -- `n_eff = p(1-p)/se^2`, t-quantile |
+
+**And the alias is the tell.** `svy` maps **`"clopper-pearson"` to `"korn-graubard"`**.
+Asking it for Clopper-Pearson does not return the textbook interval this project ships. So
+D-18's finding about Wilson was not a quirk of one method: **it is true of every interval
+`svy` has**, for the same structural reason -- each substitutes an effective sample size for
+`n`, and ours do not.
+
+**Allocation is the one place the two coincide, and it is the place we most needed one.**
+`svy.selection.allocation._neyman_allocation` computes `measure = N * S`, then
+`raw = measure / total * n`, then floors and hands the shortfall to the largest fractional
+parts. **That is Neyman allocation with largest-remainder rounding** -- our formula and
+**D-30**'s rule, arrived at independently.
+
+**This is the first genuine external witness the allocation has ever had.** **F-9**
+established that R `survey` has **no allocator**, so `r/stratified_fixtures.R`'s `neyman()`
+is our own formula re-implemented in R by its own author -- the sixth instrument-limit kind,
+a fixture that looks external and is not. `svy` is a different author, a different language
+and a different lineage.
+
+**Measured, with the space stated.**
+
+| What | Result |
+|---|---|
+| The three shipped Neyman fixtures | **all three identical**, including `rare_event_neyman_5000` -- the case whose floors summed to 4999 and forced **Q4 / D-30**. `svy` gives the remainder to the same stratum |
+| Randomised sweep: 2000 designs, seed 20260830, 2-6 strata, weights ~ U(0.01, 1) normalised, `p` ~ U(0.0005, 0.5), `n` ~ U(2k, 20000) | **2000 of 2000 identical** |
+| Exact fractional ties, 2 and 3 equal strata | **Identical.** `svy` sorts with numpy, whose default sort is not stable, so this could have gone either way. D-30 condition 2 required our tie-break to be deterministic and stated; it did not require anyone else to agree |
+
+**Where they part, and it is policy rather than estimator.** `svy` has two behaviours we do
+not: `min_n` floors a stratum up from a raw allocation below 1, and `cap_at_population` caps
+and redistributes when Neyman asks for more units than a stratum holds. **We refuse in both
+places** -- `ALLOCATION_TOO_THIN` (Q2) and `ALLOCATION_IMPOSSIBLE`. So the agreement above is
+over the region where both produce an *unconstrained* allocation, and outside it the two
+tools do different things about the same problem. Asserted in
+`test_where_the_two_implementations_diverge_we_refuse_rather_than_adjust`, so the 2000-case
+figure cannot later be read wider than it is.
+
+**Hard Rule 1 is untouched, and the mechanism is the same as the renderer's.** `svy` declares
+a hard dependency on **`httpx`**, which is D-2's whole reasoning for not depending on it. So
+it is installed in a **throwaway environment**, `svy/generate_allocation_fixtures.py` is run
+there, and **only the output is committed**. `svy` is not in `[project.dependencies]`, not in
+the dev extras, and not in the project virtualenv. The zero-network guard walks
+`[project.dependencies]`; **it does not look at a throwaway environment, and its silence is
+not evidence about one** -- this paragraph is the evidence.
 
 ## S-3 — Platform methodology (context; sets the honest limits)
 

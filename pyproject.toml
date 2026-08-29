@@ -66,6 +66,11 @@ ignore = ["S101"] # assert is fine in tests
 # the tool worked correctly and declined. Renaming it would read worse in the one
 # place anyone actually looks.
 "src/prevalence_kit/errors.py" = ["N818"]
+# S311 wants a cryptographic RNG. This is a fixture generator whose sweep must be
+# REPRODUCIBLE from a recorded seed -- a cryptographic source would make the
+# fixture unregenerable, which is the opposite of what it is for. The rule is
+# asking for the wrong property here, not being waived for convenience. D2.9.
+"svy/generate_allocation_fixtures.py" = ["S311"]
 
 [tool.mypy]
 python_version = "3.12"
