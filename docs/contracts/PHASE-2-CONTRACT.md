@@ -651,6 +651,46 @@ would rather the charter say that out loud, it belongs here rather than buried i
 
 ---
 
+---
+
+### Q12 - Is a one-stratum plan a design error, or merely redundant?
+
+**Raised 2026-08-29, unruled.** Recorded because it existed only in a chat window, and Phase 1 §10 is
+what happens to things that live there.
+
+**How it came up.** While designing the strata layer the builder wrote a refusal for a plan defining
+fewer than two strata, on the reasoning that *"stratified sampling with one stratum is simple random
+sampling with extra bookkeeping, and the record would claim a design the run did not use."* That
+reasoning is the builder's. **It is the one strata decision that no source anchors.**
+
+**The other two are anchored.** **S-1.13** (Statistics Canada, official methodology, read) gives:
+
+> *"the population is divided into homogeneous, **mutually exclusive** groups called strata"*
+> *"**independent samples are selected from each stratum**"*
+
+Mutual exclusivity anchors refusing frame units in strata the plan does not define. Independence
+anchors drawing each stratum separately. **Neither says anything about how few strata is too few**,
+and the draft that refused at one was written before S-1.2 and S-1.3 were obtainable.
+
+| | Option | Consequence |
+|---|---|---|
+| **A** | **Refuse a plan with fewer than two strata**, at `plan` | The record never claims a design the run did not use. Costs an operator who genuinely wants one stratum a rewrite to `design: srs`, which is the same measurement |
+| B | Accept it, and record in the ledger that the design degenerated to SRS | Nothing is refused that is arithmetically fine — a one-stratum stratified estimate *is* the SRS estimate, with weight 1. But the plan then says `stratified` while the run did SRS, and reconciling those is the reader's problem |
+| C | Accept silently | Rejected without argument. It is the silent-substitution class this project has refused three times — V-1, V-7, Q7 |
+
+**Recommendation: A**, weakly, and the weakness is the point. It is consistent with how this project
+has ruled every other case where the plan says one thing and the run does another. But **it refuses a
+plan that is not wrong**, only redundant, and that is a different act from every other refusal here —
+the rest fire on measurements that cannot be defended, this one on a measurement that can.
+
+**A one-line question that decides it:** does `design` name *what the operator committed to*, or
+*what the arithmetic did*? If the first, A. If the second, B.
+
+**Do not rule this from reasoning alone if S-1.3 answers it.** Cochran's chapter on stratified
+sampling is the natural place for a statement about the minimum useful number of strata, and it is
+now obtainable. **This question should be re-read against it before it is ruled** — which is the
+whole reason the strata layer stopped rather than shipped.
+
 ## Approval
 
 - [x] Director approves this contract — **29 August 2026**
