@@ -23,6 +23,7 @@ before any of this code existed. R2.2.
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from functools import partial
 from pathlib import Path
 from typing import Any
@@ -31,10 +32,12 @@ import pytest
 
 from prevalence_kit.errors import Reason, Refusal
 from prevalence_kit.estimators import (
+    Interval,
     _binomial_tail_at_least,
     _binomial_tail_at_most,
     _solve,
     clopper_pearson,
+    rogan_gladen_interval,
     wilson,
 )
 
@@ -253,3 +256,82 @@ def test_a_well_formed_count_is_accepted() -> None:
     """The positive control. A gate that refuses everything proves nothing."""
     interval = clopper_pearson(5, 100)
     assert float(interval.low) < 0.05 < float(interval.high)
+
+
+# ------------------------------------------------------------------- F-8
+#
+# `confidence` was unvalidated in every interval estimator. Found by D2.7's
+# boundary hunt, not at a review stop.
+
+
+@pytest.mark.parametrize("bad", [-0.5, 0.0, 1.0, 1.5, 2.0])
+@pytest.mark.parametrize("estimator", [wilson, clopper_pearson])
+def test_a_confidence_outside_zero_to_one_is_refused_by_name(
+    estimator: Callable[..., Interval], bad: float
+) -> None:
+    """The negative control, on both estimators and both kinds of bad input.
+
+    Before this guard, the two failed differently and both failures were wrong:
+
+        wilson(5, 100, confidence=1.0)    StatisticsError traceback
+        wilson(5, 100, confidence=-0.5)   [0.066846, 0.037230] -- inverted
+        clopper_pearson(5, 100, -0.5)     [0.062031, 0.042361] -- inverted
+
+    The traceback breaks rule 5, which wants refusals named. The inverted
+    interval is worse: no error at all, a lower bound above its upper bound, and
+    the point estimate outside both. A silently wrong number is the one thing
+    the charter says this tool must never produce.
+
+    The endpoints are refused too, not only values outside. At 1.0 the normal
+    quantile is undefined; at 0.0 the interval collapses and claims nothing.
+    """
+    with pytest.raises(Refusal) as caught:
+        estimator(5, 100, confidence=bad)
+
+    assert caught.value.reason is Reason.PLAN_INVALID
+    assert str(bad) in caught.value.detail, "the operator must see the value they gave"
+    assert "0.95" in caught.value.fix, "R8: say what to set it to"
+
+
+@pytest.mark.parametrize("good", [0.5, 0.9, 0.95, 0.99, 0.999])
+@pytest.mark.parametrize("estimator", [wilson, clopper_pearson])
+def test_ordinary_confidence_levels_are_accepted(
+    estimator: Callable[..., Interval], good: float
+) -> None:
+    """The positive control. A gate that refuses everything proves nothing.
+
+    Also checks the interval stays sane across the range, since the defect being
+    closed was an interval that came back inverted rather than an exception.
+    """
+    got = estimator(5, 100, confidence=good)
+
+    assert float(got.low) <= float(got.point) <= float(got.high)
+    assert 0.0 <= float(got.low) <= float(got.high) <= 1.0
+
+
+def test_a_wider_confidence_gives_a_wider_interval() -> None:
+    """The property the guard exists to protect, asserted rather than assumed.
+
+    If confidence and width ever stop moving together, something is wrong with
+    the arithmetic and not just with the input checking.
+    """
+    for estimator in (wilson, clopper_pearson):
+        widths = [
+            float(estimator(5, 100, confidence=c).high) - float(estimator(5, 100, confidence=c).low)
+            for c in (0.80, 0.90, 0.95, 0.99)
+        ]
+        assert widths == sorted(widths), f"{estimator.__name__} widths not monotone: {widths}"
+
+
+def test_the_corrected_interval_inherits_the_confidence_guard() -> None:
+    """`rogan_gladen_interval` builds on `clopper_pearson`, so it is covered too.
+
+    Asserted rather than assumed, because "it calls the guarded function" is the
+    kind of reasoning that stops being true after a refactor.
+    """
+    with pytest.raises(Refusal) as caught:
+        rogan_gladen_interval(
+            45, 150, 0.96, 0.89, interval_method="clopper_pearson", confidence=1.5
+        )
+
+    assert caught.value.reason is Reason.PLAN_INVALID

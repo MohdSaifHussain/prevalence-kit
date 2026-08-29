@@ -2,9 +2,13 @@
 
 **Machine-readable. `tools/check_claims.py` reconciles this file against the code.**
 
-Every finding accepted in a review stop appears here with the test that closes it. The checker
-verifies that each named test **exists**, and reports any finding whose closing evidence is missing
-or unnamed.
+Every accepted finding appears here with the test that closes it. The checker verifies that each
+named test **exists**, and reports any finding whose closing evidence is missing or unnamed.
+
+This used to say *"every finding accepted in a review stop"*. That was too narrow, and F-8 is
+why: it was found by D2.7's boundary hunt, not at a stop. A finding does not become less real
+because of when it was found, and a register that only admits stop findings would have quietly
+excluded it.
 
 **It is now reconciled in both directions, and the second direction was missing for weeks.**
 `check_findings` validates the rows that are *here*. `check_register` — added 2026-08-29 — scans
@@ -45,6 +49,7 @@ the same wrong reason.
 | F-5 | low | closed | `test_verify_without_the_key_refuses_by_name` | — |
 | F-6 | low | closed | `test_labels_for_a_different_sample_are_refused` | — |
 | F-7 | low | closed | `test_a_different_id_in_the_same_directory_is_refused` | — |
+| F-8 | high | closed | `test_a_confidence_outside_zero_to_one_is_refused_by_name` | D2.7 |
 | V-1 | critical | closed | `test_replanning_into_an_open_workspace_is_refused` | D-17 |
 | V-2 | high | closed | `test_replan_without_rerunning_names_the_plan_not_the_estimate` | C-10 |
 | V-3 | high | closed | `test_an_unrecognised_comparison_is_refused` | — |

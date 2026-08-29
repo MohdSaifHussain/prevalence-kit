@@ -55,6 +55,50 @@ class Interval:
         }
 
 
+def _check_confidence(confidence: float) -> None:
+    """Refuse a confidence level outside (0, 1), by name.
+
+    F-8, found by D2.7's boundary hunt. Nothing checked this, and all three
+    interval estimators took it straight into their arithmetic.
+
+    What that produced, measured 2026-08-29:
+
+        wilson(5, 100, confidence=1.0)    StatisticsError traceback
+        wilson(5, 100, confidence=1.5)    StatisticsError traceback
+        wilson(5, 100, confidence=-0.5)   [0.066846, 0.037230]  -- inverted
+        clopper_pearson(5, 100, -0.5)     [0.062031, 0.042361]  -- inverted
+
+    **The inverted pair is the serious half.** No error, no warning, an interval
+    whose lower bound is above its upper and whose point estimate sits outside
+    both. That is a silently wrong number, which is the one thing the charter
+    says this tool must never print.
+
+    The endpoints are excluded, not just the outside. At 1.0 the normal quantile
+    is undefined and Wilson raises; at 0.0 the interval collapses to a point and
+    claims nothing. Neither is a confidence level anyone can act on.
+
+    **`PLAN_INVALID` rather than a new code, and D-22 decides it.** Count the
+    artifacts an operator opens. `rogan_gladen` already refuses an out-of-range
+    sensitivity or specificity with `PLAN_INVALID`, in this same module, and this
+    sends the reader to the same place for the same kind of fix: one number, in
+    the plan, in the wrong range.
+
+    **Not reachable from the CLI today** -- `run.py` calls `wilson(positives, n)`
+    and takes the default. It becomes reachable when D2.8 puts interval settings
+    in the plan, which is why it is fixed before then rather than after.
+    """
+    if not 0.0 < confidence < 1.0:
+        raise Refusal(
+            Reason.PLAN_INVALID,
+            f"Confidence is {confidence}, which is not between 0 and 1. "
+            "A confidence level of exactly 0 or 1 is not a level either: at 1 the "
+            "interval is undefined, and at 0 it collapses to a point and claims "
+            "nothing.",
+            "Set confidence to a value above 0 and below 1. The usual choice is "
+            "0.95, and this project's anchors publish at that level.",
+        )
+
+
 def wilson(positives: int, n: int, *, confidence: float = 0.95) -> Interval:
     """Wilson score interval for a binomial proportion.
 
@@ -76,6 +120,8 @@ def wilson(positives: int, n: int, *, confidence: float = 0.95) -> Interval:
             f"{positives} positives out of {n} items is not possible.",
             "The labels do not line up with the sample. Re-run ingest-labels.",
         )
+
+    _check_confidence(confidence)
 
     z = NormalDist().inv_cdf(1 - (1 - confidence) / 2)
     p = positives / n
@@ -230,6 +276,7 @@ def clopper_pearson(positives: int, n: int, *, confidence: float = 0.95) -> Inte
             f"{positives} positives out of {n} items is not possible.",
             "The labels do not line up with the sample. Re-run ingest-labels.",
         )
+    _check_confidence(confidence)
 
     alpha_half = (1 - confidence) / 2
 
