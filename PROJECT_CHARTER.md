@@ -115,7 +115,7 @@ breaches it is a deviation to be recorded, not absorbed.
 | `plan` | Read a measurement plan (YAML): the estimand, the population, the sampling design, the label source. **Hash the plan before any data is touched.** This is pre-registration. The plan cannot quietly change after results are seen. |
 | `sample` | Draw the sample per the plan. v1.0: simple random sampling, and stratified with proportional or Neyman allocation. Deterministic under a recorded seed. |
 | `ingest-labels` | Read human labels (CSV/JSONL). Content is **sealed on ingest**: encrypted at rest, shown only as a safe preview (length, digest, harm flags). Every unseal is explicit and logged. |
-| `estimate` | Compute prevalence with a correct interval — **Wilson** (primary) or **Clopper-Pearson** (conservative). Optional Rogan–Gladen correction when sensitivity and specificity are supplied. **Refuse with a named reason** rather than print a silently wrong number. |
+| `estimate` ▸ **A-4** | Compute prevalence with a correct interval. **The plan names the method and there is no default** — `interval: wilson` or `interval: clopper_pearson`. **Neither is primary.** The choice is between coverage you can rely on and an interval that is narrower. Clopper-Pearson holds its nominal level; Wilson is tighter and can fall below it. You cannot have both, and the tool will not pick for you. Optional Rogan–Gladen correction when sensitivity and specificity are supplied. **Refuse with a named reason** rather than print a silently wrong number. |
 | `verify` | Re-check the whole chain: plan hash, sample determinism, ledger integrity, estimate reproduction. An outsider must be able to verify a published number from the sealed record alone. |
 | `emit-report` | Stamped Markdown and JSON: estimate, interval, design, n, every hash, and a mandatory **Honest Limits** block, asserted present by a test. |
 
@@ -295,6 +295,22 @@ concrete finding that only FULL-tier ceremony would have produced.
 - **Interval guarantees are sampling-only.** They do not account for rater quality. This matches the
   caveat YouTube publishes for VVR: *"The confidence intervals do not take into account rater
   quality, which may impact our measurements."*
+- **The interval you choose has a coverage cost, and at rare-event rates it is large.** Ask for a
+  95% Wilson interval and you can get one that covers **as little as 91%** of the time, when the true
+  rate is a few times 1/n. That is the regime this tool is built for. Clopper-Pearson holds at or
+  above its nominal level there, and is wider for it. Measured, not asserted:
+  `r/fixtures/coverage.json`, checked against the published limits in S-1.1 — which the same
+  instrument reproduces before it reports anything else. **"As little as" is exact and "about" would
+  not be:** every figure in that table is the worst found on a grid of points, and a finer grid can
+  only find a worse one. **This is why the plan must name the method.** A default would be this
+  project choosing, for an operator who did not know there was a choice. Added 2026-08-29, A-4.
+- **What we ship is limited by what we can witness.** Section 6 says every estimator is validated
+  against an authoritative reference before it ships. That rule has a price, and this is it. S-1.1 —
+  our own anchor — recommends the Jeffreys interval for small samples and Agresti–Coull for larger
+  ones. **We ship neither.** Neither is in R `survey` or Python `svy`, so R2.3 would have nothing to
+  check them against. **The methods here are the ones we can prove, not the ones the anchor
+  prefers.** That is a deliberate trade. It is written here so nobody reads Wilson and
+  Clopper-Pearson as a claim about which intervals are best. Added 2026-08-29, A-4.
 - Validation is on synthetic data and one public dataset. **No claim of production deployment.**
 - No EU regulation requires the number this tool produces. See §3.
 - Built by directing an AI under the governed process. The director wrote none of the code and all
@@ -334,6 +350,7 @@ Every change to this charter after ratification gets a row here.
 
 | # | Date | Change | Ruled by | Verbatim ruling |
 |---|---|---|---|---|
+| A-4 | 2026-08-29 | **§4's `estimate` row and two honest limits.** Under **Q11 / D-37** the plan names the interval method and there is no default, so **neither interval is primary** and §4 said one was. Two limits added: what the choice costs in coverage at rare-event rates, and — the one that was invisible — **what we ship is limited by what we can witness**, since our own anchor recommends two intervals we cannot validate and therefore do not ship. Ruled after the builder raised it as a question about §6 reading as pure strength | Director | **Verbatim below** |
 | A-3 | 2026-08-29 | **§6.1's Rogan–Gladen sentence amended.** Two claims in it were false and one was true. **True and kept:** neither `survey` nor `svy` implements a misclassification correction. **False:** that it followed there is no witness — `epiR` 2.0.92 implements it, S-1.10. **False:** that the anchor is Lang & Reiczigel (2014) — D-31 ruled S-1.6 Reiczigel et al. (2010). The narrowing travels with the amendment and is not optional. Found by a fresh session reading the record before building; the builder raised it and did **not** edit the ratified document. §6.1's numbered points are untouched | Director | **Verbatim below** |
 | A-2 | 2026-08-29 | **Honest limits gain a second line**: at rare-event prevalence an ordinary-sounding specificity makes the Rogan-Gladen correction undefined rather than imprecise. From the `fpr_exceeds_prevalence` case, found by the D2.5 fixture contradicting its own author's note. | Director | D2.5 review, this session |
 | A-1 | 2026-08-29 | **Honest limits gain one line** under ruling Q5 / D-31: the corrected interval treats supplied Se and Sp as exact. A limit added, never narrowed -- section 8's rule is intact. Wright's exact optimal allocation added to the NEXT queue the same day. | Director | Q5 ruling, this session |
@@ -375,6 +392,37 @@ builder's to fix. **Two were in this ratified document, and the builder raised t
 editing them** — amendments are the director's. The builder's first report undercounted the drift as
 "one place of four"; it was one place of seven, and the correction is what made this ruling cover the
 charter at all.
+
+
+### A-4, ruled 2026-08-29 — the director's words, verbatim
+
+Recorded in full because the second limit was the director's ruling rather than the builder's draft,
+and because it is the limit a reader is least likely to arrive at unaided.
+
+> **Point 3 — yes. Say it out loud, and put it in §8.**
+>
+> This is the more important of the three, and it is currently invisible. §6 says every estimator is
+> validated against an authoritative reference before it ships, and that reads as pure strength. The
+> cost is not stated anywhere: the witness libraries constrain what we are able to ship, and that is
+> not the same as choosing the best method.
+>
+> A reader today would reasonably conclude we ship Wilson and Clopper-Pearson because those are the
+> best available. The truth is that we ship them because two libraries implement them. Our own anchor
+> recommends Jeffreys for n ≤ 40 and Agresti-Coull above, and we ship neither.
+
+**Two corrections to the builder's draft came with the ruling.**
+
+*"the right one depends on what you are measuring and only you know that"* — struck. The director:
+*"the second half overstates the operator's knowledge and understates what the tool can tell them.
+They often do not know until they have measured."* The row now names the actual trade: coverage you
+can rely on, or a narrower interval, and not both.
+
+*"covers about 91% of the time"* — became **"as little as 91%."** The builder had established one
+message earlier that a finer grid can only find a lower minimum, so every figure in that table is an
+upper bound on the worst case, and then wrote the bullet as a point fact anyway. The director:
+*"'about 91%' reads as a point fact about typical behaviour. 'As little as' is both what the
+measurement supports and the framing an operator needs."*
+
 
 ### Standing directions in force
 

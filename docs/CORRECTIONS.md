@@ -964,6 +964,33 @@ property or split the sentence.**
 
 Both instances were in Phase 1's closed outcome, written in the same section, on the same day.
 
+### A worst case measured over a grid is an upper bound on the worst case
+
+**Not the axes rule restated.** The axes rule says a figure names what varied and what was pinned.
+This is stronger and narrower: **for any minimum or maximum taken over a sampled space, a finer
+sample can only find a more extreme value.** So the number is a bound, and the direction of the bound
+is known.
+
+It applies to every min or max this project reports over a grid, not only to coverage.
+
+| # | Figure | The grid | Consequence |
+|---|---|---|---|
+| 1 | Worst coverage of Wilson / Clopper-Pearson / Jeffreys | `p = gamma/n`, gamma in [0.5, 15] **step 0.25** | The director re-measured at step **0.05** and found **0.9537** where step 0.25 reports **0.9540** |
+| 2 | *"Worst gap found anywhere: 0.7316% of variance"* — S-1.7's optimality search | 37,910 random designs, window +/- 2 units | Already stated at the width of its search. It says *"stated at the width of the search"* and it was right to |
+
+**Both grids are kept, not reconciled.** Two grids disagreeing in the fourth decimal is evidence about
+the method of measurement, and averaging them away would destroy that evidence. The witness records
+its step; the director's is recorded beside it.
+
+**The wording that follows from it.** *"covers about 91%"* reads as a point fact about typical
+behaviour. **"Covers as little as 91%"** is what an upper-bound-on-the-worst-case supports, and it is
+the framing an operator needs. The charter says the second.
+
+**Recorded because the builder had the insight and then wrote the prose the other way, minutes
+apart.** The upper-bound property was established in one message and the honest-limits bullet was
+drafted with "about" in the next. Knowing a thing and writing it are different acts, and the gap
+between them is where this class lives.
+
 ### A figure measured along one axis and stated as though along all of them
 
 The measurement is real. The sentence reporting it does not say which dimensions

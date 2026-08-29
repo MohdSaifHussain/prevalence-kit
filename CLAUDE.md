@@ -114,41 +114,52 @@ confirms we implement the method as its author does. It does not independently c
    C-23, `check_codes` reading one contract when there were three, D-34, and C-27. When you add or
    trust a check, ask what it does **not** read. Ask in both directions: `check_findings` validated
    every row that was there and could not see the four that were missing.
-8. **A checked number can carry an unchecked claim.** *"23 reason codes, each with both controls"*
+8. **A worst case measured over a grid is an *upper bound* on the worst case.** A finer grid can
+   only find a more extreme value, so say **"as little as 91%"**, never "about 91%". State the
+   grid step the way you state any other axis. The director re-measured coverage at step 0.05 and
+   found 0.9537 where step 0.25 reported 0.9540; **both are kept**, because two grids disagreeing
+   is evidence about the measurement.
+9. **A checked number can carry an unchecked claim.** *"23 reason codes, each with both controls"*
    looks like one verified sentence. A machine counted the 23. Nothing checked "each with both
    controls", and it was false — C-27. Same shape in C-28. This is worse than a plain unchecked
    claim, because the half you can verify makes you stop looking. **Check the property, or split
    the sentence.**
-9. **A test asserts a defining property, or a measurement with stated scope. Never a region.**
+10. **A test asserts a defining property, or a measurement with stated scope. Never a region.**
    A defining property is true by construction — *Clopper-Pearson covers at least 1 − α*, and
    S-1.1 §4.2.1 says so. A region description — *narrower where k ≤ 1* — is a summary of the
    grid you happened to sample, and it will be wrong at the corner you did not. **C-30(c) was
    wrong three times** before the width test was deleted and replaced by a coverage test.
-10. **Check an artifact the way its real consumer reads it.** Structured files — YAML, JSON, TOML,
+11. **Check an artifact the way its real consumer reads it.** Structured files — YAML, JSON, TOML,
    CSV, XML — get the **consumer's parser**, never a regex. That is how an unparseable `gate.yml`
    passed a green checker (**C-23**). **Markdown is the exception**, and the reason is the rule: its
    consumer is a human, who reads it loosely too.
-11. **"The guard did not object" is not "the guard looked."** Know what each check does *not* read,
+12. **"The guard did not object" is not "the guard looked."** Know what each check does *not* read,
     and assert that scope rather than describe it.
-12. **A check with no artifact is a memory with a result attached.** The fixture verdict check ran
+13. **A check with no artifact is a memory with a result attached.** The fixture verdict check ran
     once as a `python -c`, was reported as "machine-checked", and left no trace. **The suite count
     not moving is what exposed it** — which is why the gate prints its own count.
-13. **The witness's documentation is not the witness. Only the pinned build is.** C-25: the manual
+14. **The witness's documentation is not the witness. Only the pinned build is.** C-25: the manual
     on CRAN described a version we do not run.
-14. **Re-run the whole gate after anything that writes to the working tree, and report *that*
+15. **Re-run the whole gate after anything that writes to the working tree, and report *that*
     run.** C-29: a mutation loop ended with `git checkout --` on a file whose real edit was
     still unstaged, so it reverted the edit. The gate had been green before the loop. I
     reported those numbers after it, and committed a tree that failed 3 tests.
-15. **Never delete or overwrite the director's working directories.** `C:\Users\mohds\ts-sentry` is
+16. **A source that anchors an *arithmetic* can be validated by reproduction. A source that
+    anchors a *decision* has to be read.** S-1.4 and S-1.6 are unread and that is fine — the
+    Rogan-Gladen formula either reproduces against `epiR` or it does not. **S-1.1 anchors a
+    choice**, and no reproduction checks a choice. It went unread for two phases. O-24.
+17. **Never delete or overwrite the director's working directories.** `C:\Users\mohds\ts-sentry` is
     read-only. **Never remove a Docker image** — they belong to the director's other projects.
 
 ## Where things stand
 
-**Phase 0** ratified. **Phase 1** closed at `d66d225`. **Phase 2 is in build**, **Q1–Q7 ruled.**
+**Phase 0** ratified. **Phase 1** closed at `d66d225`. **Phase 2 is in build**, **Q1–Q11 ruled**,
+**A-1 … A-4** applied to the charter.
 
-**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **406 tests locally**, seven
-gate checks green. **CI last ran green at 401 tests** on CPython 3.12.14 / 3.13.15 / 3.14.7 — the
-five since are local until the next push, and the two figures are stated apart on purpose.
+**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **602 tests**, seven gate
+checks green. **CI last ran green at 602** on CPython 3.12.14 / 3.13.15 / 3.14.7, run `33236035832`,
+head `95a521a`. Local and CI figures are stated apart on purpose — they were 406 and 401 once, and
+the gap is the thing worth seeing.
 
 ### Done
 
@@ -160,6 +171,8 @@ five since are local until the next push, and the two figures are stated apart o
 | **D2.4** | Clopper-Pearson **from its definition** — binomial tail in log space, no incomplete beta anywhere. Witness: base R `binom.test`. **8.4e-11**, across n = 1…1,999,514 **and** confidence {0.90, 0.95, 0.99} |
 | **D2.5** | Rogan-Gladen point estimate, 11 cases from `epiR`. Two refusals, both controls |
 | **D2.6** | Rogan-Gladen **interval** — the corrected bounds are the apparent Clopper-Pearson bounds transformed endpoint by endpoint. Against `epiR`: **7.3e-13**. **O-8 discharged.** Clamped both ends (Q6/D-32), Clopper-Pearson only (Q7/D-33) |
+| **D2.7** | Refusals proved to fire. **Mutation sweep** over all 31 codes found two nothing could distinguish (**C-27**); a **boundary probe** found **F-8**, `confidence` unvalidated everywhere. Ninth checker check, `controls` |
+| **D2.8** *(part)* | **confidence is a fixture axis** — 69 CP cases, 33 RG, at 0.90/0.95/0.99. Found **C-30**. **Coverage** replaces the width test, anchored on S-1.1's published limits, which our code reproduces (0.8382 vs 0.838). **Q11/D-37**: the plan names the interval, no default |
 
 ### The Rogan-Gladen codes — two, not three
 
