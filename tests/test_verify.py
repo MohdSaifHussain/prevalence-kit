@@ -354,7 +354,10 @@ def test_the_two_missing_plan_codes_send_the_operator_to_different_places() -> N
     verify_src = (root / "verify.py").read_text(encoding="utf-8")
 
     assert "Reason.PLAN_FILE_MISSING" in plan_src
-    assert "write a plan first" in plan_src, "the file code must send the operator to the path"
+    assert "Plan.load()" in plan_src, (
+        "the file code is defensive and its fix text must address a caller, not an operator -- "
+        "the CLI refuses a missing path before this runs"
+    )
 
     assert "Reason.PLAN_SEAL_MISSING" in verify_src
     assert "Restore the run directory" in verify_src, "the seal code must send them to the run"

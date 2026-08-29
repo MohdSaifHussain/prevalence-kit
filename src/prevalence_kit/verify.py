@@ -187,7 +187,7 @@ def _verify_plan(ws, entries, plan_path, checks) -> Plan:  # type: ignore[no-unt
     except Refusal as exc:
         if exc.reason is Reason.SEAL_TRUNCATED:
             raise Refusal(
-                Reason.PLAN_MISSING,
+                Reason.PLAN_SEAL_MISSING,
                 "The sealed copy of the plan is not in the run.",
                 "Without it the plan cannot be checked at all. Restore the run directory.",
             ) from exc

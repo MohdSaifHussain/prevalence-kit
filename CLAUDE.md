@@ -130,7 +130,11 @@ confirms we implement the method as its author does. It does not independently c
     not moving is what exposed it** — which is why the gate prints its own count.
 12. **The witness's documentation is not the witness. Only the pinned build is.** C-25: the manual
     on CRAN described a version we do not run.
-13. **Never delete or overwrite the director's working directories.** `C:\Users\mohds\ts-sentry` is
+13. **Re-run the whole gate after anything that writes to the working tree, and report *that*
+    run.** C-29: a mutation loop ended with `git checkout --` on a file whose real edit was
+    still unstaged, so it reverted the edit. The gate had been green before the loop. I
+    reported those numbers after it, and committed a tree that failed 3 tests.
+14. **Never delete or overwrite the director's working directories.** `C:\Users\mohds\ts-sentry` is
     read-only. **Never remove a Docker image** — they belong to the director's other projects.
 
 ## Where things stand

@@ -90,9 +90,11 @@ class Plan:
         """Read and validate a plan. Opens the plan only -- never the data."""
         if not path.exists():
             raise Refusal(
-                Reason.PLAN_MISSING,
+                Reason.PLAN_FILE_MISSING,
                 f"No plan file at {path}.",
-                "Check the path, or write a plan first.",
+                "This is a Python API guard. Every CLI verb declares its plan "
+                "argument as click.Path(exists=True), so Click refuses a missing "
+                "path before this runs. Check the path passed to Plan.load().",
             )
         try:
             raw: Any = yaml.safe_load(path.read_text(encoding="utf-8"))

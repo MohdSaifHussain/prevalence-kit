@@ -173,7 +173,7 @@ Each gets a distinct code, both controls, and a message that says what to do.
 | `STRATA_UNDEFINED` | `design: stratified` with no strata definition |
 | `ALLOCATION_TOO_THIN` | Neyman allocated fewer than 2 units to a stratum — zero within-stratum degrees of freedom, so its variance contribution is undefined. Q2. **Checked after rounding, not before** — D-30 condition 4 |
 | `ALLOCATION_ROUNDING_UNDECLARED` ▸ **AMENDED** — **PENDING-CONTROL** until **D2.8** | `design: stratified` with no `allocation_rounding` field. The rounding rule is a commitment the operator makes, so it cannot be defaulted. **Q4 / D-30 condition 1.** **The specification is right and not yet built** (**Q9** / D-36): the plan schema cannot express the condition until D2.8, so today's raise site is a defensive branch that no valid `Rounding` reaches. Marked PENDING rather than struck — striking would lose the contract's promise in between, and `check_codes` expires the marker by machinery when D2.8 lands |
-| `PLAN_FILE_MISSING` ▸ **AMENDED** *(**Q8** / D-35, 2026-08-29)* | The plan file the operator named is not there. **Artifact: the path they typed.** Remedy: fix the path, or write a plan |
+| `PLAN_FILE_MISSING` ▸ **AMENDED** *(**Q8** / D-35, 2026-08-29)* — **defensive, not operator-facing** | The plan file passed to `Plan.load()` is not there. **The CLI cannot produce this.** Every verb declares its plan argument as `click.Path(exists=True)`, so Click refuses first with a usage error and exit 2. This guards the **Python API**, which D-25 records as a real surface. Its fix text addresses a caller, not an operator. Classification pinned by `test_the_cli_refuses_a_missing_plan_before_our_code_runs` — relax the Click guard and that test fails, forcing this row to be re-read |
 | `PLAN_SEAL_MISSING` ▸ **AMENDED** *(**Q8** / D-35, 2026-08-29)* | The **sealed copy** of the plan is absent from the run. **Artifact: the run directory.** Remedy: restore the run. This is what protects **D-15 check (a)**, the check that makes R5 provable rather than aspirational |
 | ~~`PLAN_MISSING`~~ **SUPERSEDED** *(2026-08-29, **Q8** / D-35)* | Phase 1's single code for both situations above. **It had no control at either raise site** — C-27 — and D-22 says two artifacts means two codes. An operator who mistyped a path got a message telling them to restore their run directory: **worse than an undifferentiated refusal, because it sends them to the wrong artifact with confidence.** `docs/contracts/PHASE-1-CONTRACT.md` §4 still names it and **is not edited** — a contract is a dated document. `check_codes` reads the supersession from this row |
 | `CORRECTION_INTERVAL_UNSUPPORTED` ▸ **AMENDED** *(added 2026-08-29, **Q7**)* | The plan pre-registers `interval: wilson` **and** supplies `sensitivity`/`specificity`. A Wilson-transformed corrected interval has no pre-existing expected value, so R2.2 forbids shipping one — and silently handing back a Clopper-Pearson-based interval instead would substitute a method inside a pre-registered measurement, which is V-1's and V-7's class. **Refused at plan load, before any data is touched.** Built in **D2.6** |
@@ -505,6 +505,39 @@ substitutes a different method into is not one. The refusal is at `plan`, not at
 reason — **it fails before the label budget is spent.**
 
 ---
+
+---
+
+### Q10 - Should this tool own its missing-input refusals, or is Click's message the right one?
+
+Raised by the director from the `PLAN_FILE_MISSING` finding, and it is wider than that one code.
+
+Three arguments take an input file that must already exist: the plan, the frame, and the labels. All
+three are declared `click.Path(exists=True)`, so **Click refuses first** and our own refusal never
+runs. Measured 2026-08-29:
+
+| Command | Who refuses | Exit |
+|---|---|---|
+| `plan <missing>` | Click | 2 |
+| `sample ... <missing frame>` | Click | 2 |
+| `ingest-labels ... <missing labels>` | Click | 2 |
+| `verify --run <missing>` | **ours**, `RUN_NOT_FOUND` | 2 |
+| `verify --plan <missing>` | ours, and a **deliberate skip** with exit 0 | 0 (D-24) |
+
+So the tool has two refusal vocabularies and nobody chose that. The exit code is the same either
+way, and Click's message is clear, so **nothing is broken today**.
+
+| | Option | Consequence |
+|---|---|---|
+| A | Leave it. Click owns missing-input errors; our codes cover everything after the file is open | Simplest. Two vocabularies, but the seam is at a clean line: *does the file exist* versus *is its content usable* |
+| B | Relax `exists=True` on all three, let our refusals speak | One vocabulary, every refusal has a reason code. Costs a clear standard message and touches three arguments |
+| C | Relax it only for the plan | Worst of both -- the inconsistency becomes deliberate and unexplained |
+
+**Not ruled. Owned by the post-stop surface work**, because it changes the CLI, which section 5 puts
+after the review stop. Recorded now so it is a decision rather than an accident.
+
+**`PLAN_FILE_MISSING` is classified defensive in the meantime**, which is true under option A and
+would change under B.
 
 ## Approval
 

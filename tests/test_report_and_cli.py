@@ -491,3 +491,50 @@ def test_the_recorded_plan_path_is_as_invoked(tmp_path: Path) -> None:
     assert recorded(relative) == "plan.yaml", "a bare filename must stay a bare filename"
     assert recorded(absolute) == str(plan_path)
     assert str(tmp_path) not in str(recorded(relative))
+
+
+def test_the_cli_refuses_a_missing_plan_before_our_code_runs() -> None:
+    """PLAN_FILE_MISSING is defensive, and this is what pins that.
+
+    Every verb declares its plan argument as `click.Path(exists=True)`, so Click
+    refuses a missing path with a usage error and exit 2. `Plan.load`'s own
+    refusal never runs from the CLI.
+
+    That makes the code a Python API guard, not an operator-facing refusal, and
+    the Phase 2 contract says so. If someone relaxes the Click guard to let our
+    message through, this test fails and the contract row has to be re-read
+    rather than quietly becoming wrong.
+
+    It also records a limit of the mutation sweep. The sweep proved
+    PLAN_FILE_MISSING is distinguishable, because a test calls `Plan.load`
+    directly. Distinguishable is not the same as reachable by an operator.
+    """
+    result = cli("plan", "no-such-plan.yaml")
+    combined = result.stdout + result.stderr
+
+    assert result.returncode == 2
+    assert "Invalid value" in combined, "Click no longer owns this refusal"
+    assert "PLAN_FILE_MISSING" not in combined
+
+
+def test_every_input_path_argument_still_declares_exists() -> None:
+    """The general shape of the above, so it is not pinned one argument at a time.
+
+    Three arguments take an input file that must already be there: the plan, the
+    frame, and the labels. All three let Click check existence, so none of our
+    own missing-file refusals can reach an operator through them.
+
+    Recorded as a property rather than a per-argument test because the open
+    question is about all three at once: should this tool own missing-input
+    refusals, or is Click's message the right one? Nobody has decided. Until
+    somebody does, this asserts what is actually true.
+    """
+    source = (Path(__file__).resolve().parents[1] / "src" / "prevalence_kit" / "cli.py").read_text(
+        encoding="utf-8"
+    )
+    for name in ("plan_path", "frame_path", "labels_path"):
+        assert name in source, name
+    assert source.count("click.Path(exists=True, path_type=Path)") == 3, (
+        "the number of existence-checked input arguments changed; "
+        "see the Phase 2 contract on PLAN_FILE_MISSING being defensive"
+    )
