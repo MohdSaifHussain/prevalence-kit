@@ -219,3 +219,43 @@ def test_the_verdict_check_can_fail() -> None:
     acceptable = denominator > 0 and 0.0 <= estimate <= 1.0
     assert not acceptable
     assert declared_accept != acceptable, "the check must reject the label it was given"
+
+
+# ---------------------------------------------------- the coverage witness
+
+
+def test_the_coverage_witness_validated_itself_before_reporting() -> None:
+    """D2.1's rule, applied to a second instrument.
+
+    `r/coverage_fixtures.R` computes coverage for Wilson, Clopper-Pearson and
+    Jeffreys. Before it reports any of that it reproduces three published limits
+    from S-1.1, and it calls `stop()` if they do not match. An instrument that
+    has not proved itself is not a witness.
+    """
+    fixture = load("coverage.json")
+    checks = fixture["validation"]
+
+    assert len(checks) == 3, [c["label"] for c in checks]
+    assert all(c["passed"] for c in checks), [c for c in checks if not c["passed"]]
+
+    wanted = sorted(round(float(c["want"]), 3) for c in checks)
+    assert wanted == [0.838, 0.889, 0.920], wanted
+
+
+def test_clopper_pearson_is_the_only_one_that_holds_nominal_in_the_rare_regime() -> None:
+    """The fact Q11 turns on, asserted so it cannot drift out of the record.
+
+    Over `p = gamma/n`, gamma in [0.5, 15] -- the regime this tool exists for --
+    Clopper-Pearson is at or above nominal at every (n, confidence) measured, and
+    Wilson and Jeffreys are both below it at every one.
+
+    This is a measurement with its axes stated, not a claim about all inputs.
+    """
+    rows = load("coverage.json")["rare_event_worst_coverage"]
+    assert rows, "the coverage fixture is empty"
+
+    for row in rows:
+        nominal = row["conf"]
+        assert row["clopper_pearson"]["coverage"] >= nominal - 1e-9, row
+        assert row["wilson"]["coverage"] < nominal, row
+        assert row["jeffreys"]["coverage"] < nominal, row

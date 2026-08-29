@@ -17,11 +17,11 @@ neither the director nor the AI can quietly absorb the other's.
 | Chat reviewer (draft author) | 3 | 0 | **3** |
 | Research report (passed through unverified) | 2 | 0 | **2** |
 | Stale-at-draft-time, queued but built on anyway | 1 | 0 | **1** |
-| **Builder (Claude Code)** | **24** | **0** | **24** |
+| **Builder (Claude Code)** | **25** | **0** | **25** |
 | Reviewer instrument | **2** | 0 | **3** (1 noted) |
 | Director | 0 | 0 | 0 |
 | Tool artifact (noted, not a defect) | - | - | **1** |
-| **Total** | **32** | **0** | **33** |
+| **Total** | **33** | **0** | **34** |
 
 C-1 … C-6 are Phase 0: defects in the chat-drafted vision, all caught before any code, none reaching
 an artifact. **C-7 … C-13 are Phase 1, and all seven are mine.** Five were caught by the director's
@@ -867,6 +867,41 @@ width question ever did.
 
 ---
 
+## C-31 - I read a paper for the first time and immediately misread it
+
+| | |
+|---|---|
+| **Claimed** | `docs/STANDARDS.md`, commit `e665344`, and the report and commit message with it: S-1.1's assessment of Jeffreys is *"close to the opposite"* of the blog's, and D-8 therefore rests on a characterisation the anchor contradicts. Also: *"the charter's §6.1 ... cite a blog's reading"*. |
+| **Actually** | **Neither half holds.** (a) The two sources measure different quantities and do not conflict. S-1.1 §3.2 praises Jeffreys' **average** coverage across p and, in the same section, records *"an unfortunate fairly deep spike near p = 0"* -- then §4.1.2 supplies a modified Jeffreys whose purpose is removing that spike. The anchor documents a rare-event problem itself. (b) **Jeffreys does not appear in charter §6.1 at all.** Its only mention is line 340, inside the A-0 amendment log -- a dated record of the director's ruling, never edited. |
+| **Direction** | Against two documents that were fine. A correction proposed against a non-defect, which is C-26's shape with the builder as the source rather than an instrument. |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | The director, who declined to accept the reading and asked for it to be measured rather than reconciled in prose, and who checked every charter mention. |
+| **Severity** | **Medium.** It reached a commit and a push. Nothing in the code depended on it, but it was on its way to becoming a correction entry asserting a conflict between two papers that agree. |
+| **Replaced by** | `r/coverage_fixtures.R`, which measures all three intervals at the rare-event operating points, and a rewritten S-1.1 section stating what each source measured. |
+| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+
+**What the measurement found, and it is the reverse of what I implied.** Worst coverage over
+`p = gamma/n`, gamma in [0.5, 15], at n = 1000:
+
+| nominal | Wilson | Clopper-Pearson | Jeffreys |
+|---|---|---|---|
+| 0.90 | 0.8532 | **0.9043** | **0.8125** |
+| 0.95 | 0.9098 | **0.9540** | 0.9141 |
+
+**Jeffreys is the worst of the three at 0.90**, which is the opposite of "close to the opposite."
+Our own instrument confirms the anchor's own caveat.
+
+**The class this belongs to, and it is not a new one.** *A figure measured along one axis and stated
+as though along all of them* -- C-30's class -- with "average coverage" as the axis and "coverage" as
+the unqualified word. **The record conflated an average with its worst point.** An average hides its
+worst point by construction, which is exactly why this project measures at operating points.
+
+**Reading a source for the first time is not the same as understanding it**, and the gap between
+those two is where this landed. The fix was not to read more carefully; it was to compute the
+quantity both sources were talking about.
+
+---
+
 ## Classes, tracked separately from the count
 
 A correction gets a C-number when it reached a commit. A **class** keeps its own tally, because a
@@ -922,6 +957,7 @@ half-checked one deflects it, because the part a reader can verify is right.
 | 1 | **C-27** | "23 reason codes" -- counted from `Reason` by `check_claims` | "each with both controls" -- false for `PLAN_MISSING`, at both its raise sites |
 | 2 | **C-28** | "reconciled against the code by `tools/check_claims.py`" -- it did reconcile | "20 accepted, 20 closed" -- 18 were closed, and four accepted findings had no row |
 | 3 | **C-29** | "423 tests, selftest 9/9" -- true of the tree I measured | "seven green" -- false of the tree I committed, which failed 3 tests |
+| 4 | **C-31** | S-1.1 calls Jeffreys' **average** coverage excellent -- it does | read as "coverage", when the same section records a deep spike near p = 0 |
 
 **The rule: when a checked figure sits in a sentence with an unchecked property, either check the
 property or split the sentence.**

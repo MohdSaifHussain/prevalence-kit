@@ -237,8 +237,17 @@ Jeffreys. **This is the method source for our intervals.** It replaces the blog 
 anchored on.
 
 **Shipped: Wilson (primary) and Clopper-Pearson (conservative second). Jeffreys is dropped.**
-*(Ruling R-4, D-8.)* Clopper-Pearson is exact, never under-covers, and — unlike Jeffreys — is
-implemented in **both** R `survey` and `svy`, so the dual cross-check of D-3 applies to it.
+*(Ruling R-4, D-8.)* Clopper-Pearson is exact and never under-covers. It is also implemented in
+**both** R `survey` and `svy`, so the dual cross-check of D-3 applies to it, and **Jeffreys is in
+neither** -- which is the reason it was dropped, since R2.3 would have nothing to check it
+against.
+
+*Reworded 2026-08-29 (C-31).* This read "Clopper-Pearson is exact, never under-covers, and --
+unlike Jeffreys -- is implemented in both", where "unlike Jeffreys" could attach to either
+clause. Under one reading it asserted that Jeffreys under-covers, which nobody had measured.
+It has since been measured -- `r/fixtures/coverage.json` -- and Jeffreys does under-cover near
+p = 0, as S-1.1 §3.2 says. The sentence is split anyway, because a claim that happens to be
+true is not the same as a claim that was checked.
 
 ### Stratified sampling and Neyman allocation
 

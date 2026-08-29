@@ -120,21 +120,43 @@ shipping it as the conservative option is defensible. But the anchor's words are
 than left out, because a register that only quotes the sentences supporting its choices is not a
 register.
 
-**One thing the reading unsettles, raised rather than acted on.** D-8 dropped Jeffreys, and one of
-its four stated reasons was that the Unofficial Google Data Science Blog *"criticises it for this
-exact use case."* The anchor's own assessment is close to the opposite:
+### Jeffreys: two sources that were never in conflict -- measured, not reconciled
 
-> *"Both the Wilson interval and the Jeffreys prior interval have excellent performance in terms of
-> the average coverage probability; that of the Jeffreys prior interval is, if anything, slightly
-> superior."*
+**The first version of this section claimed S-1.1 said "close to the opposite" of the blog on
+Jeffreys. That was wrong, and C-31 records it.** The two sources measure different quantities, and
+S-1.1 says both things itself.
 
-and it **recommends** Wilson or Jeffreys for n <= 40, Agresti-Coull above.
+| Source | Quantity | Verdict |
+|---|---|---|
+| S-1.1 §3.2 | **average** coverage across p | *"excellent ... if anything, slightly superior"* to Wilson |
+| S-1.1 §3.2 | coverage **near p = 0** | *"an unfortunate fairly deep spike"* |
+| S-1.1 §4.1.2 | -- | supplies a **modified** Jeffreys whose whole purpose is removing that spike |
+| S-X.1 (blog) | rare-event behaviour | reports Jeffreys is unsuitable there |
 
-**D-8's decision still stands and its other three reasons are untouched** -- the blog is unofficial
-and cannot be a method source, Clopper-Pearson is in both witness libraries, and Jeffreys is in
-neither, so it could have had only one witness. That last reason is decisive on its own under R2.3.
-**What is now known to be wrong is the characterisation, not the ruling.** Recorded as an open item
-for the director: the charter's §6.1 and D-8 cite a blog's reading of a paper nobody had read.
+**So the anchor documents a rare-event problem with unmodified Jeffreys, independently of the blog.**
+Averaging well across p and covering badly at small p are not contradictory; an average hides its
+worst point, which is the whole reason this project measures at operating points rather than on
+average.
+
+**Measured rather than argued.** `r/coverage_fixtures.R` computes exact coverage for all three
+candidates at the rare-event operating points. It validates itself against three of S-1.1's published
+limits before reporting anything else -- D2.1's rule, applied to a second instrument. Worst coverage
+over `p = gamma/n`, gamma in [0.5, 15]:
+
+| n | nominal | Wilson | Clopper-Pearson | Jeffreys |
+|---|---|---|---|---|
+| 1000 | 0.90 | 0.8532 | **0.9043** | 0.8125 |
+| 1000 | 0.95 | 0.9098 | **0.9540** | 0.9141 |
+| 1000 | 0.99 | 0.9596 | **0.9908** | 0.9738 |
+
+Our own numbers confirm the anchor's spike: **Jeffreys is the worst of the three at 0.90 and 0.95**,
+which is the opposite of what "close to the opposite" implied.
+
+**D-8's decision stands, and no charter amendment is needed.** The decisive reason was always that
+Jeffreys is in neither witness library, so R2.3 has nothing to check it against -- Q1's reasoning,
+applied before Q1 existed. And Jeffreys appears in `PROJECT_CHARTER.md` only inside the **A-0
+amendment log**, a dated record of the director's ruling that is never edited. §6.1 does not mention
+it; the builder's claim that it did was wrong.
 
 ### S-1.7 -- largest-remainder rounding, quoted from the source
 
@@ -292,6 +314,60 @@ zero-network guard's scope is now asserted: it walks `[project.dependencies]` an
 marked `extra ==`. The witness image is on the far side of that line -- **the guard does not look at
 it, and the guard not objecting to it is not evidence about it.** The evidence is this paragraph and
 `r/Dockerfile`.
+
+
+### Read state -- every entry, stated either way
+
+**S-1.1 was cited unread through two phases and the register was silent about it.** S-1.9 and S-1.11
+both said plainly that their full text was unread; S-1.1 said nothing, and **silence read as "read."**
+That is a register-level defect, not a citation slip.
+
+**So read state is now recorded for every entry, and absence of a note is no longer an answer.**
+Four values, and `not recorded` is a real one -- filling it in by assumption would be the original
+defect repeated.
+
+| State | Means |
+|---|---|
+| `full` | The full text has been read by someone on this project |
+| `partial` | Named sections read, quoted or re-derived. The scope is stated |
+| `not read` | Deliberately cited on metadata alone, and the entry says so |
+| `not recorded` | **Nobody wrote it down. Unknown, not assumed.** |
+
+| Entry | Read state | Evidence |
+|---|---|---|
+| S-1.1 | **full** | Read 2026-08-29 from the director's copy. Three published limits reproduced |
+| S-1.2 Neyman 1934 | `not recorded` | Cited by reprint DOI. The allocation formula came from S-2.3's re-derivation, not from this text |
+| S-1.3 Cochran | `not recorded` | Cited by ISBN as a design reference |
+| S-1.4 Rogan-Gladen 1978 | `not recorded` | The estimator is one line of algebra and is checked against `epiR`, not against this text |
+| S-1.5 Lang & Reiczigel 2014 | `not read` | Deliberately not implemented (D-31). Cited to say what we do **not** do |
+| S-1.6 Reiczigel 2010 | `not recorded` | The interval is checked against `epiR`, which cites it. We have not read it |
+| S-1.7 Wright 2014 | **partial** | §1 and §2.3 quoted verbatim; abstract quoted. Fetched, digest recorded |
+| S-1.8 Wright 2012 | `not read` | Metadata verified via Crossref |
+| S-1.9 Balinski-Young 1975 | `not read` | Stated in the entry. The paradox is demonstrated on our own frames instead |
+| S-1.10 `epiR` | **partial** | Source behaviour verified by running 2.0.92 directly. Package docs not the witness (C-25) |
+| S-1.11 Kopacka & Fuchs 2026 | `not read` | Stated in the entry. Crossref metadata only |
+| S-2.1 `survey` 4.5 | **partial** | Tarball compared file by file against the p3m mirror (V-17). Source not read |
+| S-2.1a / S-2.1b | **full** | An image digest and a call, not a document. Both executed |
+| S-2.2 `svy` 0.25.0 | **partial** | `base.py` lines 713-746 read and quoted (D-18) |
+| S-2.3 Barnett 2021 | **partial** | Tables 2A and 2B read and independently re-derived, Phase 0 §C6 |
+| S-2.4 `binom.test` | **full** | Base R behaviour, executed across 69 cases |
+| S-3.1 … S-3.4 | `not recorded` | Platform methodology pages, cited for published caveats |
+| S-4.1 Reg. 2022/2065 | **partial** | Full text retrieved and mechanically counted for one word (D-5) |
+| S-4.2 Reg. 2024/2835 | **partial** | Same. Digest and page count re-derived |
+| S-4.3 Decision 2011/833/EU | **partial** | Articles 2, 4 and 6 read in two renderings and compared (O-18) |
+| S-5.1 … S-5.4 | **partial** | Documentation and changelog sections read at pinned URLs |
+| S-7.1 … S-7.3 | `not recorded` | Dataset and licence pages |
+| S-8.1 … S-8.4 | **full** | Procedures, not documents. Each executed and its result recorded |
+| S-X.1 (the blog) | **full** | Read end to end during Phase 0 verification, which is how C-3 was found |
+
+**What this table is not.** It records whether a source was read, not whether reading it would change
+anything. Several `not recorded` entries are almost certainly harmless -- Cochran is a textbook
+reference, and the Rogan-Gladen formula is checked against a witness rather than against its paper.
+**S-1.1 was the dangerous one precisely because it is the anchor for a choice rather than a formula**,
+and choices cannot be checked against a witness.
+
+**Owed:** a `check_claims` check that every S-entry carries one of the four states, so a new entry
+cannot be added without one. Opened as **O-24**.
 
 ## S-2 — Validation targets
 

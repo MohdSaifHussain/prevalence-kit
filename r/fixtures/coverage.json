@@ -1,0 +1,186 @@
+{
+  "what": "Exact coverage of Wilson, Clopper-Pearson and Jeffreys in the rare-event regime",
+  "produced_by": "r/coverage_fixtures.R",
+  "why": "C-30(c) asserted a region three times and was wrong three times. Coverage has a definition, so it is asserted instead. This fixture answers whether the blog's claim (Jeffreys over-covers for rare events) and S-1.1's claim (Jeffreys has excellent average coverage) are in conflict. They measure different quantities, so they may both be true.",
+  "instrument_validated_against": "S-1.1 sections 3.2 and 4.1.1, published limits",
+  "validation": [
+    {
+      "label": "S-1.1 4.1.1  Wilson p=0.1765/n conf=0.95",
+      "got": 0.8381922508520416,
+      "want": 0.838,
+      "passed": true
+    },
+    {
+      "label": "S-1.1 4.1.1  Wilson p=0.1174/n conf=0.99",
+      "got": 0.889226366119887,
+      "want": 0.889,
+      "passed": true
+    },
+    {
+      "label": "S-1.1 3.2    Wilson lim inf, gamma>=1, conf=0.95",
+      "got": 0.919790657159799,
+      "want": 0.92,
+      "passed": true
+    }
+  ],
+  "exact_call": "wilson: closed form, kappa = qnorm(1 - (1-conf)/2); clopper_pearson: binom.test(k, n, conf.level = conf)$conf.int; jeffreys: qbeta({alpha/2, 1-alpha/2}, k+0.5, n-k+0.5), with LJ(0)=0 and UJ(n)=1 per S-1.1 section 3.1.3; coverage: sum(dbinom(k, n, p)) over k whose interval contains p",
+  "environment": {
+    "image_digest": "sha256:c3f39b365d1077fe24f8e9ab2742e352b6d3950897f51af1624a5bb5550c21c0",
+    "r_version": "R version 4.5.3 (2026-03-11)",
+    "cran_snapshot": "https://p3m.dev/cran/__linux__/noble/2026-04-23"
+  },
+  "standards": {
+    "anchor": "S-1.1 Brown, Cai & DasGupta (2001), DOI 10.1214/ss/1009213286"
+  },
+  "axes": {
+    "varied": ["n", "conf", "p = gamma/n for gamma in [0.5, 15]"],
+    "held_fixed": "none",
+    "note": "An agreement or coverage figure states its axes."
+  },
+  "rare_event_worst_coverage": [
+    {
+      "n": 100,
+      "conf": 0.9,
+      "wilson": {
+        "coverage": 0.8609990480841705,
+        "at_p": 0.045
+      },
+      "clopper_pearson": {
+        "coverage": 0.9021913528692761,
+        "at_p": 0.1275
+      },
+      "jeffreys": {
+        "coverage": 0.8165499987357465,
+        "at_p": 0.02
+      }
+    },
+    {
+      "n": 100,
+      "conf": 0.95,
+      "wilson": {
+        "coverage": 0.9101776910086821,
+        "at_p": 0.005
+      },
+      "clopper_pearson": {
+        "coverage": 0.9544451817854346,
+        "at_p": 0.055
+      },
+      "jeffreys": {
+        "coverage": 0.880566857887187,
+        "at_p": 0.025
+      }
+    },
+    {
+      "n": 100,
+      "conf": 0.99,
+      "wilson": {
+        "coverage": 0.9601207001599944,
+        "at_p": 0.0075
+      },
+      "clopper_pearson": {
+        "coverage": 0.9912223572012393,
+        "at_p": 0.1075
+      },
+      "jeffreys": {
+        "coverage": 0.9762852218583076,
+        "at_p": 0.04
+      }
+    },
+    {
+      "n": 500,
+      "conf": 0.9,
+      "wilson": {
+        "coverage": 0.8540325576733115,
+        "at_p": 0.008999999999999999
+      },
+      "clopper_pearson": {
+        "coverage": 0.9058270388905075,
+        "at_p": 0.0185
+      },
+      "jeffreys": {
+        "coverage": 0.8129150177985059,
+        "at_p": 0.004
+      }
+    },
+    {
+      "n": 500,
+      "conf": 0.95,
+      "wilson": {
+        "coverage": 0.9098719102571735,
+        "at_p": 0.001
+      },
+      "clopper_pearson": {
+        "coverage": 0.9520727205296546,
+        "at_p": 0.026
+      },
+      "jeffreys": {
+        "coverage": 0.9144654364994329,
+        "at_p": 0.0055
+      }
+    },
+    {
+      "n": 500,
+      "conf": 0.99,
+      "wilson": {
+        "coverage": 0.9596192453088626,
+        "at_p": 0.0015
+      },
+      "clopper_pearson": {
+        "coverage": 0.9906637900129965,
+        "at_p": 0.025
+      },
+      "jeffreys": {
+        "coverage": 0.9741076526994082,
+        "at_p": 0.008
+      }
+    },
+    {
+      "n": 1000,
+      "conf": 0.9,
+      "wilson": {
+        "coverage": 0.8531721571196055,
+        "at_p": 0.0045
+      },
+      "clopper_pearson": {
+        "coverage": 0.9042979706163611,
+        "at_p": 0.00925
+      },
+      "jeffreys": {
+        "coverage": 0.812463087760794,
+        "at_p": 0.002
+      }
+    },
+    {
+      "n": 1000,
+      "conf": 0.95,
+      "wilson": {
+        "coverage": 0.9098339238105775,
+        "at_p": 0.0005
+      },
+      "clopper_pearson": {
+        "coverage": 0.9539591890934214,
+        "at_p": 0.0145
+      },
+      "jeffreys": {
+        "coverage": 0.9140521477511666,
+        "at_p": 0.00275
+      }
+    },
+    {
+      "n": 1000,
+      "conf": 0.99,
+      "wilson": {
+        "coverage": 0.9595568689509398,
+        "at_p": 0.00075
+      },
+      "clopper_pearson": {
+        "coverage": 0.9908007973263862,
+        "at_p": 0.011
+      },
+      "jeffreys": {
+        "coverage": 0.9738304226088894,
+        "at_p": 0.004
+      }
+    }
+  ]
+}
