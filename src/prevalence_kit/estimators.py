@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from math import exp, fsum, lgamma, log, log1p, sqrt
+from math import exp, fsum, isfinite, lgamma, log, log1p, sqrt
 from statistics import NormalDist
 
 from .canonical import JSONObject
@@ -29,6 +29,72 @@ from .errors import Reason, Refusal
 DIGITS = 12
 """Decimal places carried in the record. Enough to reproduce, few enough that
 platform float noise in the last bits cannot change a digest."""
+
+
+def _well_formed(low: float, point: float, high: float, where: str) -> None:
+    """Refuse to RETURN an interval that is not one. Checked at construction.
+
+    **What this catches, and it is one thing.** A pair of numbers that cannot be
+    an interval: not finite, out of [0, 1], the ends in the wrong order, or a
+    point estimate outside its own bounds.
+
+    **Two separate defects had this exact shape and neither was caught by the
+    other's fix**, which is why it is a postcondition rather than a third
+    special case:
+
+      F-8   `wilson(5, 100, confidence=-0.5)` returned [0.066846, 0.037230]
+      D2.5  `epi.prev` at Se + Sp < 1 returns lower 6.712724 above upper 6.459273
+
+    Different causes, different modules, one failure mode: a function that
+    returns an interval without checking that it is one.
+
+    **What this does NOT catch, stated because the boundary matters.** It says
+    nothing about *coverage*. Wilson covering 90.98% when it claims 95% is a
+    property of the method, not a malformed value -- the interval it returns
+    there is perfectly well formed and simply does not cover as often as its
+    label says. No postcondition can see that; it takes a coverage computation
+    over a grid of true values, which is what `r/coverage_fixtures.R` does.
+    Confusing the two would make this guard look like it defends something it
+    cannot.
+
+    **It checks the values as RECORDED, at `DIGITS` places, not the raw floats.**
+    That is deliberate and it was found by the guard firing on a non-defect: at
+    k = 0, Wilson's lower bound computes to 4.3e-19 rather than exactly 0, so the
+    point estimate 0.0 sits below its own lower bound by four parts in 10^19. In
+    exact arithmetic `centre` and `half` are equal there and the bound is 0; the
+    residue is float error, eighteen places below anything this project records
+    or prints. Refusing on it would report a defect that no artifact can show.
+
+    The rounded values are also the right thing to check on their own merits:
+    they are what reaches the ledger and the report, and a guard on the artifact
+    should read the artifact.
+    """
+    low, point, high = (round(v, DIGITS) for v in (low, point, high))
+    for name, value in (("low", low), ("point", point), ("high", high)):
+        if not isfinite(value):
+            raise Refusal(
+                Reason.ESTIMATE_MISMATCH,
+                f"{where} produced a {name} of {value}, which is not a number.",
+                "This is a defect in prevalence-kit, not in your data. Please "
+                "report it with the plan and the sample size.",
+            )
+    if not 0.0 <= low <= high <= 1.0:
+        raise Refusal(
+            Reason.ESTIMATE_MISMATCH,
+            f"{where} produced the bounds [{low}, {high}], which are not an "
+            "interval on a proportion: a prevalence lies in [0, 1] and a lower "
+            "bound cannot exceed an upper one.",
+            "This is a defect in prevalence-kit, not in your data. Please "
+            "report it with the plan and the sample size.",
+        )
+    if not low <= point <= high:
+        raise Refusal(
+            Reason.ESTIMATE_MISMATCH,
+            f"{where} produced a point estimate of {point} outside its own "
+            f"interval [{low}, {high}].",
+            "This is a defect in prevalence-kit, not in your data. Please "
+            "report it with the plan and the sample size.",
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -130,6 +196,7 @@ def wilson(positives: int, n: int, *, confidence: float = 0.95) -> Interval:
     centre = (p + zsq_n / 2) / denom
     half = (z / denom) * sqrt(p * (1 - p) / n + zsq_n / (4 * n))
 
+    _well_formed(max(0.0, centre - half), positives / n, min(1.0, centre + half), "wilson")
     return Interval(
         method="wilson",
         point=_fixed(p),
@@ -293,6 +360,7 @@ def clopper_pearson(positives: int, n: int, *, confidence: float = 0.95) -> Inte
         else _solve(alpha_half, lambda p: _binomial_tail_at_most(positives, n, p), rising=False)
     )
 
+    _well_formed(low, positives / n, high, "clopper_pearson")
     return Interval(
         method="clopper-pearson",
         point=_fixed(positives / n),
@@ -607,17 +675,39 @@ def rogan_gladen_interval(
     if interval_method not in CORRECTABLE_INTERVALS:
         raise Refusal(
             Reason.CORRECTION_INTERVAL_UNSUPPORTED,
-            f"This plan asks for the {interval_method} interval and also supplies a "
-            f"sensitivity and specificity. The Rogan-Gladen correction is only "
-            f"validated on the Clopper-Pearson interval here: the witness that "
-            f"produced our expected values, epiR 2.0.92, builds the corrected "
-            f"interval from a Clopper-Pearson one, and we have no external "
-            f"expected value for a {interval_method}-based corrected interval. "
-            f"Returning a Clopper-Pearson interval instead would give you a number "
-            f"your plan did not commit to.",
-            "Either pre-register interval: clopper_pearson to keep the correction, "
-            "or remove sensitivity and specificity and report an uncorrected "
-            f"{interval_method} interval. Both are honest; the plan has to say which.",
+            f"This plan pre-registers the {interval_method} interval and also supplies "
+            "a sensitivity and specificity. This version can only build the "
+            "Rogan-Gladen correction on a Clopper-Pearson interval, because that is "
+            "the only one an outside witness gave us expected values for -- epiR "
+            "2.0.92 builds its corrected interval from Clopper-Pearson, and we have "
+            f"no witnessed expected value for a {interval_method}-based one. "
+            "Quietly giving you a Clopper-Pearson interval instead would hand you a "
+            "number your plan did not commit to, which is the one thing "
+            "pre-registration exists to stop.\n"
+            "\n"
+            "  Since you are here, the choice is worth making on its merits rather "
+            "than on habit. Wilson is the familiar one and it is a good interval, "
+            "but it does not guarantee its stated level. At rare-event rates -- a "
+            "true rate a few times 1/n, which is what this tool is usually pointed "
+            "at -- a 95% Wilson interval covers AS LITTLE AS 90.98% of the time, and a "
+            "90% one as little as 85.32%. Those are the worst values found on a "
+            "grid, so the real worst is at most that and may be lower. "
+            "Clopper-Pearson never covers less than the "
+            "level you asked for. It pays for that by being wider.\n"
+            "\n"
+            "  So this is not a formality. If you are measuring something rare and "
+            "you need the number to mean what it says, Clopper-Pearson is the one "
+            "that does. If you would rather have a tighter interval and can live "
+            "with the level being approximate, Wilson is a defensible choice -- "
+            "just not one this version can correct for test error. Measured, not "
+            "asserted: r/fixtures/coverage.json, checked against the published "
+            "limits in Brown, Cai & DasGupta (2001).",
+            "Pick one and put it in the plan. Either set "
+            "`interval: clopper_pearson` and keep the correction, or remove "
+            "`sensitivity` and `specificity` and report an uncorrected "
+            f"{interval_method} interval. Both are honest. The plan has to say "
+            "which, because it is hashed before any data is touched and that is "
+            "what makes it a commitment.",
         )
 
     apparent = clopper_pearson(positives, n, confidence=confidence)
@@ -640,6 +730,11 @@ def rogan_gladen_interval(
         high = 1.0
         clamped.append("high")
 
+    # The clamped pair is what an operator reads, so that is what is checked.
+    # The raw pair is deliberately NOT checked: it is allowed outside [0, 1] --
+    # that is the whole of Q6, and the raw bound is kept precisely so an auditor
+    # can see what the arithmetic produced before policy touched it.
+    _well_formed(low, float(point.corrected), high, "rogan_gladen_interval")
     return CorrectedInterval(
         method="rogan-gladen/clopper-pearson",
         point=point.corrected,

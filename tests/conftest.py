@@ -40,6 +40,10 @@ PLAN_YAML: dict[str, Any] = {
     "design": "srs",
     "sample_size": 40,
     "labels": "labels.csv",
+    # Required with no default since Q11 / D-37. Wilson here because these
+    # fixtures predate the ruling and Phase 1 measured with it; the point of the
+    # ruling is that the plan SAYS so, not that one method wins.
+    "interval": "wilson",
     "seed": "phase-1-fixture-seed",
 }
 

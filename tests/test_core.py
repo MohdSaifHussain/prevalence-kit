@@ -83,9 +83,94 @@ def test_missing_seed_has_its_own_reason_code() -> None:
 
 
 def test_unsupported_design_refused() -> None:
+    """`stratified` used to be the example of an unsupported design. It is not.
+
+    D2.8 made it loadable, so this now uses a design that genuinely is not one.
+    The stratified case moved to its own test below, because it refuses for a
+    different and more interesting reason.
+    """
+    with pytest.raises(Refusal) as exc:
+        Plan.from_mapping(PLAN_YAML | {"design": "cluster"})
+    assert exc.value.reason is Reason.PLAN_INVALID
+
+
+def test_a_stratified_plan_refuses_rather_than_drawing_a_simple_random_sample() -> None:
+    """The hazard D2.8 created and had to close in the same breath.
+
+    Adding `stratified` to the supported designs made it loadable. `do_sample`
+    still calls `draw_srs` unconditionally, so a plan saying stratified would
+    have been answered with a SIMPLE RANDOM DRAW -- a number the plan does not
+    describe, produced silently. That is the defect class this whole tool exists
+    to refuse, and it would have been introduced by a schema change.
+
+    `STRATA_UNDEFINED` is the honest code: the contract documents it as
+    "design: stratified with no strata definition", and that is literally the
+    state -- the strata field is the rest of D2.8.
+    """
+    with pytest.raises(Refusal) as exc:
+        Plan.from_mapping(
+            PLAN_YAML | {"design": "stratified", "allocation_rounding": "largest_remainder"}
+        )
+
+    assert exc.value.reason is Reason.STRATA_UNDEFINED
+    assert "simple random draw" in exc.value.detail
+    assert "design: srs" in exc.value.fix
+
+
+def test_a_stratified_plan_without_a_rounding_rule_refuses_first() -> None:
+    """O-20 at the plan file, which is what D-30 condition 1 actually asked for.
+
+    Before D2.8 the rule was held only by `allocate()` taking `rounding` as a
+    required argument. That stopped it becoming a constant in the source; it did
+    not put the commitment in the hashed plan, which is where an outsider reads
+    it.
+
+    Checked before the strata refusal on purpose: an operator who has not yet
+    named the rounding rule has a different thing to fix from one who has.
+    """
     with pytest.raises(Refusal) as exc:
         Plan.from_mapping(PLAN_YAML | {"design": "stratified"})
+
+    assert exc.value.reason is Reason.ALLOCATION_ROUNDING_UNDECLARED
+    assert "largest_remainder" in exc.value.fix
+
+
+def test_allocation_rounding_on_a_design_that_never_allocates_is_refused() -> None:
+    """The other direction. An SRS plan naming a rounding rule is confused.
+
+    Both controls: the stratified case above must demand it, and this one must
+    reject it. A field required in one design and ignored in another is a field
+    an operator cannot reason about.
+    """
+    with pytest.raises(Refusal) as exc:
+        Plan.from_mapping(PLAN_YAML | {"allocation_rounding": "largest_remainder"})
+
     assert exc.value.reason is Reason.PLAN_INVALID
+    assert "never allocates" in exc.value.detail
+
+
+def test_the_interval_is_required_and_reaches_the_hashed_record() -> None:
+    """O-22 at the plan file. Q11 / D-37.
+
+    Two halves, and the second is the one that matters for an outsider: the
+    method must be IN THE HASH, so a published number carries its own evidence
+    of which interval produced it.
+    """
+    with pytest.raises(Refusal) as exc:
+        Plan.from_mapping({k: v for k, v in PLAN_YAML.items() if k != "interval"})
+    assert exc.value.reason is Reason.PLAN_INVALID
+    assert "interval" in exc.value.detail
+
+    with pytest.raises(Refusal) as bad:
+        Plan.from_mapping(PLAN_YAML | {"interval": "jeffreys"})
+    assert bad.value.reason is Reason.PLAN_INVALID
+
+    plan = Plan.from_mapping(PLAN_YAML | {"interval": "clopper_pearson"})
+    assert plan.as_record()["interval"] == "clopper_pearson"
+    assert plan.plan_hash != Plan.from_mapping(PLAN_YAML).plan_hash, (
+        "changing the interval must change the plan hash, or the method is not "
+        "part of the commitment"
+    )
 
 
 def test_zero_sample_size_refused() -> None:

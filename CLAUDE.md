@@ -156,10 +156,14 @@ confirms we implement the method as its author does. It does not independently c
 **Phase 0** ratified. **Phase 1** closed at `d66d225`. **Phase 2 is in build**, **Q1–Q11 ruled**,
 **A-1 … A-4** applied to the charter.
 
-**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **602 tests**, seven gate
-checks green. **CI last ran green at 602** on CPython 3.12.14 / 3.13.15 / 3.14.7, run `33236035832`,
-head `95a521a`. Local and CI figures are stated apart on purpose — they were 406 and 401 once, and
-the gap is the thing worth seeing.
+**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **606 tests**, seven gate
+checks green. **CI last ran green at 602** on CPython 3.12.14 / 3.13.15 / 3.14.7, run
+`33241090771`, head `8565ddc`. Local and CI figures are stated apart on purpose.
+
+**Three of these figures are now machine-checked** — the test count, the highest ruled question,
+and the phase — because this file went stale within hours of being written and nothing noticed.
+A stale README misleads a reader; **a stale CLAUDE.md misleads the next session before it has
+read anything else.** `check_figures` derives all three.
 
 ### Done
 

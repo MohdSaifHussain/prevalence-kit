@@ -430,7 +430,10 @@ def test_wilson_with_a_correction_is_refused_by_name() -> None:
 
     assert caught.value.reason is Reason.CORRECTION_INTERVAL_UNSUPPORTED
     assert "clopper_pearson" in caught.value.fix
-    assert "remove sensitivity and specificity" in caught.value.fix
+    assert "remove" in caught.value.fix and "sensitivity" in caught.value.fix
+    # D-37 condition 1: the refusal carries the trade-off, with the numbers.
+    assert "90.98" in caught.value.detail, "the coverage cost must be in the message"
+    assert "Clopper-Pearson never covers less" in caught.value.detail
     assert "did not commit to" in caught.value.detail
 
 

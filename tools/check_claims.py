@@ -113,19 +113,35 @@ def repo_files(root: Path, *globs: str) -> Iterator[Path]:
 def defined_ids(root: Path) -> dict[str, set[str]]:
     """What the record actually defines, read from the record.
 
-    Obligations are spread across two files -- O-1..O-6 in STANDARDS.md, the rest
-    in DECISIONS.md -- so both are read. The first run of this checker flagged
-    O-4 as undefined for exactly that reason, which is the checker finding a real
-    thing about its own inputs.
+    **This docstring used to say obligations live in two files, and it was
+    wrong.** They live in three: STANDARDS.md, DECISIONS.md **and the phase
+    contracts**, which is where a phase opens the obligations it discovers.
+    Seven were invisible here -- O-8, O-16, O-17, O-18, O-20, O-21 and O-24 --
+    and nothing noticed until a test cited O-20 and the citations check called a
+    real obligation undefined.
+
+    **The sentence naming the scope was itself the defect.** It read as a
+    statement that the scope had been considered, which is worse than no
+    statement: it invited nobody to check. Rule 7, in the function whose whole
+    job is knowing what the record defines.
+
+    So the contracts are read too, and by glob rather than by name -- V-15's
+    lesson, since a Phase 3 contract must not be uncovered on the day it is
+    written.
     """
     decisions = (root / "docs" / "DECISIONS.md").read_text(encoding="utf-8")
     corrections = (root / "docs" / "CORRECTIONS.md").read_text(encoding="utf-8")
     standards = (root / "docs" / "STANDARDS.md").read_text(encoding="utf-8")
+    contracts = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in sorted((root / "docs" / "contracts").glob("*-CONTRACT.md"))
+    )
     return {
         "D": set(re.findall(r"^## (D-\d+)", decisions, re.M)),
         "C": set(re.findall(r"^## (C-\d+)", corrections, re.M)),
-        # Obligations live in tables, not headings, and in two documents.
-        "O": set(re.findall(r"^\| (O-\d+) \|", decisions + standards, re.M)),
+        # Obligations live in tables, not headings, and in THREE documents.
+        # A contract row may be bolded: `| **O-20** *(new)* | ...`
+        "O": set(re.findall(r"^\| \*{0,2}(O-\d+)\*{0,2}", decisions + standards + contracts, re.M)),
     }
 
 
@@ -688,6 +704,61 @@ def current_phase(root: Path) -> int:
     return max(numbers) if numbers else 0
 
 
+def collected_tests(root: Path) -> int:
+    """How many tests the suite actually has, by collecting them.
+
+    Counted rather than remembered. `pytest --collect-only -q` is the consumer's
+    own count, which is the point -- CLAUDE.md's figure is a claim about what
+    `pytest` reports, so `pytest` is what should produce it.
+    """
+    import subprocess
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "--collect-only",
+            # `-o addopts=` clears pyproject's own `-q`. Without it our `-q`
+            # becomes `-qq`, which prints per-file counts and no total -- the
+            # same doubling that suppressed the count in CI (V-16's sibling,
+            # and the reason CLAUDE.md says never to pass `-q`). It bit here,
+            # inside the checker written to catch stale counts.
+            "-o",
+            "addopts=",
+            "-q",
+            "--no-header",
+            "-p",
+            "no:cacheprovider",
+        ],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    for line in reversed(result.stdout.splitlines()):
+        if m := re.match(r"^(\d+) tests? collected", line.strip()):
+            return int(m.group(1))
+    return -1
+
+
+def highest_ruled_question(root: Path) -> int:
+    """The highest numbered question a contract records as RULED.
+
+    CLAUDE.md says "Q1-Qn ruled" and that n went stale within hours of being
+    written. It is derivable: the contracts mark a ruling with **RULED** or
+    "RULED:", beside the question's own heading.
+    """
+    highest = 0
+    for path in sorted((root / "docs" / "contracts").glob("*-CONTRACT.md")):
+        text = path.read_text(encoding="utf-8")
+        parts = re.split(r"^### Q(\d+)", text, flags=re.M)
+        for number, body in zip(parts[1::2], parts[2::2], strict=True):
+            if re.search(r"\*\*RULED", body) or "RULED:" in body:
+                highest = max(highest, int(number))
+    return highest
+
+
 def check_figures(root: Path) -> list[Problem]:
     """Figures restated in prose must be derivable, not remembered.
 
@@ -724,6 +795,28 @@ def check_figures(root: Path) -> list[Problem]:
             current_phase(root),
             re.compile(r"Phase (\d) of 4 in progress"),
             root / "README.md",
+        ),
+        # CLAUDE.md went stale within hours of being written -- "Q1-Q7 ruled"
+        # and "406 tests locally / CI green at 401" were both wrong by the same
+        # afternoon. It is the more consequential file: a stale README misleads
+        # a reader, a stale CLAUDE.md misleads the NEXT SESSION before it has
+        # read anything else and while it is deciding what to trust.
+        #
+        # The test count is the figure that moves most and is easiest to derive.
+        "claude.md tests": (
+            collected_tests(root),
+            re.compile(r"\*\*(\d[\d,]*) tests\*\*"),
+            root / "CLAUDE.md",
+        ),
+        "claude.md rulings": (
+            highest_ruled_question(root),
+            re.compile(r"\*\*Q1.Q(\d+) ruled"),
+            root / "CLAUDE.md",
+        ),
+        "claude.md phase": (
+            current_phase(root),
+            re.compile(r"\*\*Phase (\d) is in build\*\*"),
+            root / "CLAUDE.md",
         ),
     }
     for label, (actual, pattern, path) in claims.items():

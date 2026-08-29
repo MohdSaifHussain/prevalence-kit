@@ -296,13 +296,15 @@ concrete finding that only FULL-tier ceremony would have produced.
   caveat YouTube publishes for VVR: *"The confidence intervals do not take into account rater
   quality, which may impact our measurements."*
 - **The interval you choose has a coverage cost, and at rare-event rates it is large.** Ask for a
-  95% Wilson interval and you can get one that covers **as little as 91%** of the time, when the true
-  rate is a few times 1/n. That is the regime this tool is built for. Clopper-Pearson holds at or
+  95% Wilson interval and you can get one that covers **as little as 90.98%** of the time, when the
+  true rate is a few times 1/n. That is the regime this tool is built for. Clopper-Pearson holds at or
   above its nominal level there, and is wider for it. Measured, not asserted:
   `r/fixtures/coverage.json`, checked against the published limits in S-1.1 — which the same
-  instrument reproduces before it reports anything else. **"As little as" is exact and "about" would
-  not be:** every figure in that table is the worst found on a grid of points, and a finer grid can
-  only find a worse one. **This is why the plan must name the method.** A default would be this
+  instrument reproduces before it reports anything else. **Read the figure the safe way round.** Every number in that table is
+  the worst found on a *grid* of points, so the real worst is **at most** that and may be lower.
+  That is also why it says 90.98% and not 91%: rounding to nearest would have claimed coverage
+  never drops below 91%, when the measurement already shows it does. **Round a bound in the
+  direction that keeps it true.** **This is why the plan must name the method.** A default would be this
   project choosing, for an operator who did not know there was a choice. Added 2026-08-29, A-4.
 - **What we ship is limited by what we can witness.** Section 6 says every estimator is validated
   against an authoritative reference before it ships. That rule has a price, and this is it. S-1.1 —

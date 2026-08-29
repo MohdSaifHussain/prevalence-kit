@@ -20,9 +20,31 @@ import yaml
 from .canonical import JSONObject, digest
 from .errors import Reason, Refusal
 
-REQUIRED = ("estimand", "population", "design", "sample_size", "labels", "seed")
-SUPPORTED_DESIGNS = frozenset({"srs"})  # Phase 2 adds "stratified".
+REQUIRED = (
+    "estimand",
+    "population",
+    "design",
+    "sample_size",
+    "labels",
+    "seed",
+    "interval",
+)
+"""Every key a plan must carry.
+
+`interval` joined this list under **Q11 / D-37**. It is required, with no
+default, because the two intervals differ in what they guarantee and the
+difference is large in the regime this tool is for. A default would be this
+project choosing for an operator who did not know there was a choice.
+"""
+
+SUPPORTED_DESIGNS = frozenset({"srs", "stratified"})
 SUPPORTED_COMPARISONS = frozenset({"equals", "at_least"})
+SUPPORTED_INTERVALS = frozenset({"wilson", "clopper_pearson"})
+SUPPORTED_ROUNDING = frozenset({"largest_remainder"})
+"""Mirrors `stratified.Rounding`, asserted equal by
+`test_the_plan_vocabulary_matches_the_rounding_enum`. Two lists that must
+agree get something making them agree -- D-28.
+"""
 
 
 def _as_number(text: str) -> float | None:
@@ -83,6 +105,12 @@ class Plan:
     sample_size: int
     labels: str
     seed: str
+    interval: str
+    """`wilson` or `clopper_pearson`. Required, no default. Q11 / D-37."""
+    allocation_rounding: str | None = None
+    """Required under `design: stratified`, absent otherwise. Q4 / D-30
+    condition 1: the rounding rule is a commitment the operator makes, so it
+    cannot be defaulted or live as a constant in the source."""
     source_path: Path | None = None
 
     @classmethod
@@ -126,12 +154,75 @@ class Plan:
                 "Set `seed:` to any fixed string. Record it and never change it.",
             )
 
+        interval = str(raw["interval"]).strip().lower()
+        if interval not in SUPPORTED_INTERVALS:
+            raise Refusal(
+                Reason.PLAN_INVALID,
+                f"Interval {interval!r} is not one this tool computes.",
+                f"Use one of: {', '.join(sorted(SUPPORTED_INTERVALS))}.",
+            )
+
         design = str(raw["design"]).strip().lower()
         if design not in SUPPORTED_DESIGNS:
             raise Refusal(
                 Reason.PLAN_INVALID,
                 f"Design {design!r} is not supported in this version.",
                 f"Use one of: {', '.join(sorted(SUPPORTED_DESIGNS))}.",
+            )
+
+        # Q4 / D-30 condition 1. Only stratified plans allocate, so only they
+        # commit to a rounding rule -- requiring it of an SRS plan would be
+        # asking the operator to pre-register a decision the run never makes.
+        rounding = raw.get("allocation_rounding")
+        if design == "stratified":
+            if rounding is None or str(rounding).strip() == "":
+                raise Refusal(
+                    Reason.ALLOCATION_ROUNDING_UNDECLARED,
+                    "This plan uses design: stratified but does not say how a "
+                    "fractional allocation becomes whole units. Neyman allocation "
+                    "rarely lands on integers, and the rule that rounds it changes "
+                    "which units get sampled.",
+                    "Add `allocation_rounding: largest_remainder`. That is the only "
+                    "rule this version implements, and naming it in the plan is what "
+                    "keeps the allocation derived rather than chosen after the fact.",
+                )
+            rounding = str(rounding).strip().lower()
+            if rounding not in SUPPORTED_ROUNDING:
+                raise Refusal(
+                    Reason.PLAN_INVALID,
+                    f"Rounding rule {rounding!r} is not one this tool implements.",
+                    f"Use one of: {', '.join(sorted(SUPPORTED_ROUNDING))}.",
+                )
+            # A stratified plan is loadable and its allocation commitment is
+            # checked above -- but `do_sample` still calls `draw_srs`. Letting it
+            # through would draw a SIMPLE RANDOM SAMPLE from a plan that says
+            # stratified, which is a silently wrong number: the exact thing this
+            # tool exists to refuse.
+            #
+            # `STRATA_UNDEFINED` is the honest code and the contract already
+            # documents it as "design: stratified with no strata definition".
+            # That is literally true today -- the schema has no strata field yet,
+            # because it is the rest of D2.8.
+            if "strata" not in raw:
+                raise Refusal(
+                    Reason.STRATA_UNDEFINED,
+                    "This plan uses design: stratified but defines no strata, and "
+                    "this version has no field for them yet. Sampling would fall "
+                    "back to a simple random draw, which is not the design you "
+                    "pre-registered and would give you a number your plan does "
+                    "not describe.",
+                    "Use `design: srs` for now. Stratified sampling is built and "
+                    "checked against R `survey` (D2.3) but is not yet wired to "
+                    "the plan; until it is, the tool refuses rather than draw the "
+                    "wrong design.",
+                )
+        elif rounding is not None:
+            raise Refusal(
+                Reason.PLAN_INVALID,
+                f"This plan sets allocation_rounding but its design is {design!r}, "
+                "which never allocates across strata, so the rule would have "
+                "nothing to round.",
+                "Remove allocation_rounding, or set design: stratified.",
             )
 
         # F-3: sample_size is in REQUIRED, so its absence is a missing field rather
@@ -208,6 +299,8 @@ class Plan:
             sample_size=n,
             labels=str(raw["labels"]),
             seed=str(seed),
+            interval=interval,
+            allocation_rounding=rounding,
             source_path=source_path,
         )
 
@@ -229,6 +322,8 @@ class Plan:
             "sample_size": self.sample_size,
             "labels": self.labels,
             "seed": self.seed,
+            "interval": self.interval,
+            "allocation_rounding": self.allocation_rounding,
         }
 
     @property

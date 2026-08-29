@@ -7,4 +7,5 @@ population: frame.txt
 design: srs
 sample_size: 40
 labels: labels.csv
+interval: wilson
 seed: example-seed-2026
