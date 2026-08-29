@@ -110,38 +110,54 @@ def repo_files(root: Path, *globs: str) -> Iterator[Path]:
                 yield path
 
 
+OBLIGATION_SOURCES = ("docs/DECISIONS.md", "docs/STANDARDS.md", "docs/contracts/*-CONTRACT.md")
+"""Where obligations are defined. **This tuple is the scope, not a sentence about it.**
+
+`defined_ids` walks exactly these and `scope_of` renders them for humans, so the
+documented scope is derived from the behaviour instead of written beside it.
+
+That is C-34's fix. The old docstring said obligations live in two files. They
+live in three, seven were invisible, and **the sentence naming the scope was
+worse than no sentence** -- it answered the question before anyone asked it, and
+answered it wrongly.
+"""
+
+
+def scope_of(paths: tuple[str, ...]) -> str:
+    """The scope, rendered from the list actually walked. Never hand-written."""
+    return ", ".join(paths)
+
+
 def defined_ids(root: Path) -> dict[str, set[str]]:
     """What the record actually defines, read from the record.
 
-    **This docstring used to say obligations live in two files, and it was
-    wrong.** They live in three: STANDARDS.md, DECISIONS.md **and the phase
-    contracts**, which is where a phase opens the obligations it discovers.
-    Seven were invisible here -- O-8, O-16, O-17, O-18, O-20, O-21 and O-24 --
-    and nothing noticed until a test cited O-20 and the citations check called a
-    real obligation undefined.
+    Obligations are read from `OBLIGATION_SOURCES`, which is the single place
+    that list exists. **Do not restate it in prose here.** The previous version
+    of this docstring named two files when there were three, and because it read
+    as a considered statement nobody re-checked it: O-8, O-16, O-17, O-18, O-20,
+    O-21 and O-24 were all invisible until a test happened to cite one.
 
-    **The sentence naming the scope was itself the defect.** It read as a
-    statement that the scope had been considered, which is worse than no
-    statement: it invited nobody to check. Rule 7, in the function whose whole
-    job is knowing what the record defines.
+    A checker with no stated scope invites the question. A checker with a wrong
+    stated scope answers it falsely, and the reader comes away **more confident
+    and less correct**. So the scope is derived -- `scope_of(OBLIGATION_SOURCES)`
+    -- and `test_the_documented_scope_is_the_scope_walked` pins that it stays so.
 
-    So the contracts are read too, and by glob rather than by name -- V-15's
-    lesson, since a Phase 3 contract must not be uncovered on the day it is
-    written.
+    Contracts are matched by glob, not by name, so a Phase 3 contract is covered
+    the day it is written. V-15.
     """
     decisions = (root / "docs" / "DECISIONS.md").read_text(encoding="utf-8")
     corrections = (root / "docs" / "CORRECTIONS.md").read_text(encoding="utf-8")
-    standards = (root / "docs" / "STANDARDS.md").read_text(encoding="utf-8")
-    contracts = "\n".join(
-        path.read_text(encoding="utf-8")
-        for path in sorted((root / "docs" / "contracts").glob("*-CONTRACT.md"))
-    )
+
+    obligations = ""
+    for pattern in OBLIGATION_SOURCES:
+        for path in sorted(root.glob(pattern)):
+            obligations += path.read_text(encoding="utf-8") + "\n"
+
     return {
         "D": set(re.findall(r"^## (D-\d+)", decisions, re.M)),
         "C": set(re.findall(r"^## (C-\d+)", corrections, re.M)),
-        # Obligations live in tables, not headings, and in THREE documents.
         # A contract row may be bolded: `| **O-20** *(new)* | ...`
-        "O": set(re.findall(r"^\| \*{0,2}(O-\d+)\*{0,2}", decisions + standards + contracts, re.M)),
+        "O": set(re.findall(r"^\| \*{0,2}(O-\d+)\*{0,2}", obligations, re.M)),
     }
 
 

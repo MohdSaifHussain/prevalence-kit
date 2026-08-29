@@ -510,3 +510,33 @@ def test_the_contracts_numbered_questions_are_not_read_as_findings() -> None:
                     f"{path.name} writes {ident}, which reads as a register finding. "
                     "Numbered questions are spelled Q5, without the hyphen."
                 )
+
+
+def test_the_documented_scope_is_the_scope_walked() -> None:
+    """C-34. A checker's stated scope is a claim, and claims get checked.
+
+    `defined_ids` once said obligations live in two files. They live in three,
+    seven were invisible, and the sentence naming the scope was worse than no
+    sentence: it answered the question before anyone asked it, and answered it
+    wrongly. A reader who checked the docstring came away more confident and
+    less correct.
+
+    So the scope is now a tuple the function walks, and the human-readable form
+    is rendered from that tuple. This pins the two together: if someone adds a
+    fourth source to the walk and forgets the prose, there is no prose to
+    forget.
+    """
+    module = _check_claims_module()
+    root = Path(__file__).resolve().parents[1]
+
+    assert "docs/contracts/*-CONTRACT.md" in module.OBLIGATION_SOURCES, (
+        "contracts are where a phase opens the obligations it discovers"
+    )
+    for pattern in module.OBLIGATION_SOURCES:
+        assert sorted(root.glob(pattern)), f"{pattern} matches nothing"
+        assert pattern in module.scope_of(module.OBLIGATION_SOURCES)
+
+    # The seven that were invisible must now resolve.
+    defined = module.defined_ids(root)["O"]
+    for name in ("O-8", "O-16", "O-17", "O-18", "O-20", "O-21", "O-24"):
+        assert name in defined, f"{name} is defined in a contract and still unseen"

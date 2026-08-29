@@ -8,6 +8,10 @@ neither the director nor the AI can quietly absorb the other's.
 
 **Source attribution is the director's, given at ratification**, and is recorded as given.
 
+**The `Director` row read 0 through thirty-one entries and now reads 1 — C-32.** A table that
+counts the builder's errors and never the director's is not measuring honesty; it is measuring
+who writes the entries. The director raised that one himself and asked for it to be counted.
+
 ---
 
 ## Counts
@@ -17,11 +21,11 @@ neither the director nor the AI can quietly absorb the other's.
 | Chat reviewer (draft author) | 3 | 0 | **3** |
 | Research report (passed through unverified) | 2 | 0 | **2** |
 | Stale-at-draft-time, queued but built on anyway | 1 | 0 | **1** |
-| **Builder (Claude Code)** | **25** | **0** | **25** |
+| **Builder (Claude Code)** | **27** | **0** | **27** |
 | Reviewer instrument | **2** | 0 | **3** (1 noted) |
-| Director | 0 | 0 | 0 |
+| **Director** | **1** | 0 | **1** |
 | Tool artifact (noted, not a defect) | - | - | **1** |
-| **Total** | **33** | **0** | **34** |
+| **Total** | **36** | **0** | **37** |
 
 C-1 … C-6 are Phase 0: defects in the chat-drafted vision, all caught before any code, none reaching
 an artifact. **C-7 … C-13 are Phase 1, and all seven are mine.** Five were caught by the director's
@@ -902,6 +906,97 @@ quantity both sources were talking about.
 
 ---
 
+## C-32 - "As little as 91%" asserts a floor the measurement already breaks
+
+| | |
+|---|---|
+| **Claimed** | `PROJECT_CHARTER.md` §8, amendment **A-4**: a 95% Wilson interval *"covers **as little as 91%** of the time"* at rare-event rates. Also in the `CORRECTION_INTERVAL_UNSUPPORTED` refusal text. |
+| **Actually** | The measurement is **0.9098**, which is **below** 0.91. So the sentence asserts a floor the measurement has already gone under -- and since it is a worst-over-a-grid figure, a finer grid can only push it lower. |
+| **Direction** | Toward the flattering answer. It makes the tool's primary interval look better than measured. |
+| **Source** | **Director.** |
+| **Caught by** | The builder, verifying the refusal text against the fixture before shipping it -- `int(0.9098 * 100)` returned 90, not 91. |
+| **Severity** | **Medium.** It reached the **ratified charter**. Nothing computed from it, but it is the number an operator is meant to make a decision on. |
+| **Replaced by** | **90.98%** in the charter and in the refusal, with the reason stated: round a bound in the direction that keeps it true. |
+| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+
+**This is the first correction sourced to the director**, and the counts table has read `Director | 0`
+through thirty-one entries. Recorded because a table that counts the builder's errors and never the
+director's is not measuring honesty, it is measuring who writes the entries.
+
+**How it happened is the useful part, and it is not carelessness.** The director changed *"about
+91%"* to *"as little as 91%"* and **the framing got better while the number got worse.** "About" is a
+loose claim that 0.9098 satisfies. "As little as" is a precise one that it does not. The edit
+improved the sentence and broke it in the same stroke, and it read well enough to be ruled into a
+ratified document.
+
+**The director's own note on the shape**, recorded because it revises a characterisation in the
+record: C-19 said *"my instruments have been wrong about what the contract's action is, never about
+what the code does."* That held for five instances. **This is the second break, after C-26** -- and
+both breaks came when the director was correcting someone else.
+
+**The rule is worth more than the fix.**
+
+> **Round a bound in the direction that preserves it.** Rounding to nearest is correct for a
+> measurement and wrong for a bound, because a bound is a claim about everything *outside* your
+> sample, and rounding toward the middle silently weakens it.
+
+---
+
+## C-33 - Two more bounds rounded toward the middle, both ours
+
+| | |
+|---|---|
+| **Claimed** | (a) `docs/STANDARDS.md` S-2.4 and `tests/test_clopper_pearson.py`: the worst Clopper-Pearson agreement after `DIGITS = 12` record rounding is **2.6e-07**. (b) `PROJECT_CHARTER.md` NEXT queue: largest-remainder rounding costs at **worst 0.73%** of variance. |
+| **Actually** | (a) **2.627713e-07**, so 2.6e-07 understates the worst by rounding down. (b) `docs/STANDARDS.md` S-1.7 records **0.7316%**; the charter's 0.73% rounds it down too. Both claim a tighter bound than was measured. |
+| **Direction** | Both toward the flattering answer. (a) makes our record format look more precise than it is; (b) makes the ruled rounding method look cheaper than it is. |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | The sweep the director ordered after **C-32** -- *"start with any figure in the record described as 'worst', 'at most' or 'no more than'."* Both were found in the first pass. |
+| **Severity** | **Low each, notable together.** Neither changes a decision. What they show is that the class was already present twice before anyone named it. |
+| **Replaced by** | **2.7e-07** and **0.74%**, rounded away from the middle. |
+| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+
+**The sweep also confirmed three figures that were already right**, which is what makes it a
+measurement rather than a hunt: `8.4e-11` from 8.383e-11, `7.3e-13` from 7.281e-13, and S-1.7's own
+`0.7316%` in STANDARDS. Each rounds **up**, away from the middle, and each is a real bound. So the
+error is not systematic -- it is what happens when a figure is copied into prose without asking which
+direction is safe.
+
+**Where to look next.** Any figure in this record described as *worst*, *at most*, *no more than*, or
+*as little as*. The sweep covered those four words. It did not cover a bound stated without one of
+them, and that is the harder case.
+
+---
+
+## C-34 - A checker that stated a scope it did not have
+
+| | |
+|---|---|
+| **Claimed** | `tools/check_claims.py`, `defined_ids` docstring: *"Obligations are spread across two files -- O-1..O-6 in STANDARDS.md, the rest in DECISIONS.md -- so both are read."* |
+| **Actually** | They are spread across **three**. The phase contracts are where a phase opens the obligations it discovers, and the function never read them. **Seven were invisible**: O-8, O-16, O-17, O-18, O-20, O-21, O-24. Any code or test citing one would have been told it was undefined. |
+| **Direction** | Against the checker's own coverage, and it hid the gap rather than leaving it open. |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | A D2.8 test citing **O-20** for the first time. The citations check called a real obligation undefined, which is the checker reporting a true fact about itself in the form of a false one about the record. |
+| **Severity** | **Medium.** Nothing was wrong in the record; the instrument could not see a third of the obligations and said it could. |
+| **Replaced by** | `OBLIGATION_SOURCES`, a tuple the function walks, with `scope_of()` rendering it for humans. **The documented scope is now derived from the behaviour**, pinned by `test_the_documented_scope_is_the_scope_walked`. Contracts matched by glob so a Phase 3 contract is covered the day it is written. |
+| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+
+**This is a different kind from the seven instrument-coverage instances before it, and the director
+named the difference:**
+
+> A checker with **no** stated scope invites someone to ask. A checker with a **wrong** stated scope
+> answers the question before it is asked, and answers it falsely. **A reader who checks the
+> docstring comes away more confident and less correct.**
+
+That is why the fix is not "correct the sentence." A sentence written beside the behaviour drifts
+from it; the seven earlier instances are all that shape. **The scope has to be the same object the
+code walks**, so there is no second copy to go stale.
+
+**A documented scope is a claim, and claims get checked.** That is rule 9 -- a checked number can
+carry an unchecked claim -- applied to the one place nobody thought to apply it: the checker's own
+description of itself.
+
+---
+
 ## Classes, tracked separately from the count
 
 A correction gets a C-number when it reached a commit. A **class** keeps its own tally, because a
@@ -964,6 +1059,21 @@ property or split the sentence.**
 
 Both instances were in Phase 1's closed outcome, written in the same section, on the same day.
 
+### One pyproject setting, two costs
+
+`addopts = "-q"` is set once and has now cost something twice, both times by **doubling** into
+`-qq`, which suppresses the total pytest prints.
+
+| # | Where | What it cost |
+|---|---|---|
+| 1 | **E11**, Phase 1 | The exit check that exists to print the test count could not print it. CI ran `pytest -q` on top of the setting. Closed phase; recorded there |
+| 2 | **2026-08-29** | `check_figures`' new collect call passed `-q` and got per-file counts with no total, returning `-1`. **Inside the checker written to catch stale counts.** Fixed with `-o addopts=` |
+
+**Neither was a bug in the setting.** `-q` is a reasonable default. The cost is that it is
+invisible at every call site, so anyone reaching for `-q` gets `-qq` and no error. CLAUDE.md has
+said *"never `pytest -q`"* since Phase 1 and it happened anyway, which is the argument for the
+flag being explicit at the call rather than remembered.
+
 ### A worst case measured over a grid is an upper bound on the worst case
 
 **Not the axes rule restated.** The axes rule says a figure names what varied and what was pinned.
@@ -1021,6 +1131,7 @@ varied it. A parameter no instrument points at is a parameter nothing defends.
 | 3 | V-15 | `check_paths` read a fixed list of globs, so a new document was silently uncovered |
 | 4 | V-16 | CI ran six of the gate's seven checks. No test file was type-checked on the remote |
 | 5 | C-23 | `check_gate` read `gate.yml` with a regex, so it passed a file GitHub cannot parse |
+| 8 | **C-34** | **A fifth kind, and worse than the others.** `defined_ids` did not merely cover less than it appeared to — it **stated a scope it did not have**. The seven above leave a reader free to ask what is covered; this one answers first, and wrongly. **The fix is structural: the scope is the tuple the code walks, not a sentence beside it** |
 | 6 | **D-34** | `check_findings` validated the rows present and could not see a row missing. V-12..V-15 were named across three to nine documents each with no register row, while the checker reported "22 findings, all accounted for" |
 | 7 | **C-27** | `check_codes` reconciles `Reason` against the contracts both ways, so it looks like the reason-code checker. **It never asks whether a code fires.** `PLAN_MISSING` had no control at either raise site for a phase and a half, and the "23 reason codes" count was derived by that same checker |
 

@@ -463,12 +463,12 @@ the same measurements at confidence 0.95 only -- **C-30**. An agreement figure s
 | What | Worst disagreement |
 |---|---|
 | The method, in full double precision | **8.4e-11** |
-| After our own `DIGITS = 12` record rounding | **2.6e-07** |
+| After our own `DIGITS = 12` record rounding | **2.7e-07** |
 | The defining property at our endpoints -- `P(X >= k | lower)` against `alpha/2` | **3.9e-13** |
 
 **The rounding is the larger of the two, and adding the confidence axis widened the gap from 100x
 to 3000x.** `DIGITS = 12` costs a fixed *absolute* precision; higher confidence pushes rare-event
-lower bounds smaller, so the same absolute error is a larger relative one. The 2.6e-07 is our
+lower bounds smaller, so the same absolute error is a larger relative one. The 2.7e-07 is our
 record format, not our estimator. R2.3 asks for four significant digits; both clear
 it by orders of magnitude.
 

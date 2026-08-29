@@ -110,15 +110,20 @@ confirms we implement the method as its author does. It does not independently c
    C-24's was printed on screen at the time.
 5. **End every report with what remains open, by name and severity.** C-12 is what happens otherwise.
 6. **A finding closed in one artifact can be open in another** — D-23.
-7. **A check covers less than it looks like it covers.** Eight times now: C-15, C-19, V-15, V-16,
-   C-23, `check_codes` reading one contract when there were three, D-34, and C-27. When you add or
-   trust a check, ask what it does **not** read. Ask in both directions: `check_findings` validated
-   every row that was there and could not see the four that were missing.
-8. **A worst case measured over a grid is an *upper bound* on the worst case.** A finer grid can
-   only find a more extreme value, so say **"as little as 91%"**, never "about 91%". State the
-   grid step the way you state any other axis. The director re-measured coverage at step 0.05 and
-   found 0.9537 where step 0.25 reported 0.9540; **both are kept**, because two grids disagreeing
-   is evidence about the measurement.
+7. **A check covers less than it looks like it covers.** Nine times now: C-15, C-19, V-15, V-16,
+   C-23, `check_codes` reading one contract when there were three, D-34, C-27, and **C-34**. Ask
+   what it does **not** read, in both directions. **C-34 is the worst kind: a checker that
+   *stated* a scope it did not have.** No stated scope invites the question; a wrong one answers
+   it falsely, and the reader comes away more confident and less correct. **Make the scope the
+   object the code walks, never a sentence beside it.**
+8. **A worst case measured over a grid is an *upper bound* on the worst case, and a bound is
+   rounded in the direction that keeps it true.** A finer grid can only find a more extreme
+   value, so state the grid step like any other axis — 0.9540 at step 0.25, 0.9537 at 0.05, and
+   **keep both**, because two grids disagreeing is evidence about the measurement.
+   **Rounding to nearest is right for a measurement and wrong for a bound**: it rounds toward
+   the middle and silently weakens a claim about everything outside your sample. *"As little as
+   91%"* is false when the measurement is 0.9098 — **C-32**, the director's, in the charter.
+   The sweep it prompted found two more, both ours and both flattering: **C-33**.
 9. **A checked number can carry an unchecked claim.** *"23 reason codes, each with both controls"*
    looks like one verified sentence. A machine counted the 23. Nothing checked "each with both
    controls", and it was false — C-27. Same shape in C-28. This is worse than a plain unchecked
@@ -156,7 +161,7 @@ confirms we implement the method as its author does. It does not independently c
 **Phase 0** ratified. **Phase 1** closed at `d66d225`. **Phase 2 is in build**, **Q1–Q11 ruled**,
 **A-1 … A-4** applied to the charter.
 
-**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **606 tests**, seven gate
+**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **607 tests**, seven gate
 checks green. **CI last ran green at 602** on CPython 3.12.14 / 3.13.15 / 3.14.7, run
 `33241090771`, head `8565ddc`. Local and CI figures are stated apart on purpose.
 

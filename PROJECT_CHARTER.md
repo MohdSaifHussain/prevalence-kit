@@ -137,7 +137,7 @@ breaches it is a deviation to be recorded, not absorbed.
 - **Wright's exact optimal sample allocation** — authorised for this queue by the director,
   2026-08-29. Solves the integer allocation directly instead of rounding a Neyman solution, and is
   variance-minimal where our ruled largest-remainder rounding is not (`docs/STANDARDS.md` S-1.7,
-  measured: 0 on every shipped fixture, worst 0.73% of variance across 37,910 random designs).
+  measured: 0 on every shipped fixture, worst 0.74% of variance across 37,910 random designs).
   **Deferred for the same reason as Q1: neither R `survey` nor `svy` implements it, so R2.3 would
   have nothing to check it against.** It needs a witness before it can be built. Sources: Wright
   (2014) S-1.7, Wright (2012) S-1.8.

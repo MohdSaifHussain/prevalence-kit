@@ -102,7 +102,7 @@ def test_the_agreement_with_r_is_limited_by_our_record_not_our_method() -> None:
     across each, confidence in {0.90, 0.95, 0.99}.
 
         full double precision      8.4e-11   <- the method
-        after DIGITS = 12 rounding 2.6e-07   <- our own record format
+        after DIGITS = 12 rounding 2.7e-07   <- our own record format
 
     **What the second axis changed, and it is the point of adding it.** The
     figures used to read 7.1e-11 and 6.9e-09. Both were correct and both were
@@ -110,7 +110,7 @@ def test_the_agreement_with_r_is_limited_by_our_record_not_our_method() -> None:
 
         conf 0.90   method 8.4e-11   record 3.0e-08
         conf 0.95   method 7.1e-11   record 6.9e-09
-        conf 0.99   method 5.3e-11   record 2.6e-07
+        conf 0.99   method 5.3e-11   record 2.7e-07
 
     **The method figure barely moved. The record figure moved by a factor of 38.**
     That is not noise, and it is worth understanding rather than absorbing:
