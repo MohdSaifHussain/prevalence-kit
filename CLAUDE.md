@@ -181,8 +181,14 @@ confirms we implement the method as its author does. It does not independently c
 **A-1 … A-4** applied to the charter.
 
 **Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **608 tests**, seven gate
-checks green. **CI last ran green at 602** on CPython 3.12.14 / 3.13.15 / 3.14.7, run
-`33241090771`, head `8565ddc`. Local and CI figures are stated apart on purpose.
+checks green. **CI last ran green at 608** on the 3.12 / 3.13 / 3.14 matrix, four jobs, run
+`33269147849`, head `d096da0`. Local and CI figures are stated apart on purpose.
+
+*The exact patch versions are **not** carried here any more. The previous line said
+`3.12.14 / 3.13.15 / 3.14.7`, and that run's log does not print a `Successfully set up CPython`
+line, so re-deriving them from the artifact was not possible. **Quoting the old ones would have
+been C-7's class** — a number carried rather than re-derived. The matrix keys are what the run
+proves.*
 
 **Three of these figures are now machine-checked** — the test count, the highest ruled question,
 and the phase — because this file went stale within hours of being written and nothing noticed.
