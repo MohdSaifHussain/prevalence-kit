@@ -63,6 +63,22 @@ class Reason(StrEnum):
     # PLAN_THRESHOLD_INVALID's precedent under D-22, on its second outing.
     STRATUM_UNDECLARED = "STRATUM_UNDECLARED"
 
+    # F-11. The plan pre-registers WHICH population and WHICH labels, and the
+    # CLI takes both paths as arguments. Nothing compared them, so a run could
+    # be drawn from a file the plan does not name while `verify` reported nine
+    # checks and exit 0 -- and the report printed the plan's filename beside a
+    # number computed from a different one.
+    #
+    # V-1 defeated pre-registration of the plan. This defeated pre-registration
+    # of the EVIDENCE, which is the thing the plan is about.
+    #
+    # One code, not two, under D-22 and PLAN_THRESHOLD_INVALID's precedent: a
+    # frame mismatch and a labels mismatch send the operator to the same two
+    # places -- a line in the plan, and the command they typed -- and the
+    # remedial act is the same. Which field, and both resolved paths, travel in
+    # the detail text, which is what that text is for.
+    EVIDENCE_NOT_PREREGISTERED = "EVIDENCE_NOT_PREREGISTERED"
+
     # F-10's durable half. `estimate.json` records the method that produced the
     # number; the hashed plan records the method the operator pre-registered.
     # Nothing compared them, so `interval` sat inert for a commit while `verify`

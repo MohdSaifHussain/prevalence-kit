@@ -158,6 +158,50 @@ def do_plan(ws: Workspace, plan: Plan) -> str:
     return plan_hash
 
 
+def _declared_path(plan: Plan, declared: str) -> Path:
+    """Where the plan's `population` / `labels` value points, resolved.
+
+    **The convention, stated because an unstated resolution rule is its own
+    defect:** a relative path in the plan is resolved **against the directory
+    holding the plan file**, not against the current working directory. That is
+    how configuration files conventionally work, and it is the only rule that
+    survives running the tool from somewhere else -- a plan that names
+    `frame.txt` beside itself keeps meaning that file wherever you invoke from.
+
+    A plan built through the Python API has no `source_path` (D-25 records that
+    as a supported case), so there is no plan directory to resolve against and
+    the working directory is used instead. That difference is visible rather than
+    silent: the ledger records the path actually used.
+    """
+    base = plan.source_path.parent if plan.source_path is not None else Path.cwd()
+    return (base / declared).resolve()
+
+
+def _require_preregistered(plan: Plan, field: str, declared: str, supplied: Path) -> None:
+    """F-11. Refuse when the file supplied is not the file the plan committed to.
+
+    **Resolved paths, never strings.** `frame.txt` and `./frame.txt` are the same
+    file and different strings, and a string comparison would refuse correct runs
+    -- a control that fires for the wrong reason, which is rule 21.
+
+    Raised at `sample` and at `ingest-labels`, which is **before the label budget
+    is spent** -- Q2's reason, and the same reason Q7 refuses at plan load.
+    """
+    wanted = _declared_path(plan, declared)
+    got = supplied.resolve()
+    if wanted != got:
+        raise Refusal(
+            Reason.EVIDENCE_NOT_PREREGISTERED,
+            f"The plan pre-registers `{field}: {declared}`, which resolves to "
+            f"{wanted}. You supplied {got}. A pre-registered measurement is a "
+            f"commitment about which evidence produces the number, so this run "
+            f"would not be the measurement the plan describes.",
+            f"Run it against {wanted}, or change `{field}` in the plan and re-run "
+            f"`plan` into a fresh run directory. Changing the plan changes its "
+            f"hash, which is what makes the swap visible instead of silent.",
+        )
+
+
 def do_sample(ws: Workspace, plan: Plan, frame_path: Path) -> tuple[str, ...]:
     """Draw the sample. Records the frame too, so the draw stays re-derivable.
 
@@ -166,6 +210,8 @@ def do_sample(ws: Workspace, plan: Plan, frame_path: Path) -> tuple[str, ...]:
     moment `stratified` was loadable: a stratified plan answered with a simple
     random draw is a number the plan does not describe. F-10's family.
     """
+    _require_preregistered(plan, "population", plan.population, frame_path)
+
     if plan.design == "stratified":
         return _sample_stratified(ws, plan, frame_path)
 
@@ -188,6 +234,14 @@ def do_sample(ws: Workspace, plan: Plan, frame_path: Path) -> tuple[str, ...]:
             "frame_rows_read": len(ids),
             "frame_unique_ids": len(unique),
             "n": len(drawn),
+            # D-24's shape, applied to the frame. After F-11's check these
+            # cannot differ -- and recording both is what makes that checkable
+            # rather than assumed. Stored AS INVOKED, not resolved: SECURITY
+            # section 3.8 gives the operator a control by letting a bare
+            # filename stay a bare filename, and an absolute path here would
+            # take it away.
+            "population_declared": plan.population,
+            "population_used": str(frame_path),
         },
     )
     return drawn
@@ -200,6 +254,8 @@ def do_ingest(ws: Workspace, plan: Plan, labels_path: Path) -> dict[str, str]:
     set that is merely *mostly* right is how a measurement quietly becomes a
     different measurement.
     """
+    _require_preregistered(plan, "labels", plan.labels, labels_path)
+
     drawn: list[str] = list(ws.read_json("sample.json")["item_ids"])
     rows = _read_labels(labels_path, plan.estimand.label_field)
 
@@ -224,6 +280,8 @@ def do_ingest(ws: Workspace, plan: Plan, labels_path: Path) -> dict[str, str]:
             "labels_digest": labels_digest,
             "seals": [m.as_record() for m in manifests],
             "sealed_items": len(manifests),
+            "labels_declared": plan.labels,
+            "labels_used": str(labels_path),
         },
     )
     return labels
@@ -414,6 +472,8 @@ def _sample_stratified(ws: Workspace, plan: Plan, frame_path: Path) -> tuple[str
             "n": len(drawn_ids),
             "design": "stratified",
             "strata": len(strata),
+            "population_declared": plan.population,
+            "population_used": str(frame_path),
         },
     )
     return drawn_ids

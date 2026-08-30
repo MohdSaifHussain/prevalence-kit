@@ -71,7 +71,15 @@ def build(ws: Workspace, plan: Plan) -> JSONObject:
             "positive_when": plan.estimand.positive_when,
             "threshold": plan.estimand.threshold,
         },
-        "population": plan.population,
+        # F-11: the population the run ACTUALLY sampled, taken from the ledger.
+        # This used to read `plan.population` -- the commitment -- so a run drawn
+        # from another file printed the pre-registered filename beside a number
+        # computed from a different one, in the artifact an outsider reads.
+        # The check in `do_sample` means they cannot differ now; the report takes
+        # the value from the record anyway, because the record is what happened.
+        # Older runs have no such field and fall back to the plan, labelled.
+        "population": sample.get("population_used", plan.population),
+        "population_declared": plan.population,
         "design": plan.design,
         "seed": plan.seed,
         "frame_rows_read": sample.get("frame_rows_read"),

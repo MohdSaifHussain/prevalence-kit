@@ -52,6 +52,7 @@ the same wrong reason.
 | F-8 | high | closed | `test_a_confidence_outside_zero_to_one_is_refused_by_name` | D2.7 |
 | F-9 | medium | closed | `test_our_neyman_is_the_large_stratum_limit_of_the_1934_form` | C-35 |
 | F-10 | high | closed | `test_verify_refuses_when_the_estimate_method_contradicts_the_plan` | C-38 |
+| F-11 | critical | closed | `test_sampling_a_frame_the_plan_does_not_name_is_refused` | C-39 |
 | V-1 | critical | closed | `test_replanning_into_an_open_workspace_is_refused` | D-17 |
 | V-2 | high | closed | `test_replan_without_rerunning_names_the_plan_not_the_estimate` | C-10 |
 | V-3 | high | closed | `test_an_unrecognised_comparison_is_refused` | — |

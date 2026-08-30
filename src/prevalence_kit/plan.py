@@ -215,9 +215,20 @@ class Plan:
 
     estimand: Estimand
     population: str
+    """The frame file this measurement is pre-registered against.
+
+    **A relative path resolves against the directory holding the plan file**, not
+    against the working directory -- the convention config files use, and the
+    only one that survives being run from elsewhere. `sample` refuses when the
+    frame it is handed is not this file, comparing **resolved** paths rather than
+    strings. F-11 / C-39.
+    """
     design: str
     sample_size: int
     labels: str
+    """The labels file this measurement is pre-registered against. Same
+    resolution rule as `population`, checked at `ingest-labels` -- before the
+    label budget is spent, which is Q2's reason."""
     seed: str
     interval: str
     """`wilson` or `clopper_pearson`. Required, no default. Q11 / D-37.

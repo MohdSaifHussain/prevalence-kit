@@ -74,6 +74,20 @@ def write_frame(path: Path, sizes: dict[str, int], *, rogue: str | None = None) 
     return path
 
 
+def load_plan(tmp_path: Path, body: dict[str, Any]) -> Plan:
+    """Write the plan to disk and load it, the way the CLI does.
+
+    **F-11 makes this the honest construction.** The plan's `population` and
+    `labels` are resolved **against the plan file's directory**, so a plan built
+    by `Plan.from_mapping` has no directory to resolve against and falls back to
+    the working directory. Tests that actually run `sample` therefore have to
+    have a plan file, exactly like every real invocation.
+    """
+    path = tmp_path / "plan.yaml"
+    path.write_text(yaml.safe_dump(body, sort_keys=True), encoding="utf-8")
+    return Plan.load(path)
+
+
 @pytest.fixture
 def frame_csv(tmp_path: Path) -> Path:
     return write_frame(tmp_path / "frame.csv", SIZES)
@@ -295,8 +309,13 @@ def test_one_stratum_is_accepted(tmp_path: Path) -> None:
 
     What it must not be is silent, and that is O-27's disclosure, post-stop.
     """
-    plan = Plan.from_mapping(
-        stratified_plan(sample_size=50, strata=[{"name": "only", "expected_rate": "0.2"}])
+    plan = load_plan(
+        tmp_path,
+        stratified_plan(
+            population="solo.csv",
+            sample_size=50,
+            strata=[{"name": "only", "expected_rate": "0.2"}],
+        ),
     )
     assert plan.strata is not None
     assert len(plan.strata) == 1
@@ -311,7 +330,7 @@ def test_one_stratum_is_accepted(tmp_path: Path) -> None:
 
 
 def test_the_stratified_draw_allocates_and_sums_to_n(tmp_path: Path, frame_csv: Path) -> None:
-    plan = Plan.from_mapping(stratified_plan())
+    plan = load_plan(tmp_path, stratified_plan())
     ws = Workspace(tmp_path / "run")
     do_plan(ws, plan)
     drawn = do_sample(ws, plan, frame_csv)
@@ -335,7 +354,7 @@ def test_the_ledger_carries_both_allocations(tmp_path: Path, frame_csv: Path) ->
     An outsider re-derives the rounding without running this code, and `verify`
     re-derives it so a changed rule breaks the chain.
     """
-    plan = Plan.from_mapping(stratified_plan())
+    plan = load_plan(tmp_path, stratified_plan())
     ws = Workspace(tmp_path / "run")
     do_plan(ws, plan)
     do_sample(ws, plan, frame_csv)
@@ -349,7 +368,7 @@ def test_the_ledger_carries_both_allocations(tmp_path: Path, frame_csv: Path) ->
 
 def test_the_stratified_draw_is_deterministic(tmp_path: Path, frame_csv: Path) -> None:
     """R2, per stratum. The stratum never enters the key -- D-16 unchanged."""
-    plan = Plan.from_mapping(stratified_plan())
+    plan = load_plan(tmp_path, stratified_plan())
     first = Workspace(tmp_path / "a")
     do_plan(first, plan)
     second = Workspace(tmp_path / "b")
@@ -364,7 +383,7 @@ def test_verify_redraws_the_stratified_sample(tmp_path: Path, frame_csv: Path) -
     A stratified run checked against a simple random redraw is the auditor's tool
     making the same substitution the estimator was making.
     """
-    plan = Plan.from_mapping(stratified_plan())
+    plan = load_plan(tmp_path, stratified_plan())
     ws = Workspace(tmp_path / "run")
     do_plan(ws, plan)
     do_sample(ws, plan, frame_csv)
@@ -380,7 +399,7 @@ def test_verify_redraws_the_stratified_sample(tmp_path: Path, frame_csv: Path) -
 def test_a_frame_unit_in_an_undeclared_stratum_is_refused(tmp_path: Path) -> None:
     """Q14 / D-40. Dropping it would change the denominator -- V-7's class."""
     frame = write_frame(tmp_path / "bad.csv", SIZES, rogue="unexpected")
-    plan = Plan.from_mapping(stratified_plan())
+    plan = load_plan(tmp_path, stratified_plan(population="bad.csv"))
     ws = Workspace(tmp_path / "run")
     do_plan(ws, plan)
 
@@ -400,7 +419,7 @@ def test_a_text_frame_under_a_stratified_design_is_refused(tmp_path: Path) -> No
     """
     frame = tmp_path / "frame.txt"
     frame.write_text("a\nb\nc\n", encoding="utf-8")
-    plan = Plan.from_mapping(stratified_plan(population="frame.txt"))
+    plan = load_plan(tmp_path, stratified_plan(population="frame.txt"))
     ws = Workspace(tmp_path / "run")
     do_plan(ws, plan)
 
@@ -413,7 +432,7 @@ def test_a_text_frame_under_a_stratified_design_is_refused(tmp_path: Path) -> No
 def test_a_csv_frame_without_a_stratum_column_is_refused(tmp_path: Path) -> None:
     frame = tmp_path / "plain.csv"
     frame.write_text("item_id\na\nb\n", encoding="utf-8")
-    plan = Plan.from_mapping(stratified_plan(population="plain.csv"))
+    plan = load_plan(tmp_path, stratified_plan(population="plain.csv"))
     ws = Workspace(tmp_path / "run")
     do_plan(ws, plan)
 
@@ -425,8 +444,8 @@ def test_a_csv_frame_without_a_stratum_column_is_refused(tmp_path: Path) -> None
 def test_a_declared_stratum_with_no_frame_units_is_refused(tmp_path: Path, frame_csv: Path) -> None:
     """STRATUM_EMPTY sends the operator to the frame; STRATUM_UNSAMPLED to the
     sample. D-22 keeps them apart."""
-    plan = Plan.from_mapping(
-        stratified_plan(strata=[*STRATA, {"name": "ghost", "expected_rate": "0.1"}])
+    plan = load_plan(
+        tmp_path, stratified_plan(strata=[*STRATA, {"name": "ghost", "expected_rate": "0.1"}])
     )
     ws = Workspace(tmp_path / "run")
     do_plan(ws, plan)
@@ -444,7 +463,7 @@ def test_a_stratified_run_refuses_to_estimate_by_name(tmp_path: Path, frame_csv:
     number that looks fine and is not the design. O-26 builds the interval, under
     Q7 -- the plan names the method.
     """
-    plan = Plan.from_mapping(stratified_plan())
+    plan = load_plan(tmp_path, stratified_plan())
     ws = Workspace(tmp_path / "run")
     do_plan(ws, plan)
     drawn = do_sample(ws, plan, frame_csv)
@@ -475,3 +494,165 @@ def test_the_plan_yaml_round_trips_through_disk(tmp_path: Path) -> None:
     loaded = Plan.load(path)
     assert loaded.strata is not None
     assert [s.expected_rate for s in loaded.strata] == ["0.30", "0.05", "0.002"]
+
+
+# ------------------------------------------- F-11: the evidence the plan names
+
+
+def srs_on_disk(tmp_path: Path, **over: Any) -> tuple[Plan, Path, Path]:
+    """A loadable SRS plan with its frame and labels beside it."""
+    body = dict(PLAN_YAML) | {"population": "frame.txt", "labels": "labels.csv"}
+    body.update(over)
+    frame = tmp_path / "frame.txt"
+    frame.write_text("\n".join(f"item-{i:04d}" for i in range(200)), encoding="utf-8")
+    path = tmp_path / "plan.yaml"
+    path.write_text(yaml.safe_dump(body, sort_keys=True), encoding="utf-8")
+    return Plan.load(path), frame, path
+
+
+def test_sampling_a_frame_the_plan_does_not_name_is_refused(tmp_path: Path) -> None:
+    """F-11's negative control, and it is the defect itself.
+
+    Before this check the run was drawn from `frame_OTHER.txt`, `verify` reported
+    nine checks and exit 0, and the report printed the pre-registered filename
+    beside a number computed from a different file.
+
+    **V-1 defeated pre-registration of the plan. This defeated pre-registration
+    of the evidence**, which is the thing the plan is about.
+    """
+    plan, _frame, _ = srs_on_disk(tmp_path)
+    other = tmp_path / "frame_OTHER.txt"
+    other.write_text("\n".join(f"other-{i:04d}" for i in range(200)), encoding="utf-8")
+
+    ws = Workspace(tmp_path / "run")
+    do_plan(ws, plan)
+    with pytest.raises(Refusal) as caught:
+        do_sample(ws, plan, other)
+
+    assert caught.value.reason is Reason.EVIDENCE_NOT_PREREGISTERED
+    # Both resolved paths in the message: an operator who moved a file fixes it
+    # in one edit rather than guessing which end is wrong.
+    assert str(tmp_path / "frame.txt") in caught.value.detail
+    assert str(other) in caught.value.detail
+    assert "population" in caught.value.detail
+
+
+def test_labelling_from_a_file_the_plan_does_not_name_is_refused(tmp_path: Path) -> None:
+    """The same check at `ingest-labels`, which is before the label budget is
+    spent -- Q2's reason, and why it is not left to `estimate`."""
+    plan, frame, _ = srs_on_disk(tmp_path)
+    ws = Workspace(tmp_path / "run")
+    do_plan(ws, plan)
+    drawn = do_sample(ws, plan, frame)
+
+    other = tmp_path / "labels_OTHER.csv"
+    other.write_text(
+        "item_id,toxicity,content\n" + "\n".join(f"{i},0.1,x" for i in drawn),
+        encoding="utf-8",
+    )
+    with pytest.raises(Refusal) as caught:
+        do_ingest(ws, plan, other)
+
+    assert caught.value.reason is Reason.EVIDENCE_NOT_PREREGISTERED
+    assert "labels" in caught.value.detail
+
+
+def test_the_pre_registered_evidence_is_accepted(tmp_path: Path) -> None:
+    """The positive control. A gate that refuses everything proves nothing."""
+    plan, frame, _ = srs_on_disk(tmp_path)
+    ws = Workspace(tmp_path / "run")
+    do_plan(ws, plan)
+    assert len(do_sample(ws, plan, frame)) == plan.sample_size
+
+
+def test_the_same_file_named_differently_is_still_the_same_file(tmp_path: Path) -> None:
+    """Resolved paths, never strings -- and this is the control that proves it.
+
+    `frame.txt` and `./frame.txt` are the same file and different strings. A
+    string comparison would refuse a correct run, which is **rule 21**: a control
+    that fires for the wrong reason is a control that has not been built.
+    """
+    plan, frame, _ = srs_on_disk(tmp_path)
+    ws = Workspace(tmp_path / "run")
+    do_plan(ws, plan)
+
+    # pathlib collapses a bare ".", so use a round trip through a subdirectory:
+    # a different string, the same file after resolution.
+    (tmp_path / "sub").mkdir()
+    spelled_differently = tmp_path / "sub" / ".." / "frame.txt"
+    assert str(spelled_differently) != str(frame), "this test needs two spellings"
+    assert spelled_differently.resolve() == frame.resolve()
+    assert len(do_sample(ws, plan, spelled_differently)) == plan.sample_size
+
+
+def test_the_plans_path_resolves_against_the_plan_file_not_the_cwd(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The stated convention, asserted rather than described.
+
+    A relative `population` resolves against **the directory holding the plan
+    file**. That is how config files conventionally work, and it is the only rule
+    that survives running the tool from somewhere else -- a plan naming
+    `frame.txt` beside itself keeps meaning that file wherever you invoke from.
+    """
+    plan, frame, _ = srs_on_disk(tmp_path)
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    # A decoy of the same name in the working directory. If resolution used the
+    # cwd, the run would silently prefer this file.
+    (elsewhere / "frame.txt").write_text("decoy-0001\n", encoding="utf-8")
+    monkeypatch.chdir(elsewhere)
+
+    ws = Workspace(tmp_path / "run")
+    do_plan(ws, plan)
+    drawn = do_sample(ws, plan, frame)
+    assert all(i.startswith("item-") for i in drawn), "resolved against the cwd decoy"
+
+
+def test_the_ledger_records_the_path_actually_used(tmp_path: Path) -> None:
+    """D-24's shape, applied to the evidence.
+
+    After the check above these cannot differ -- and recording both is what makes
+    that **checkable rather than assumed**. Stored **as invoked**, not resolved:
+    `SECURITY.md` 3.8 gives the operator a control by letting a bare filename
+    stay a bare filename, and writing an absolute path here would take it away.
+    """
+    plan, frame, _ = srs_on_disk(tmp_path)
+    ws = Workspace(tmp_path / "run")
+    do_plan(ws, plan)
+    do_sample(ws, plan, frame)
+
+    body = ws.ledger.verify()[1].body
+    assert body["population_declared"] == "frame.txt"
+    assert body["population_used"] == str(frame)
+    assert not Path(body["population_declared"]).is_absolute()
+
+
+def test_the_report_names_the_population_the_run_actually_sampled(
+    tmp_path: Path,
+) -> None:
+    """The worst part of F-11, closed.
+
+    The report is the artifact an outsider reads, and it printed the plan's
+    `population` -- the **commitment** -- rather than what was sampled. The check
+    means they cannot differ now; the report takes the value from the **record**
+    anyway, because the record is what happened. C-16's class.
+    """
+    from prevalence_kit import report as report_mod
+
+    plan, frame, _ = srs_on_disk(tmp_path)
+    ws = Workspace(tmp_path / "run")
+    do_plan(ws, plan)
+    drawn = do_sample(ws, plan, frame)
+    labels = tmp_path / "labels.csv"
+    labels.write_text(
+        "item_id,toxicity,content\n"
+        + "\n".join(f"{item},{'0.9' if i < 9 else '0.1'},x" for i, item in enumerate(drawn)),
+        encoding="utf-8",
+    )
+    do_ingest(ws, plan, labels)
+    do_estimate(ws, plan)
+
+    built = report_mod.build(ws, plan)
+    assert built["population"] == str(frame), "the report is not reading the ledger"
+    assert built["population_declared"] == "frame.txt"

@@ -1154,6 +1154,44 @@ asserted the field was **used**, and the passing test is why nothing looked.
 
 ---
 
+## C-39 - The plan pre-registered the evidence and nothing enforced it
+
+| | |
+|---|---|
+| **Claimed** | `SECURITY.md` 1.3, ratified before Phase 1 code: *"The plan is hashed before any data is touched. This is pre-registration. The estimand, the **population**, the design and the **label source** are fixed and stamped before the first row is read."* Charter 5.5: *"`verify` can say no -- so its yes means something."* |
+| **Actually** | **Stamped, and not enforced.** `plan.population` was read in exactly one place -- `report.py`, **to print it** -- and never opened or compared to the frame actually sampled. **`plan.labels` was read by nothing at all.** The CLI takes both paths as separate arguments. So a run could be drawn from a file the plan does not name: `verify` reported **nine checks and exit 0**, and the report printed `Population: frame_APPROVED.txt` beside a number every one of whose ids began `other-` |
+| **Direction** | Against the operator, the auditor and the reader at once, in the property the whole tool exists to provide |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | **The director's probe**, named at the review stop: *for every field in the hashed plan record, what reads it, and what happens if it changes?* Run by the builder, reproduced end to end by the director |
+| **Severity** | **Critical.** **V-1 defeated pre-registration of the plan. This defeated pre-registration of the evidence, which is the thing the plan is about** |
+| **Replaced by** | `EVIDENCE_NOT_PREREGISTERED`, refused at `sample` and `ingest-labels` -- before the label budget, Q2's reason. **Resolved paths, never strings**, with the plan's value resolved against the **plan file's directory**, stated in the schema docs. Both resolved paths in the message. The path used is recorded in the ledger beside the declared one, D-24's shape. **The report takes the population from the record, not from the commitment** |
+| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+
+**A defect against a stated protection, not a limit -- and doctrine rule 9 requires saying
+which.** SECURITY 1.3 was written before Phase 1 code and claims the population and the label
+source are fixed and stamped. Phase 1 did not meet that claim. **Phase 1 is not reopened**:
+the record is corrected here and the fix lands in Phase 2, which is **C-27's precedent
+exactly**. A dated document keeps its sentence; this entry is the correction.
+
+**Why no instrument found it, and this is the part that generalises.** `grep -rn
+"\.population\|plan\.labels" tests/` returned **nothing**. Not a weak test -- **no test at
+all**. F-10 at least had a test checking the half that worked. Two plan fields have now been
+inert, and **neither was found by an instrument**: one by reading code and asking what reads a
+field, one by the director naming the probe.
+
+**The third will be found the same way unless the schema declares its own intent.** That is
+the fix that outlives this one: every field marked *behavioural* must be read somewhere, every
+field marked *declarative* must not select behaviour, and a checker asserts both. Ruled into
+**D2.14**. `estimand.description` is inert and **correct** -- it declares intent rather than
+selecting behaviour -- and today nothing in the record distinguishes that from an accident.
+
+**The report was the worst of it.** A number computed from one file, printed beside the
+filename of another, in the artifact an outsider reads and the one the report itself tells
+them to re-check. **C-16's class**, at a severity C-16 never had. The report now reads the
+ledger, because **the record is what happened and the plan is only what was promised**.
+
+---
+
 ## Classes, tracked separately from the count
 
 A correction gets a C-number when it reached a commit. A **class** keeps its own tally, because a

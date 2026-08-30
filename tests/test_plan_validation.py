@@ -227,11 +227,17 @@ def test_both_frame_counts_reach_the_record(tmp_path: Path) -> None:
 
     For a prevalence tool this is the denominator.
     """
+    import yaml
+
     from prevalence_kit.run import Workspace, do_plan, do_sample
 
     frame = tmp_path / "frame.txt"
     frame.write_text("\n".join(f"item-{i % 200:04d}" for i in range(300)), encoding="utf-8")
-    plan = Plan.from_mapping(PLAN_YAML)
+    # F-11: `population` resolves against the plan file's directory, so a test
+    # that runs `sample` needs a plan file, exactly like a real invocation.
+    plan_path = tmp_path / "plan.yaml"
+    plan_path.write_text(yaml.safe_dump(PLAN_YAML, sort_keys=True), encoding="utf-8")
+    plan = Plan.load(plan_path)
 
     ws = Workspace(tmp_path / "run")
     do_plan(ws, plan)
