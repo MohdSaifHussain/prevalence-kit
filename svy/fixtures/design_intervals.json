@@ -1,0 +1,379 @@
+{
+ "what": "svy design-based interval fixtures, generated BEFORE the estimator",
+ "deliverable": "D2.17",
+ "obligation": "O-26",
+ "register": "S-2.2",
+ "svy_version": "0.25.0",
+ "numpy_version": "2.5.2",
+ "polars_version": "1.44.1",
+ "python": "3.14.0",
+ "exact_call": "svy.Estimation(svy.Sample(frame, svy.Design(row_index='unit', stratum='stratum', wgt='wgt', psu='unit'))).prop('y', ci_method=M, alpha=1-confidence), y_level == 1 row",
+ "method_map": {
+  "design_wilson": "wilson",
+  "design_clopper_pearson": "beta"
+ },
+ "narrowing": "svy witnesses these because a stratified estimate is design-based, which is what D2.9's conclusion about the BINOMIAL intervals does not reach. It reproduces our point estimate, standard error and degrees of freedom exactly. It does not independently confirm the method: it is an implementation, not a published table like Barnett Table 2B.",
+ "not_offered": "svy's 'korn-graubard' adds NCHS truncation of the effective sample size. It is a third construction and this version does not offer it -- deferred by name rather than absent by accident.",
+ "cases": [
+  {
+   "label": "balanced",
+   "strata": {
+    "a": [
+     2000,
+     100,
+     20
+    ],
+    "b": [
+     3000,
+     150,
+     15
+    ],
+    "c": [
+     5000,
+     250,
+     5
+    ]
+   },
+   "intervals": {
+    "design_wilson": [
+     {
+      "confidence": 0.9,
+      "point": 0.08,
+      "se": 0.01177656977278549,
+      "df": 497,
+      "low": 0.06266299286828342,
+      "high": 0.10161365895060298
+     },
+     {
+      "confidence": 0.95,
+      "point": 0.08,
+      "se": 0.01177656977278549,
+      "df": 497,
+      "low": 0.05977989191966515,
+      "high": 0.10628626837274693
+     },
+     {
+      "confidence": 0.99,
+      "point": 0.08,
+      "se": 0.01177656977278549,
+      "df": 497,
+      "low": 0.05451619667708025,
+      "high": 0.11593558860449343
+     }
+    ],
+    "design_clopper_pearson": [
+     {
+      "confidence": 0.9,
+      "point": 0.08,
+      "se": 0.01177656977278549,
+      "df": 497,
+      "low": 0.061469137818647844,
+      "high": 0.1021108653511109
+     },
+     {
+      "confidence": 0.95,
+      "point": 0.08,
+      "se": 0.01177656977278549,
+      "df": 497,
+      "low": 0.058371340077815616,
+      "high": 0.10643850594658186
+     },
+     {
+      "confidence": 0.99,
+      "point": 0.08,
+      "se": 0.01177656977278549,
+      "df": 497,
+      "low": 0.052611872418688595,
+      "high": 0.11519320945794881
+     }
+    ]
+   }
+  },
+  {
+   "label": "rare",
+   "strata": {
+    "a": [
+     200,
+     60,
+     3
+    ],
+    "b": [
+     800,
+     120,
+     2
+    ],
+    "c": [
+     4000,
+     120,
+     1
+    ]
+   },
+   "intervals": {
+    "design_wilson": [
+     {
+      "confidence": 0.9,
+      "point": 0.011333333333333343,
+      "se": 0.007018422684272203,
+      "df": 297,
+      "low": 0.004231635906766253,
+      "high": 0.02999437549716352
+     },
+     {
+      "confidence": 0.95,
+      "point": 0.011333333333333343,
+      "se": 0.007018422684272203,
+      "df": 297,
+      "low": 0.0035607512507334314,
+      "high": 0.03546836799923808
+     },
+     {
+      "confidence": 0.99,
+      "point": 0.011333333333333343,
+      "se": 0.007018422684272203,
+      "df": 297,
+      "low": 0.0025923990184892574,
+      "high": 0.04812452999265891
+     }
+    ],
+    "design_clopper_pearson": [
+     {
+      "confidence": 0.9,
+      "point": 0.011333333333333343,
+      "se": 0.007018422684272203,
+      "df": 297,
+      "low": 0.002684379281991123,
+      "high": 0.031105599475169575
+     },
+     {
+      "confidence": 0.95,
+      "point": 0.011333333333333343,
+      "se": 0.007018422684272203,
+      "df": 297,
+      "low": 0.00196338177391462,
+      "high": 0.035292352106268174
+     },
+     {
+      "confidence": 0.99,
+      "point": 0.011333333333333343,
+      "se": 0.007018422684272203,
+      "df": 297,
+      "low": 0.000990384687434408,
+      "high": 0.044399322791577274
+     }
+    ]
+   }
+  },
+  {
+   "label": "two_stratum",
+   "strata": {
+    "a": [
+     900,
+     90,
+     30
+    ],
+    "b": [
+     100,
+     40,
+     2
+    ]
+   },
+   "intervals": {
+    "design_wilson": [
+     {
+      "confidence": 0.9,
+      "point": 0.305,
+      "se": 0.04510711027423328,
+      "df": 128,
+      "low": 0.23606306898441046,
+      "high": 0.3839504445223636
+     },
+     {
+      "confidence": 0.95,
+      "point": 0.305,
+      "se": 0.04510711027423328,
+      "df": 128,
+      "low": 0.2241522120223616,
+      "high": 0.3999750360787033
+     },
+     {
+      "confidence": 0.99,
+      "point": 0.305,
+      "se": 0.04510711027423328,
+      "df": 128,
+      "low": 0.2021136311147404,
+      "high": 0.43190965861832104
+     }
+    ],
+    "design_clopper_pearson": [
+     {
+      "confidence": 0.9,
+      "point": 0.305,
+      "se": 0.04510711027423328,
+      "df": 128,
+      "low": 0.23096425166930754,
+      "high": 0.3875823905179556
+     },
+     {
+      "confidence": 0.95,
+      "point": 0.305,
+      "se": 0.04510711027423328,
+      "df": 128,
+      "low": 0.21855345657029754,
+      "high": 0.4028742090397448
+     },
+     {
+      "confidence": 0.99,
+      "point": 0.305,
+      "se": 0.04510711027423328,
+      "df": 128,
+      "low": 0.195306583074034,
+      "high": 0.4330619325975653
+     }
+    ]
+   }
+  },
+  {
+   "label": "very_rare",
+   "strata": {
+    "a": [
+     500,
+     100,
+     1
+    ],
+    "b": [
+     9500,
+     400,
+     0
+    ]
+   },
+   "intervals": {
+    "design_wilson": [
+     {
+      "confidence": 0.9,
+      "point": 0.0005,
+      "se": 0.0005000000000000003,
+      "df": 498,
+      "low": 0.00011125437584236881,
+      "high": 0.0022440540593088175
+     },
+     {
+      "confidence": 0.95,
+      "point": 0.0005,
+      "se": 0.0005000000000000003,
+      "df": 498,
+      "low": 8.793595207690031e-05,
+      "high": 0.002837498811071911
+     },
+     {
+      "confidence": 0.99,
+      "point": 0.0005,
+      "se": 0.0005000000000000003,
+      "df": 498,
+      "low": 5.83264251559786e-05,
+      "high": 0.004271933364472744
+     }
+    ],
+    "design_clopper_pearson": [
+     {
+      "confidence": 0.9,
+      "point": 0.0005,
+      "se": 0.0005000000000000003,
+      "df": 498,
+      "low": 2.5613851538355644e-05,
+      "high": 0.002370504318786649
+     },
+     {
+      "confidence": 0.95,
+      "point": 0.0005,
+      "se": 0.0005000000000000003,
+      "df": 498,
+      "low": 1.2638451087210245e-05,
+      "high": 0.002783615818487358
+     },
+     {
+      "confidence": 0.99,
+      "point": 0.0005,
+      "se": 0.0005000000000000003,
+      "df": 498,
+      "low": 2.5001562766981966e-06,
+      "high": 0.0037105073519181726
+     }
+    ]
+   }
+  },
+  {
+   "label": "wide",
+   "strata": {
+    "a": [
+     1000,
+     50,
+     25
+    ],
+    "b": [
+     1000,
+     50,
+     10
+    ],
+    "c": [
+     1000,
+     50,
+     40
+    ]
+   },
+   "intervals": {
+    "design_wilson": [
+     {
+      "confidence": 0.9,
+      "point": 0.5,
+      "se": 0.03595159254890834,
+      "df": 147,
+      "low": 0.4409019714256684,
+      "high": 0.5590980285743317
+     },
+     {
+      "confidence": 0.95,
+      "point": 0.5,
+      "se": 0.03595159254890834,
+      "df": 147,
+      "low": 0.42965019825479994,
+      "high": 0.5703498017452001
+     },
+     {
+      "confidence": 0.99,
+      "point": 0.5,
+      "se": 0.03595159254890834,
+      "df": 147,
+      "low": 0.40777125410232135,
+      "high": 0.5922287458976787
+     }
+    ],
+    "design_clopper_pearson": [
+     {
+      "confidence": 0.9,
+      "point": 0.5,
+      "se": 0.03595159254890834,
+      "df": 147,
+      "low": 0.4385854925883219,
+      "high": 0.5614145074116781
+     },
+     {
+      "confidence": 0.95,
+      "point": 0.5,
+      "se": 0.03595159254890834,
+      "df": 147,
+      "low": 0.42742040650407725,
+      "high": 0.5725795934959228
+     },
+     {
+      "confidence": 0.99,
+      "point": 0.5,
+      "se": 0.03595159254890834,
+      "df": 147,
+      "low": 0.4057624767735567,
+      "high": 0.5942375232264433
+     }
+    ]
+   }
+  }
+ ]
+}
