@@ -21,11 +21,11 @@ who writes the entries. The director raised that one himself and asked for it to
 | Chat reviewer (draft author) | 0 | 3 | **3** |
 | Research report (passed through unverified) | 0 | 2 | **2** |
 | Stale-at-draft-time, queued but built on anyway | **1** | 0 | **1** |
-| **Builder (Claude Code)** | **0** | **33** | **33** |
+| **Builder (Claude Code)** | **2** | **33** | **35** |
 | Reviewer instrument | **1** | **2** | **4** (1 noted) |
 | **Director** | 0 | **1** | **1** |
 | Tool artifact (noted, not a defect) | - | - | **1** (noted) |
-| **Total** | **2** | **41** | **45** |
+| **Total** | **4** | **41** | **47** |
 
 **Derived, and now checked — 2026-08-30.** Every figure above is computed from the entry blocks in
 this file rather than incremented as rows arrived. An earlier version said 36 open and 3
@@ -1295,6 +1295,64 @@ the strength of it".
 **And the finding was still worth having.** The half that survived is the stronger half of the
 row. A reviewer wrong about one clause and right about another is the ordinary case, and
 treating the whole finding as void because part of it failed would be its own error.
+
+---
+
+## C-43 - A source described as a methodology manual when it is a teaching page
+
+| | |
+|---|---|
+| **Claimed** | `docs/STANDARDS.md`, and after it the Phase 2 contract at Q12: **S-1.13** is *"Statistics Canada, official methodology, read"* |
+| **Actually** | It is **Statistics Canada, *Power from Data!*, section 3.2.2** -- an official Statistics Canada publication and an **educational** one. Their methodology manual is *Survey Methods and Practices* (12-587-X) and **has not been read**. Verified by re-fetching the page 2026-08-30, HTTP 200, date modified 2021-09-02 |
+| **Direction** | **In our favour**, and in the way this register keeps finding: the source is real, the sentence is real, and the description makes the support sound one rank stronger than it is |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | The builder, adding the register row the entry never had. **The row is what forced it** -- rule 4 of the register asks for a pin, a URL and a re-check date, and none of the three can be written without going to the artifact |
+| **Severity** | **Low in effect, and worth the entry anyway.** The sentence it supplies is correct and the two rulings that rest on it are unaffected: strata are mutually exclusive and covering, whichever Statistics Canada document says so |
+| **Replaced by** | A full S-1.13 row naming the publication, the URL, the fetch, the date modified and the re-check date, and stating that the methodology manual is a different document that has not been read |
+| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+
+**A second, smaller thing came with it, and it is the same shape one level down.** The register
+quoted the source as **two** fragments -- *"homogeneous, mutually exclusive groups"* and
+*"independent samples are selected from each stratum"* -- which reads as two statements
+supporting two rules. **It is one sentence.** One sentence quoted twice is one piece of
+evidence, not two, and the corrected row says so.
+
+**Why an entry rather than a quiet fix.** The description reached three committed documents and
+**anchored two rulings** -- Q12, where it was the reason a one-stratum plan is not refused, and
+Q14 / D-40, where it is the reason an undeclared unit cannot be dropped. That is the register's
+own admission rule: it counts claims that reached a commit **or changed a ruling**, and this did
+both.
+
+**And it says something about where the gap was.** S-1.13 had a **read state** and no **register
+row**, so `O-24`'s check -- every entry carries one of four read states -- passed it. A check
+that walks the read-state table cannot see an entry missing from the table beside it. **D-34's
+shape, in the standards register**: the reconciliation ran in one direction only.
+
+---
+
+## C-44 - A deliverable that two artifacts name and the contract does not
+
+| | |
+|---|---|
+| **Claimed** | `CLAUDE.md`: *"D2.1-D2.16 done, **D2.17** built"*, and again in its Done table |
+| **Actually** | **The Phase 2 contract had no D2.17.** Section 3's deliverable table ran D2.1 to D2.16, and section 11's evidence table stopped at D2.16. The name was also committed inside two artifacts -- `svy/fixtures/design_intervals.json` records `"deliverable": "D2.17"` and `tests/test_design_intervals.py` opens with it -- so **three places used a deliverable number the binding document did not define** |
+| **Direction** | Against the contract, and in the direction that matters most: **the contract is what "done" means.** A deliverable absent from it cannot be reported at close, and its exit checks cannot be written |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | The builder, reading the record on a fresh window before doing anything else. **Not by an instrument** -- `check_citations` resolves `D-nn` decisions and `O-nn` obligations, and deliverable numbers are a different vocabulary that nothing walks |
+| **Severity** | **Low in effect and high in kind.** No number is wrong. But O-26's work was real, shipped, and had no row in the document that defines the phase, which is how a phase closes with a deliverable nobody signed off |
+| **Replaced by** | A **D2.17 row in section 3** naming its governing standard and obligation, and an evidence row in section 11. The direction was chosen deliberately: two committed artifacts already carried the name, so adding the row keeps the record consistent, where renaming would have edited artifacts to match a document |
+| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+
+**Why the contract was corrected rather than `CLAUDE.md`.** The director's instruction was
+*"one of the two is wrong; decide which and make them agree."* The tie-break is that the name
+is already **inside committed evidence** -- a fixture and a test file -- and evidence is not
+edited to match a document. **The document was the thing missing a row.**
+
+**And it is the same shape as C-41 one deliverable later.** Question numbers were allocated in
+`DECISIONS.md` and listed in the contract, with nothing making the two agree; deliverable
+numbers are allocated in commit messages and listed in the contract, with nothing making
+*those* agree. **Two lists that must agree and no third thing making them.** That class now has
+three instances here -- V-16's gate, C-41's questions, and this one.
 
 ---
 

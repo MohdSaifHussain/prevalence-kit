@@ -313,7 +313,14 @@ def _verify_sample(ws, by_step, plan, checks) -> None:  # type: ignore[no-untype
             "Redrawing the sample from the recorded plan and frame gives a different sample.",
             "The sample was not drawn by the plan it claims. Do not publish this number.",
         )
-    checks.append(Check("sample", True, f"{n_redrawn} ids redrawn from the frame, identical"))
+    # **The note names the design it redrew, and that is the point of the line.**
+    # It read `N ids redrawn from the frame, identical` for both designs, so the
+    # director's hand-run could not tell a stratified redraw from a simple random
+    # one -- which is exactly the substitution this branch exists to prevent.
+    # A control nobody can read is a control on paper: the check was real, its
+    # output was silent about what it had checked.
+    how = "per stratum" if plan.design == "stratified" else "as a simple random sample"
+    checks.append(Check("sample", True, f"{n_redrawn} ids redrawn from the frame {how}, identical"))
 
 
 def _verify_seals(ws, by_step, checks) -> None:  # type: ignore[no-untyped-def]

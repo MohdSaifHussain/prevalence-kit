@@ -108,6 +108,7 @@ Each names the top standard it must follow.
 | **D2.13** ▸ **DONE 2026-08-30** | **T-2.** Applied and stated at the head of `docs/DECISIONS.md`, in two halves with the second overriding the first, plus the default-with-no-reason case and the amendments-are-the-director's case. **The rule governs choices the builder makes alone. A question put to the director and ruled is recorded because it was ruled, whatever its operator visibility.** Without that line, Q3 — same CLI, same codes, invisible to an operator — would be suppressed by the first rule written to shrink the log, which is the one thing it must never do. | Tier trim, ruled 2026-08-29 |
 | D2.14 ▸ **DONE 2026-08-30** — all four conditions, and **three new checks with both controls**: `counts`, `schema`, `open-items`. `check_claims` now runs **twelve**. (a) `PATH_LIKE` widened on the two axes that were wrong — directory prefixes and extensions — rather than by naming the files it missed, so `r/`, `svy/`, `examples/` and both PDFs are covered. (b) the counts table is **derived and checked**; it fired on its first run. (c) an open-items row naming a discharged item fails, and **it fired on its first run too**, on a genuinely stale O-23. (d) `FIELD_KIND` is asserted against the code: every hashed field declared both ways, and every behavioural field read outside `plan.py` — F-10's shape, made a gate | Extend `check_claims` to the new artifacts (fixtures directory, R script). **Two more gaps found 2026-08-29, ruled into this deliverable:** (a) `check_paths` does not cover either PDF — wrong directory prefix *and* wrong extension; (b) **the counts table in `docs/CORRECTIONS.md` is not covered by `check_figures`, and was updated by hand.** That is the count treadmill, in the table that counts our own counting errors. ▸ **The semantics are now written down — `docs/CORRECTIONS.md`, "What these columns mean" — so the check has a specification rather than a number to copy, ruled 2026-08-30. The table was derived and found over by one: C-36. What remains owed is the machine check.** The definition it must encode: an **entry** is a `## C-n` or `## V-n` heading, `Open` counts `Status: OPEN`, `noted` is excluded from Open and included in Total, and **a class tally is a different population from this table** — which is how the reviewer-instrument row reached 3. **(c) Ruled in 2026-08-29, by the director, from four stale rows found by reading: an open-items row naming an item the record says is discharged must fail the gate.** `CLAUDE.md`'s "Open, by name" table is a **live figure written in prose**, and nothing checks it. Its three machine-checked figures were current while four hand-maintained rows in the same file had drifted, **inside about six hours** — §6.1 (discharged by A-3), O-20 and O-22 (both moved at `d25e6fe`), and the corrections range. **The minimum condition: an obligation or correction identifier in an open-items row, whose owning record marks it discharged, is a failure.** ▸ **(d) Ruled 2026-08-30 at the review stop: the plan schema declares each field *behavioural* or *declarative*, and a checker asserts both halves** — every behavioural field is read somewhere in `src/`, and no declarative field selects behaviour. **Two fields have now been inert** — `interval` (F-10) and `population` / `labels` (F-11) — **and neither was found by an instrument**: one by reading code and asking what reads a field, one by a probe the director named. `estimand.description` is inert and correct, and nothing today distinguishes that from an accident. **The third will be found the same way unless the schema declares its own intent** The three figures are checked because they went stale once and nobody noticed; this table went stale the same way and was caught only by a session that read carefully. **That assumption is the one `check_figures` exists to remove** | D-23's stated limit |
 | **D2.16** *(new, 2026-08-29)* | **`stratallo` fixtures. FIXTURE-ONLY — no new estimator.** A second independent witness for D2.3's stratified variance (`var_st` / `var_stsi`) and the **first** for D-30's rounding (`round_oric` / `round_ran`). Strengthens work already built at the cost of a fixture. **The `epiR` narrowing travels with it**: these are the algorithm authors' own implementation, so it confirms we compute what they compute and does **not** independently confirm the method | **S-1.12** |
+| **D2.17** *(new, 2026-08-30)* ▸ **DONE** | **The design-based intervals**, discharging **O-26** under **Q7 / D-33** and **Q15 / D-40's vocabulary**. `design_wilson` and `design_korn_graubard`, fixtures generated and committed **first** at `e04a7aa`, estimators at `eb17c9a`. **Named as a deliverable rather than left as an obligation discharge**, because two committed artifacts already carry the name -- `svy/fixtures/design_intervals.json` records `"deliverable": "D2.17"` and `tests/test_design_intervals.py` opens with it -- while section 3 had no such row. **C-44** | **S-2.2** `svy` 0.25.0 - **O-26** - **Q15** |
 | D2.15 | Discharge or restate O-3, O-14, O-15 | rule 11 |
 
 **Not a deliverable, deliberately:** any change to how the report or CLI *renders* the new
@@ -267,6 +268,87 @@ Expected results stated in advance. Commands are CLI invocations; the director r
 **F1, F2 and F7 are the phase's real product.** F1 is the witness proving itself; F2 is the ordering
 that makes it independent; F7 is the refusal the charter calls a feature.
 
+## 8a. Exit checklist — APPROVED 2026-08-30, with the director's addition. This is what he runs.
+
+**Section 8 above is the checklist as it stood when the phase was built. This section
+supersedes it and is what the director runs.** Section 8 is not edited: it is a dated part of a
+binding document, and the record of what the checklist covered while the phase was being built
+is worth more than a tidy single list. The draft lived here rather than in a chat window for
+Q12's reason -- a thing that exists only in a conversation is a thing Phase 1 section 10 lost.
+
+**Approved 2026-08-30 with one addition, F25, which is the director's** and is described in the
+closing note below.
+
+**Why it has to be replaced before the hand-run, in the director's words:** *"As written, my
+hand-run would certify Phase 2 without ever touching F-11, the most serious defect in this
+project's life. The director's hand-run is the only instrument here that is not the builder's,
+and it has been pointed at the wrong things."*
+
+**What was actually wrong, checked rather than restated.** Section 8 names nine reason codes
+and **omits four** that came from this phase's most serious fixes: `EVIDENCE_NOT_PREREGISTERED`
+(F-11, critical), `ESTIMATE_METHOD_MISMATCH` (F-10, high), `STRATUM_UNDECLARED` (D-40) and
+`INTERVAL_UNDEFINED` (O-26). **One correction to the finding, and it changes the remedy rather
+than the verdict:** `CORRECTION_DEGENERATE` appears in **F8b's explanatory clause**, not as an
+expected result — F8b expects exit 0 and names the struck code to say what it *would have*
+refused. So the checklist is runnable as written; it is **incomplete**, not broken. The clause
+is reworded below anyway, because a struck code's name beside an exit code invites exactly the
+reading it got.
+
+**Every command below was run before it was written here.** Exit codes are from
+`$LASTEXITCODE` on this machine, not from reading the source.
+
+| # | Command | Expected |
+|---|---|---|
+| F1 | Run the R witness script | Reproduces Barnett Table 2B: `2098 / 828 / 584 / 256 / 234`, VVR `0.20%`, SD `0.054 pp`. **Exit 0.** |
+| F2 ▸ **RESTATED** | `git log` each fixture and its estimator | **Every fixture commit precedes its estimator commit.** Four pairs now, not three: `41f8a33` before `9c7f21f`, `9c652fc` before `104abe3`, `ad73030` before `6ac1c1d`, and **`e04a7aa` before `eb17c9a`** for the design intervals. Proves R2.2 |
+| F3 | `prevalence-kit plan` a stratified plan | Prints the hash. Exit 0. |
+| F4 ▸ **RESTATED** | Full chain on a **two-stratum** plan, ending in `emit-report` | **Exit 0, and the run now produces an interval** — it refused `DESIGN_NOT_ESTIMABLE` when section 8 was written. **Read the report by eye.** Four things must be there: the per-stratum figures; the method named as `design-korn-graubard`; the *What that 95% actually delivers* block; and the sentence saying the coverage figure **is not a measurement of your design** |
+| F5 | Compare estimate against the R fixture | Agreement to ≥ 4 significant digits, printed |
+| F6 | Clopper-Pearson vs base R `binom.test` | Agreement printed; docstring names it as an implementation check |
+| F7 | Rogan-Gladen with Se = 0.6, Sp = 0.3 | **Exit 2, `CORRECTION_UNDEFINED`** |
+| F8 | Rogan-Gladen, `pos = 0, n = 4000, Se = 0.90, Sp = 0.99` | **Exit 2, `CORRECTION_OUT_OF_RANGE`.** Corrected estimate `-0.011236` |
+| F8b ▸ **REWORDED** | Rogan-Gladen, `pos = 0, n = 4000, Se = 0.90, Sp = 1.00` | **Exit 0.** Point estimate `0`, upper bound `0.001024`. A rare-event measurement that finds nothing and reports a defensible upper bound **is the product**. *(An earlier code, `CORRECTION_DEGENERATE`, would have refused this. It was struck 2026-08-29 and no longer exists; the name appears here as history and is not an expected result.)* |
+| F8c | Rogan-Gladen, `pos = 8, n = 4000, Se = 0.90, Sp = 0.999` | **Exit 0.** `[0, 0.003267]`, the output saying the lower bound was clamped, the ledger carrying the raw `-0.000151`. **Q6 / D-32** |
+| F8d | A plan with `interval: wilson` that also supplies Se/Sp | **Exit 2, `CORRECTION_INTERVAL_UNSUPPORTED`**, carrying the coverage trade-off. **Q7 / D-33** |
+| F8e | A stratified plan with no `allocation_rounding` | **Exit 2, `ALLOCATION_ROUNDING_UNDECLARED`**, at `plan` |
+| F8f | A plan with no `interval` at all | **Exit 2, `PLAN_INVALID`** naming the missing key |
+| F8g | A stratified plan with `allocation_rounding` but no strata | **Exit 2, `STRATA_UNDEFINED`** |
+| **F8h** *(new)* | Compare the design intervals against the `svy` fixture | Worst endpoint disagreement **4.9e-13** across all 30 rows, printed. The witness `svy` never enters this environment; the fixture does |
+| F9 | A stratified plan with an unsampled stratum | **Exit 2, `STRATUM_UNSAMPLED`** |
+| F10 | An empty stratum | **Exit 2, `STRATUM_EMPTY`.** Distinct from F9 |
+| **F10b** *(new, **D-40**)* | A frame unit in a stratum the plan does not declare — change one `stratum` value in the frame CSV and run `sample` | **Exit 2, `STRATUM_UNDECLARED`**, naming the offending unit, its stratum, and the strata the plan does declare. **Its converse is F10 and the pair is complete.** Dropping those units instead would change the denominator silently — V-7's class, in the one number this tool produces |
+| F11 | Rogan-Gladen with valid Se/Sp | **Exit 0** — the positive control |
+| **F17** *(new, **F-11**, critical)* | `sample` a frame the plan does not pre-register: `sample plan.yaml other.csv` where the plan says `population: frame.csv` | **Exit 2, `EVIDENCE_NOT_PREREGISTERED`**, naming both **resolved** paths and saying that changing the plan changes its hash. **This is the row whose absence blocked the close.** Before the fix, this run completed, `verify` reported nine checks and exit 0, and the report printed the pre-registered filename beside a number computed from another file |
+| **F18** *(new, **F-11**)* | The same swap at `ingest-labels` | **Exit 2, `EVIDENCE_NOT_PREREGISTERED`.** Both verbs, because pre-registration covers both the frame and the labels, and one guard is not two |
+| **F19** *(new, **F-10**, high)* | `pytest -k "method_contradicts or method_matches"` | Both pass. **This one is a test rather than a hand-run, and the reason is rule 21.** The defect was a *broken writer* — every digest honest, the dispatch wrong — so its control breaks the dispatch and writes an honest run. Editing `estimate.json` by hand trips `LEDGER_BROKEN` **first** and would prove nothing about this check. The positive control is in the same run |
+| **F20** *(new, **O-26**)* | A stratified run whose labels are all negative | **Exit 2, `INTERVAL_UNDEFINED`** at `estimate`. The fix text says the point estimate stands and sends the reader to `sample` for the odds |
+| **F21** *(new, **D-41**)* | `sample` a stratified plan whose strata declare `expected_rate: 0.001` at `sample_size: 60` | **Exit 0**, and a NOTE printed: *this design has a 94.2% chance of producing NO INTERVAL at all*, with what to change. **Stated, not refused** — D-41: refusing on `expected_rate` would be refusing on a prior this project promised could only cost efficiency. The figure is in the ledger as well as on the console |
+| **F22** *(new, **O-25**)* | Read the *What that 95% actually delivers* block in an SRS report | Names the method, the measured worst coverage at that nominal level, the grid it was measured on, **where this run sits on both axes**, and the sentence *not a coverage computed for this run, and none was computed*. On the shipped example: `wilson`, **90.98%**, gamma = 9.000 inside the swept range, n = 40 **not** one of the measured sizes |
+| **F23** *(new, **O-27 / D-38**)* | Full chain on a **one-stratum** stratified plan | **Exit 0**, and the report states all three things the ruling names: one stratum, **no precision gain**, and an interval resting on a stratified variance basis rather than a binomial inversion |
+| **F24** *(new, **Q15 / A-6**)* | `plan` a stratified plan naming `interval: wilson`; then an SRS plan naming `interval: design_wilson` | **Exit 2, `PLAN_INVALID`, both directions.** Each refusal says *why* — a binomial interval is built on `(k, n)`, a stratified estimate is design-weighted — and lists the valid names for that design. **The refusals teach**, which is what Q15 required |
+| **F25** *(new, the director's addition)* | A clean two-stratum run, then `prevalence-kit verify --run <run> --plan plan.yaml` | **Exit 0, nine checks.** Read the `sample` line by eye: it must say **`redrawn from the frame per stratum`**. **This is the row the whole checklist was missing.** Every other row exercises a refusal at `plan`, `sample` or `estimate`; **none ran the tool whose yes is the product.** `verify.py` redraws the design the plan pre-registered — `draw_srs` was called unconditionally there, **F-10's third site** — and the director's instrument had never touched it |
+| **F25b** *(new, the negative)* | `pytest -k "redraw"` | Both pass. The negative control is a **broken checker**, not a tampered run — rule 21 again: the run stays honest and the *redraw* is forced to SRS, which is the state the defect produced. Editing `sample.json` would trip `LEDGER_BROKEN` first |
+| F12 | `pytest` | All pass; the count printed. **Never `-q`** — `pyproject.toml` already sets it |
+| F13 | `ruff check .` · `ruff format --check .` · `mypy --strict src` · `mypy` | All exit 0. **Four commands, not three** — the config form of `mypy` is what covers `tests` |
+| F14 | `tools/check_claims.py --selftest` then without | Both exit 0; the selftest covers all twelve checks |
+| F15 | `tools/check_tripwires.py --check` | Five tripwires reported. **TW-4 is FIRED and stays fired** until O-19 |
+| F16 | Verify the R image digest matches `docs/STANDARDS.md` | Identical. Proves R2.6 |
+
+**F1, F2, F17, F19 and F25 are the phase's real product.** F1 is the witness proving itself; F2
+is the ordering that makes it independent; **F17 and F19 are the two defects that made a passing
+`verify` mean nothing**; and **F25 runs `verify` itself**, which nothing else here did.
+
+**F25 is the director's addition and it closed the same gap the checklist was blocked for.**
+The draft covered the refusals at `plan`, `sample` and `estimate` and never ran the verb whose
+`yes` is the product -- while section 8's own text says the controls exist so that *"`verify`
+can say no, so its yes means something."* `verify` appeared three times in the draft: twice in
+prose and once as *verify the R image digest*, which is a different sense of the word.
+
+**Building it changed the tool, and that is the finding.** The `sample` line read
+`200 ids redrawn from the frame, identical` for **both designs**, so the director could not
+have told a stratified redraw from a simple random one by reading it. The check was real and
+its output was silent about what it had checked. It now names the draw.
+
 ## 9. Tier — re-asked and discharged
 
 **Ruling: remain at STANDARD.** Discharged 2026-08-29 by the director.
@@ -404,6 +486,7 @@ follows is the builder's evidence, offered for that.
 | **D2.14** | All four conditions. `check_claims` runs **twelve** checks; `counts`, `schema` and `open-items` are new and each has both controls. Two of them **fired on their first run** |
 | **D2.15** | O-3 discharged (every fixture records version and exact call, asserted by `test_fixtures.py`). **O-14 and O-15 restated as carried** — see below |
 | **D2.16** | `stratallo` witnesses the **rounding** — 3/3 fixtures, 2000/2000 sweep — and **not** the variance, which is the without-replacement form. Fixture only |
+| **D2.17** | Design intervals against `svy`: **4.9e-13** across 30 fixture rows. Coverage measured by exhaustive enumeration -- **neither holds its nominal level**, worst conditional 0.7472 (KG) and 0.0000 (Wilson) against 0.90. **A-6 renamed `design_clopper_pearson` before it shipped** |
 
 ### Requirements
 
@@ -434,6 +517,24 @@ paths recorded **as invoked** — was verified end to end rather than assumed.
    interval vocabulary is not built, so **O-26 remains open by ruling rather than by omission**.
 5. **A question number was issued twice.** C-41, with a root cause in D-28's shape: numbers are
    allocated in `DECISIONS.md` and listed in the contract, and Q13/Q14 had no sections.
+6. **This outcome section went stale while it was the thing being ruled on**, and that is the
+   deviation worth the most. It said *"O-26 | Unmet, named blocker: A-5 unruled"* after A-5 was
+   applied and O-26 was built, carried pre-`eb17c9a` gate figures, and had no D2.17 row. **The
+   director rules the phase on this section**, and nothing reconciled it against the tree --
+   rule 11's second half, which the method states and this project had not built.
+   `check_open_items` now reads **every** open-items table in the record, in **both**
+   directions, and it was proved against this exact row before the row was fixed.
+7. **The exit checklist did not cover the phase as built.** Section 8 named nine reason codes
+   and omitted the four that came from this phase's most serious fixes --
+   `EVIDENCE_NOT_PREREGISTERED`, `ESTIMATE_METHOD_MISMATCH`, `STRATUM_UNDECLARED`,
+   `INTERVAL_UNDEFINED`. **As written, the hand-run would have certified Phase 2 without ever
+   exercising F-11**, the most serious defect in this project's life, and the hand-run is the
+   only instrument here that is not the builder's. A replacement is drafted at **section 8a**
+   and is **not in force** until the director rules it. **The close is blocked on that ruling.**
+8. **A source anchoring two rulings had no register row.** S-1.13 carried a read state and no
+   pin, URL or re-check date, so `O-24`'s check passed it -- the read-state table cannot see an
+   entry missing from the table beside it. Fixed, and the fix found **C-43**: the source is an
+   official Statistics Canada *educational* page, not its methodology manual.
 
 ### Obligations
 
@@ -448,9 +549,9 @@ paths recorded **as invoked** — was verified end to end rather than assumed.
 | O-20 | **Discharged** — `allocation_rounding` in the hashed plan, refused at load |
 | O-22 | **Discharged** — `interval` in the hashed plan **and read**; F8d performable |
 | O-23 | **Discharged** — ledger half with O-29, report half with the disclosure |
-| O-25 | **Unmet, named blocker: Q15.** The report must state the coverage of the interval actually used, and which intervals exist under a stratified design has just changed |
-| O-26 | **Unmet, named blocker: A-5 unruled.** The witness gate passed — `svy` reproduces our stratified estimate exactly — so this is blocked on vocabulary, not on evidence |
-| O-27 | **Unmet, carried.** D-38's one-stratum disclosure, post-stop surface |
+| O-25 | **Discharged 2026-08-30** — the report carries a *What that 95% actually delivers* block naming the measured coverage of the method actually used, the grid it was measured on, and **where this run sits relative to that grid**. The blocker was A-6, which is now applied |
+| O-26 | **Discharged 2026-08-30 by D2.17** — `design_wilson` and `design_korn_graubard`, fixtures first at `e04a7aa`, witnessed by `svy` to **4.9e-13**. **This row read *unmet, named blocker: A-5 unruled* for a day after both had moved**, and nothing compared it to the tree. `check_open_items` now would — see the deviations |
+| O-27 | **Discharged 2026-08-30** — a one-stratum run's report states all three things D-38 names: one stratum, no precision gain, and an interval resting on a stratified variance basis rather than a binomial inversion |
 | O-29 | **Discharged** — Se/Sp in the plan, the correction reachable, F8d performable |
 | O-16, O-17, O-18, O-21, O-19, O-28 | O-16/O-17/O-18 discharged earlier; **O-19, O-21, O-28 carried to Phase 3 by design** |
 
@@ -467,8 +568,16 @@ paths recorded **as invoked** — was verified end to end rather than assumed.
 
 ### Gate at the close
 
-**Twelve checks green, 694 tests, selftest 12/12, register 30 rows, 37 reason codes.**
-Corrections: 44 entries, **1 open**, 41 closed, 2 noted.
+**Superseded 2026-08-30, after D2.17 and the O-25 / O-27 disclosures landed.** The figures
+below were true at the moment they were written and were carried unchanged while four more
+commits went in, which is C-9's mechanism -- a live figure in prose with nothing watching it.
+Re-derived from the tree rather than edited from memory:
+
+**Twelve checks green, 720 tests, selftest 12/12, register 30 rows, 38 reason codes.**
+Corrections: 47 entries, **4 open**, 41 closed, 2 noted.
+
+*Was, at the review-stop close: twelve checks green, 694 tests, selftest 12/12, register 30
+rows, 37 reason codes; corrections 44 entries, 1 open, 41 closed, 2 noted.*
 
 
 ---
@@ -1022,7 +1131,7 @@ normal approximation the builder put on that SE to show the bases differ — and
 is shipped**. What is proven is that the two paths compute different quantities. **O-26** and
 **O-27** carry the builder and the disclosure.
 
-## A-6 - DRAFT for the director's ruling. Not applied.
+## A-6 - APPLIED to the ratified charter, 2026-08-30. Ruled as drafted.
 
 **What it changes.** Charter §4's `estimate` row, amended yesterday as **A-5**, and §8's honest
 limits.

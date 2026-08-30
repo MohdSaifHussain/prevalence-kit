@@ -236,7 +236,20 @@ def test_evidence_path_files_all_exist() -> None:
 
 def test_evidence_path_covers_every_runtime_module() -> None:
     """And the other direction: a new module must be classified, not ignored."""
-    surface = {"__init__.py", "errors.py", "canonical.py", "cli.py", "report.py"}
+    surface = {
+        "__init__.py",
+        "errors.py",
+        "canonical.py",
+        "cli.py",
+        "report.py",
+        # O-25. Measured coverage figures and the block the report renders from
+        # them. **Surface, and the classification is the honest one rather than
+        # the cautious one**: it touches no label and computes no estimate, so
+        # putting it in the evidence path would widen what "evidence path" means
+        # in order to look careful. The AI guard therefore does not cover it,
+        # which is said here rather than left for someone to discover.
+        "coverage.py",
+    }
     unclassified = {p.name for p in SRC.glob("*.py")} - set(EVIDENCE_PATH) - surface
     assert not unclassified, (
         f"New runtime modules are in neither the evidence path nor the surface list: "

@@ -108,7 +108,13 @@ def test_a_zero_standard_error_refuses_by_name() -> None:
         with pytest.raises(Refusal) as caught:
             builder(0.0, 0.0, 100, 150)
         assert caught.value.reason is Reason.INTERVAL_UNDEFINED
-        assert "plan" in caught.value.fix
+        # **The verb has to be the one that actually reports the odds.** This
+        # line asserted `plan` and passed, because the fix text said `plan` --
+        # and the odds are computed at `sample`, where the allocation and the
+        # frame sizes exist. The test agreed with the message rather than with
+        # the tool, so an operator sent to `plan` would have found nothing.
+        assert "`sample` reports" in caught.value.fix
+        assert "`plan` reports" not in caught.value.fix
 
 
 def test_a_real_standard_error_is_accepted() -> None:

@@ -427,39 +427,6 @@ def _stratified_interval(
     )
 
 
-def _refuse_unestimable_design(plan: Plan) -> None:
-    """A design that draws but cannot yet be estimated refuses BY NAME.
-
-    `stratified_estimate` returns a standard error and no interval, and building
-    the interval is **O-26** under **Q7** -- the plan names the method. Until it
-    exists, the alternative to this refusal is `_estimate_from` answering a
-    stratified draw with SRS Wilson: a number that looks fine, ignores the
-    strata, and contradicts the design its own plan pre-registered.
-
-    **A half-wired path that produces a number is worse than a refusal.** This is
-    the same hazard as adding `stratified` to `SUPPORTED_DESIGNS` while
-    `do_sample` still called `draw_srs`, and it is closed the same way -- named,
-    not defaulted.
-
-    Placed in `_estimate_from` rather than in `do_estimate` on purpose: `verify`
-    recomputes through this function, so the refusal covers the auditor's path
-    too and cannot be bypassed by re-verifying a run created by an older build.
-    """
-    if plan.design == "stratified":
-        raise Refusal(
-            Reason.DESIGN_NOT_ESTIMABLE,
-            "This plan uses design: stratified. The sample is drawn correctly, "
-            "per stratum, but this version has no stratified interval yet -- the "
-            "stratified estimator returns a standard error and nothing turns it "
-            "into a bound.",
-            "Use `design: srs` to get a number now. The stratified interval is "
-            "obligation O-26 and is governed by Q7: the plan will name the "
-            "method, with no default. Refusing is deliberate -- estimating a "
-            "stratified draw as a simple random sample would print a number your "
-            "plan does not describe.",
-        )
-
-
 INTERVAL_METHOD = {
     "wilson": "wilson",
     "clopper_pearson": "clopper-pearson",

@@ -876,67 +876,152 @@ def check_schema(root: Path) -> list[Problem]:
 
 
 def check_open_items(root: Path) -> list[Problem]:
-    """**D2.14(c).** An open-items row naming an item the record marks discharged.
+    """**D2.14(c), widened 2026-08-30.** An obligation asserted in two states.
 
     `CLAUDE.md`'s *Open, by name* table is a **live figure written in prose**, and
     nothing checked it. Its three machine-checked figures were current while
     **four hand-maintained rows in the same file had drifted**, inside about six
-    hours: charter §6.1 (discharged by A-3), O-20 and O-22 (both moved at
+    hours: charter section 6.1 (discharged by A-3), O-20 and O-22 (both moved at
     `d25e6fe`), and the corrections range.
 
-    **The condition, as ruled:** an obligation or correction identifier appearing
-    in an open-items row, whose owning record marks it discharged, is a failure.
+    **The first version read one table in one direction, and section 11 of the
+    Phase 2 contract proved that was too narrow.** That table still said
+    *"O-26 | Unmet, named blocker: A-5 unruled"* after A-5 was applied and O-26
+    was built. The row is the artifact the director rules on at phase close, and
+    nothing compared it to the tree. It also missed **O-3**, discharged in the
+    same section 11 and still listed as carried in `CLAUDE.md` -- because the
+    discharge scan was case-sensitive and section 11 writes *Discharged*, not
+    *DISCHARGED*.
 
-    **What it cannot do**, said here rather than left to be assumed. It cannot
-    tell that a row's *prose* has gone stale while its identifier is still
-    genuinely open -- only that a row names something already closed. That is the
-    direction that has actually failed, and claiming the other would be C-34.
+    **The condition now:** an obligation whose identifier heads a table row in one
+    live document, asserted **discharged** there and **unmet or open** somewhere
+    else, is a failure. Both directions, every table, because *which* of the two
+    rows is stale is not something a checker can know -- and does not need to.
+
+    **Three scope decisions, stated because each one silences something.**
+
+    1. **The identifier must be in the row's FIRST cell.** An `O-n` mentioned in
+       passing inside a long prose cell is a citation, not a status claim.
+       Scanning whole rows flagged D2.12's deliverable row, where *"O-4"* and
+       *"unmet"* appear in unrelated sentences about C-9 and C-1.
+    2. **Contracts for closed phases are not read.** Phase 1's section 10 records
+       O-16 and O-17 as *unmet, named blocker: no remote*, which was true at its
+       close and was discharged in Phase 2. **A dated reading is never rewritten
+       to satisfy a checker** -- flagging it would demand exactly that.
+    3. **It still cannot tell that a row's prose has gone stale while its
+       identifier is genuinely open.** That is unchanged, and claiming otherwise
+       would be C-34.
     """
     claude = root / "CLAUDE.md"
     if not claude.exists():
         return [Problem("open-items", "CLAUDE.md", "is missing")]
-
-    table = re.search(
-        r"^### Open, by name\n(.*?)(?:\n## |\Z)",
-        claude.read_text(encoding="utf-8"),
-        flags=re.M | re.S,
-    )
-    if table is None:
+    if not re.search(r"^### Open, by name$", claude.read_text(encoding="utf-8"), flags=re.M):
         return [Problem("open-items", "CLAUDE.md", "has no 'Open, by name' table")]
 
-    named: set[str] = set()
-    for line in table.group(1).splitlines():
-        if not line.startswith("|"):
+    claims = _obligation_claims(root)
+    problems: list[Problem] = []
+    for ident in sorted(claims, key=lambda o: int(o[2:])):
+        rows = claims[ident]
+        states = {state for _, _, state in rows}
+        if len(states) < 2:
             continue
-        named |= set(re.findall(r"\b(O-\d+)\b", line.split("|")[1]))
-
-    discharged = _discharged_obligations(root)
-    problems = [
-        Problem(
-            "open-items",
-            "CLAUDE.md",
-            f"{ident} is listed as open but the record marks it discharged",
+        open_at = [f"{path}:{line}" for path, line, state in rows if state == "open"]
+        done_at = [f"{path}:{line}" for path, line, state in rows if state == "discharged"]
+        problems.append(
+            Problem(
+                "open-items",
+                open_at[0].split(":")[0],
+                f"{ident} is listed as open at {', '.join(open_at)} "
+                f"but marked discharged at {', '.join(done_at)}",
+            )
         )
-        for ident in sorted(named & discharged)
-    ]
     return problems
 
 
-def _discharged_obligations(root: Path) -> set[str]:
-    """Obligations the record marks discharged, closed or done.
+_OPEN_WORDS = re.compile(r"\b(UNMET|Unmet|unmet|OPEN|Open|Carried|CARRIED)\b")
+_DONE_WORDS = re.compile(r"\b(DISCHARGED|Discharged|discharged|CLOSED|Closed|DONE|Done)\b")
 
-    Read from the same files `defined_ids` walks -- one definition of where
-    obligations live, so the two cannot drift (C-34's structural fix, reused).
+
+def _live_documents(root: Path) -> list[Path]:
+    """Where a status claim about an obligation is still a live claim.
+
+    `OBLIGATION_SOURCES` plus `CLAUDE.md`, **minus the contract of every phase
+    that has closed**. Derived from `current_phase` rather than naming a file, so
+    it moves on its own when Phase 3 opens -- the alternative is a constant that
+    is right today and wrong at the next boundary.
     """
-    discharged: set[str] = set()
+    live = current_phase(root)
+    paths = [root / "CLAUDE.md"]
     for pattern in OBLIGATION_SOURCES:
         for path in sorted(root.glob(pattern)):
-            for line in path.read_text(encoding="utf-8").splitlines():
-                if not re.search(r"\b(DISCHARGED|CLOSED)\b", line):
-                    continue
-                head = line.split("|")[1] if line.startswith("|") else line
-                discharged |= set(re.findall(r"\b(O-\d+)\b", head))
-    return discharged
+            phase = re.search(r"PHASE-(\d+)-CONTRACT\.md$", path.name)
+            if phase is not None and int(phase.group(1)) < live:
+                continue
+            paths.append(path)
+    return [p for p in paths if p.exists()]
+
+
+def _obligation_claims(root: Path) -> dict[str, list[tuple[str, int, str]]]:
+    """`{O-n: [(file, line, "open" | "discharged"), ...]}` from every live table.
+
+    A row counts when an obligation identifier appears in its **first cell**. The
+    state is read from the whole row, which is safe because no row in the record
+    asserts both -- checked before this rule was written, not assumed.
+
+    **A row under a *Done* heading asserts discharge whether or not it says so**,
+    and that is the clause that catches the case this widening was built for.
+    Section 11 of the Phase 2 contract said *"O-26 | Unmet, named blocker: A-5
+    unruled"* while `CLAUDE.md` listed D2.17 / O-26 in its **Done** table -- and
+    the Done row carries no status word at all, so a word-matching rule saw one
+    claim, found nothing to contradict, and passed. **The heading is the claim.**
+    """
+    claims: dict[str, list[tuple[str, int, str]]] = {}
+    for path in _live_documents(root):
+        rel = path.relative_to(root).as_posix()
+        section = ""
+        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+            if line.startswith("#"):
+                section = "done" if line.strip().lower().endswith("done") else ""
+            if not line.startswith("|"):
+                continue
+            cells = line.split("|")
+            if len(cells) < 3:
+                continue
+            idents = set(re.findall(r"\b(O-\d+)\b", cells[1]))
+            if not idents:
+                continue
+            # **Where the state is read from, and the order matters.**
+            #
+            # 1. The FIRST CELL wins when it carries a state word. Section 10
+            #    writes `| O-4 > DISCHARGED by D2.9 | ... O-13 is separate and
+            #    still open ... |` -- the status belongs to O-4 and the mention
+            #    of O-13 is prose about a neighbour.
+            # 2. Otherwise the rest of the row, but ONLY if it names no other
+            #    obligation. Section 11 writes `| O-26 | **Unmet, named blocker
+            #    ...** |`, where the status is genuinely in the second cell.
+            # 3. A row under a *Done* heading is discharged either way.
+            #
+            # The first draft read the whole row and attributed the state to
+            # whatever cell 1 named. It fired on a row listing O-14 and O-15 as
+            # carried whose prose explained that O-3 had been discharged. The
+            # second draft skipped any row naming another obligation -- and
+            # silenced section 10's O-4 row, which is a real discharge claim.
+            # **Both were found by running it, not by reading it.**
+            others = set(re.findall(r"\b(O-\d+)\b", line)) - idents
+            head = cells[1]
+            if _DONE_WORDS.search(head) or _OPEN_WORDS.search(head):
+                scope = head
+            else:
+                scope = "" if others else line
+            if _DONE_WORDS.search(scope) or section == "done":
+                state = "discharged"
+            elif _OPEN_WORDS.search(scope):
+                state = "open"
+            else:
+                continue
+            for ident in idents:
+                claims.setdefault(ident, []).append((rel, number, state))
+    return claims
 
 
 def check_gate(root: Path) -> list[Problem]:
@@ -1225,8 +1310,8 @@ def selftest() -> int:
             # The defect exactly as it was: the Total row over by one. C-36 sat
             # in the file with its own columns summing to 38 against a stated 37.
             "docs/CORRECTIONS.md",
-            "| **Total** | **2** | **41** | **45** |",
-            "| **Total** | **2** | **40** | **45** |",
+            "| **Total** | **4** | **41** | **47** |",
+            "| **Total** | **4** | **40** | **47** |",
         ),
         "schema": (
             # F-10's shape, planted: declare a field behavioural that nothing
@@ -1243,7 +1328,7 @@ def selftest() -> int:
             # check exists for.
             "CLAUDE.md",
             "| **O-21** | The rare-event specificity fact must reach the README | Phase 3 |",
-            "| **O-4** | Listed as open after the record discharged it | Phase 2 |",
+            "| **O-4** | **Unmet, carried.** Still awaiting the cross-check | Phase 2 |",
         ),
         "figures": (
             "src/prevalence_kit/run.py",

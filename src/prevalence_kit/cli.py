@@ -27,6 +27,7 @@ import click
 
 from . import __version__
 from . import report as report_mod
+from .coverage import NOTICE_THRESHOLD
 from .errors import Refusal
 from .plan import Plan
 from .run import Workspace, do_estimate, do_ingest, do_plan, do_sample
@@ -113,16 +114,20 @@ def sample(plan_path: Path, frame_path: Path, run_dir: Path) -> None:
     # CORRECTION_OUT_OF_RANGE: name the number that has to change, not just the
     # fact that something is wrong.
     #
-    # STATED, not refused, pending the director's ruling: an operator may
-    # legitimately want the point estimate knowing the interval is unlikely, and
-    # that is a judgment about how the tool is used rather than about arithmetic.
+    # STATED, not refused. RULED 2026-08-30, D-41. `expected_rate` is documented
+    # as a prior that costs efficiency and never validity, and that guarantee is
+    # what made it safe to require -- so a refusal driven by it would be a
+    # refusal on a guess, and a pessimistic prior would block a measurement that
+    # would have worked. Recording the number in the ledger as well as printing
+    # it is what makes stating sufficient.
     body = Workspace(run_dir).ledger.verify()[-1].body
     odds = body.get("probability_no_interval")
-    if odds is not None and float(str(odds)) >= 0.05:
+    if odds is not None and float(str(odds)) >= NOTICE_THRESHOLD:
         percent = float(str(odds)) * 100.0
         click.echo("")
         click.echo(
-            f"  NOTE: this design has a {percent:.1f}% chance of producing NO INTERVAL at all."
+            f"  NOTE: this design has AT LEAST a {percent:.1f}% chance of producing "
+            "NO INTERVAL at all."
         )
         click.echo("  At the rates your plan declares, that share of samples this size come back")
         click.echo("  entirely negative. The design standard error is then zero and there is no")

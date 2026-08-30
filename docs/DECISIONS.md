@@ -1478,6 +1478,51 @@ plan and the frame must describe the same population.
 
 ---
 
+## D-41 - The odds of no interval are stated, not refused
+
+**Date:** 2026-08-30 · **Made in:** the director's ruling on the no-interval notice · **Ruled by:** director
+
+`sample` computes the chance that the design produces **no interval at all** -- the product over
+strata of `(1 - p_h)` to the `n_h` -- prints it, and records it in the ledger. **It does not
+refuse, however bad the odds are.**
+
+**The director's grounds, and they turn on a property this project already promised.**
+
+> `expected_rate` is documented as a prior that costs efficiency and never validity. **That
+> guarantee is what made it safe to require.** If a wrong prior can block a run, the field stops
+> being cost-free -- a pessimistic guess would refuse a measurement that would have worked.
+> **Refusing on a prior means refusing on a guess.**
+
+**D-39 is the entry that makes this one binding.** It attached the statement that `expected_rate`
+is a prior whose only cost is efficiency, and said the opposite belief *"would make an operator
+afraid of a field that cannot hurt them."* A refusal driven by that field would make the opposite
+belief **true**, and would do it to an operator who had been told otherwise in the schema
+documentation, the `PlanStratum` docstring and the limits.
+
+**Why stating is sufficient rather than merely cheaper.** The number reaches the **ledger** as well
+as the console, so an auditor reading the run later sees what the design's odds were rather than
+taking the operator's word that they were told. Printed-only would have made it a courtesy to
+whoever happened to run the command.
+
+**Alternatives not taken.**
+
+- **Refuse above a threshold.** Rejected on the grounds above, and on a second: any threshold would
+  be this project choosing for an operator, which is what **D-37** removed from the interval
+  method one ruling earlier. An operator may legitimately want the point estimate knowing the
+  interval is unlikely -- at rare rates a run that finds nothing and reports a defensible upper
+  bound is **the product**, which is exactly what striking `CORRECTION_DEGENERATE` established.
+- **Warn only on the console.** Rejected: it leaves no artifact, and a warning nobody can audit is
+  the shape `CLAUDE.md` rule 14 names -- a result with no record attached.
+
+**The limit that travels with it.** The closed form is the probability that **every sampled unit is
+negative**. A design standard error of zero also arises when every stratum is *uniformly* labelled,
+including all-positive strata, so the true probability of no interval is very slightly higher than
+the number printed. At the rates this tool is for the difference is far below the four decimal
+places the closed form was checked to. **Stated because the printed number is a lower bound on the
+risk, and a bound is read in the direction that keeps it true.**
+
+---
+
 ## Carried obligations opened by these decisions
 
 | # | Obligation | Owner | Opened by |

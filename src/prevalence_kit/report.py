@@ -21,6 +21,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from .canonical import JSONObject, digest
+from .coverage import DESIGN_GRID, MEASURED_N, NOTICE_THRESHOLD, disclosure
 from .errors import Reason, Refusal
 from .ledger import Entry
 from .plan import Plan
@@ -84,6 +85,22 @@ def build(ws: Workspace, plan: Plan) -> JSONObject:
         "seed": plan.seed,
         "frame_rows_read": sample.get("frame_rows_read"),
         "frame_unique_ids": sample.get("frame_unique_ids"),
+        # O-27 / D-38. How many strata the design actually had, read from the
+        # record rather than from the plan, for F-11's reason: the report states
+        # what happened. `None` for an SRS run and for runs made before the
+        # field existed.
+        "strata": sample.get("strata"),
+        # D-41. The odds this design produced no interval at all, as computed and
+        # recorded at `sample`, before the labels were paid for.
+        "probability_no_interval": sample.get("probability_no_interval"),
+        # O-25 / D-37 condition 3. What the chosen interval's confidence level
+        # actually delivers, at the nominal level this run used.
+        "coverage": disclosure(
+            str(plan.interval),
+            str(estimate["confidence"]),
+            str(estimate["point"]),
+            int(str(estimate["n"])),
+        ),
         "estimate": estimate,
         "chain": [
             {"seq": e.seq, "step": e.step, "at": e.at, "entry_digest": e.entry_digest}
@@ -112,10 +129,18 @@ def render_markdown(report: JSONObject) -> str:
     point = _percent(str(est["point"]))
     low, high = _percent(str(est["low"])), _percent(str(est["high"]))
 
+    # The level the estimator actually used, read from the record. This line
+    # said "95%" as a constant until O-25. Nothing reached it, because the CLI
+    # takes the default and the default is 0.95 -- which is exactly what made it
+    # worth fixing: a recorded field the artifact does not read is F-10's shape,
+    # and the day a plan carries `confidence` the report would have printed the
+    # wrong level beside the right bounds.
+    level = _confidence_label(str(est["confidence"]))
+
     lines = [
         "# Prevalence report",
         "",
-        f"**{point}**  (95% interval {low} to {high})",
+        f"**{point}**  ({level} interval {low} to {high})",
         "",
         f"{est['positives']} of {est['n']} sampled items were positive.",
         "",
@@ -167,8 +192,9 @@ def render_markdown(report: JSONObject) -> str:
             f"specificity {est['specificity']} (Rogan-Gladen). The uncorrected "
             f"apparent prevalence was {_percent(str(est['apparent']['point']))}."
         )
+    lines += _one_stratum_disclosure(report)
+    lines += _coverage_block(report, level)
     lines += [
-        "",
         "## The record",
         "",
         f"Pre-registration hash: `{report['plan_hash']}`",
@@ -205,6 +231,108 @@ def render_markdown(report: JSONObject) -> str:
     return "\n".join(lines)
 
 
+def _one_stratum_disclosure(report: JSONObject) -> list[str]:
+    """**O-27 / D-38.** A one-stratum stratified design says so, in the report.
+
+    The ruling was *accept and disclose*, and the precedent it rests on is
+    **D-21**: de-duplicating the frame was correct, and doing it silently was the
+    defect. Accepting a one-stratum plan is correct -- both anchors admit
+    `L = 1` -- so the silence is the only thing left that could be wrong.
+
+    **Three statements, because the ruling names three** and the third is the one
+    a reader would never derive: the point estimate of a one-stratum stratified
+    design equals the SRS estimate, and **its variance does not**. At the shipped
+    example's numbers the two paths give the same `0.225` and different bases.
+    """
+    if report.get("design") != "stratified" or report.get("strata") != 1:
+        return []
+    return [
+        "",
+        "> **This design has one stratum, so stratification gained you nothing.** "
+        "Splitting a population into one group is the unstratified design with "
+        "extra bookkeeping, and the record says so rather than leaving you to "
+        "notice. The number is not wrong and the plan was followed exactly.",
+        "",
+        "> **The interval still rests on a stratified variance, not on a binomial "
+        "inversion.** A one-stratum stratified estimate equals the simple random "
+        "sample estimate at the point and **not** at the interval: the two paths "
+        "compute different quantities from the same data. Do not compare this "
+        "bound with a `wilson` or `clopper_pearson` bound as though they were the "
+        "same construction.",
+    ]
+
+
+def _coverage_block(report: JSONObject, level: str) -> list[str]:
+    """**O-25 / D-37 condition 3.** What the level on the box actually delivers.
+
+    The plan records which interval the operator chose. **This records what that
+    choice cost**, at the nominal level the run actually used.
+
+    **It quotes a measurement and says what the measurement covers.** It does not
+    compute coverage at this run's operating point, and the difference is stated
+    in the report rather than left for a reader to assume -- Clopper-Pearson
+    coverage at one true rate costs one root-find per possible outcome, 3.3
+    seconds at n = 500 on this machine and growing, so a report that computed it
+    would either be slow or would use a second construction that is not the one
+    it shipped. **The bound is real and it is a bound**, which is the honest
+    thing to hand someone.
+    """
+    block = report.get("coverage")
+    if not isinstance(block, dict) or block.get("measured") is None:
+        return []
+    measured = float(str(block["measured"]))
+    lines = [
+        "",
+        f"## What that {level} actually delivers",
+        "",
+        f"Measured, not asserted. Worst coverage for `{block['method']}` at a "
+        f"nominal {level}: **{measured * 100:.2f}%**, at {block['measured_where']}.",
+        "",
+        "That is the worst value found on a *grid* of true rates, so the real "
+        "worst is **at most** this and may be lower. It is rounded down rather "
+        "than to nearest, because rounding a bound toward the middle claims a "
+        "floor the measurement already breaks.",
+        "",
+    ]
+    if block.get("is_design_based"):
+        lines += [
+            "**Neither stratified interval holds its nominal level at rare "
+            f"rates.** The figure comes from {DESIGN_GRID}. **It is not a "
+            "measurement of your design**, which was not measured. Read it as "
+            "what the method does in this regime.",
+            "",
+        ]
+        odds = report.get("probability_no_interval")
+        if odds is not None and float(str(odds)) >= NOTICE_THRESHOLD:
+            lines += [
+                f"**And this design had at least a {float(str(odds)) * 100:.1f}% chance "
+                "of producing no interval at all**, computed from the plan before any "
+                "labelling was paid for. It produced one. At rare rates that is the "
+                "single most likely outcome rather than an edge case.",
+                "",
+            ]
+    else:
+        gamma = float(str(block["gamma"]))
+        rate = "inside" if block.get("gamma_in_swept_range") else "outside"
+        sizes = ", ".join(str(n) for n in MEASURED_N)
+        size = (
+            f"n = {block['n']}, one of the sizes measured"
+            if block.get("n_was_measured")
+            else f"n = {block['n']}, which is not one of the sizes measured ({sizes})"
+        )
+        lines += [
+            f"**Where this run sits, on both axes.** True rate: gamma = p x n = "
+            f"{gamma:.3f}, {rate} the swept range 0.5 to 15. Sample size: {size}.",
+            "",
+            "The figure above is what the method does at the sizes and rates that "
+            "were measured. **It is not a coverage computed for this run, and none "
+            "was computed.** Coverage oscillates with sample size, so a worst case "
+            "at one n does not bound another.",
+            "",
+        ]
+    return lines
+
+
 def emit(ws: Workspace, plan: Plan, *, stem: str = "report") -> tuple[Path, Path]:
     """Write both forms and append a ledger entry. Returns (markdown, json)."""
     report = build(ws, plan)
@@ -235,6 +363,16 @@ def _refuse_non_ascii(text: str) -> None:
 def _percent(decimal_string: str) -> str:
     """0.225000000000 -> 22.500%. Three decimal places holds rare-event rates."""
     return f"{float(decimal_string) * 100:.3f}%"
+
+
+def _confidence_label(decimal_string: str) -> str:
+    """0.950000000000 -> 95%. A header wants the level, not twelve places of it.
+
+    Trailing zeros are stripped rather than a fixed width chosen, so 0.995 reads
+    as 99.5% instead of being rounded into a level nobody asked for.
+    """
+    text = f"{float(decimal_string) * 100:.6f}".rstrip("0").rstrip(".")
+    return f"{text}%"
 
 
 def last_report(ws: Workspace) -> Entry | None:

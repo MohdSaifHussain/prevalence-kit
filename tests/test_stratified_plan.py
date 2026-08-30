@@ -26,6 +26,7 @@ from typing import Any
 import pytest
 import yaml
 
+from prevalence_kit import verify as verify_module
 from prevalence_kit.errors import Reason, Refusal
 from prevalence_kit.estimators import wilson
 from prevalence_kit.plan import (
@@ -413,7 +414,47 @@ def test_verify_redraws_the_stratified_sample(tmp_path: Path, frame_csv: Path) -
 
     checks = verify_run(ws)
     assert all(c.ok for c in checks)
-    assert any("redrawn" in c.note for c in checks)
+    # **The note must say WHICH draw it redid.** `any("redrawn" in note)` passed
+    # for either design, so the line an auditor reads could not distinguish a
+    # stratified redraw from a simple random one -- the very substitution this
+    # branch exists to prevent. The check was real and its output was silent
+    # about what it had checked.
+    sample = next(c for c in checks if c.name == "sample")
+    assert "per stratum" in sample.note
+    assert "simple random" not in sample.note
+
+
+def test_verify_refuses_when_the_stratified_redraw_is_done_as_srs(
+    tmp_path: Path, frame_csv: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The negative control for the redraw, and **rule 21 decides its shape**.
+
+    The defect was `draw_srs` called unconditionally in `verify` -- a **broken
+    checker**, not a tampered run. So the control breaks the dispatch and leaves
+    the run honest: every digest correct, the draw genuinely stratified, and the
+    auditor's tool checking it against the wrong redraw.
+
+    **Editing `sample.json` instead would trip `LEDGER_BROKEN` first** and prove
+    nothing about this branch, which is the mistake rule 21 was written after.
+    """
+    plan = load_plan(tmp_path, stratified_plan())
+    ws = Workspace(tmp_path / "run")
+    do_plan(ws, plan)
+    do_sample(ws, plan, frame_csv)
+
+    # The state the defect actually produced: a correct run, verified by a build
+    # whose redraw ignores the design its own plan pre-registered.
+    monkeypatch.setattr(
+        verify_module,
+        "draw_stratified",
+        lambda frame, *, seed, allocation: {
+            name: tuple(sorted(ids)[: allocation[name]]) for name, ids in frame.items()
+        },
+    )
+    with pytest.raises(Refusal) as caught:
+        verify_run(ws)
+    assert caught.value.reason is Reason.ESTIMATE_MISMATCH
+    assert "different sample" in caught.value.detail
 
 
 # -------------------------------------------------------------------- refusals

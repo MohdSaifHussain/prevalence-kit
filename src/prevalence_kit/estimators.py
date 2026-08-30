@@ -879,8 +879,8 @@ def effective_n(
             "interval from.",
             "The point estimate stands and the sample sizes stand; the interval "
             "does not exist for this sample. At rare rates this is the most "
-            "likely single outcome rather than an edge case -- `plan` reports the "
-            "chance of it before any labelling is paid for. Report the point "
+            "likely single outcome rather than an edge case -- `sample` reports "
+            "the chance of it before any labelling is paid for. Report the point "
             "estimate and say the interval was undefined.",
         )
     n_eff = point * (1.0 - point) / (standard_error * standard_error)
@@ -976,7 +976,7 @@ def design_korn_graubard(
 
 
 def probability_no_interval(rates: Sequence[float], allocation: Sequence[int]) -> float:
-    """The chance this design produces **no interval at all**, in closed form.
+    """A **lower bound** on the chance this design produces no interval at all.
 
         P = product over strata of (1 - p_h) ** n_h
 
@@ -984,6 +984,16 @@ def probability_no_interval(rates: Sequence[float], allocation: Sequence[int]) -
     and there is nothing to build an interval from. At rare rates this is not an
     edge case: **87.8%** at the `two_stratum` fixture with p = 0.001, **74.1%**
     at `rare`.
+
+    **It is a bound and it is named as one here, where the reader meets it.**
+    This closed form is the probability that every sampled unit is **negative**.
+    The design standard error is also zero when every stratum comes back
+    *uniformly* labelled -- all-positive strata included -- so the true chance of
+    no interval is very slightly higher than this number. At the rates this tool
+    is for the difference sits far below the four decimal places the closed form
+    was checked to, and it is stated anyway: **a bound is read in the direction
+    that keeps it true**, and D-41 is not a document an operator opens. The
+    operator-facing notice says *at least* for the same reason.
 
     **The plan already carries everything this needs** -- `expected_rate` per
     stratum and the allocation -- so it is computable **before any data is

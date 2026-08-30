@@ -115,7 +115,7 @@ breaches it is a deviation to be recorded, not absorbed.
 | `plan` | Read a measurement plan (YAML): the estimand, the population, the sampling design, the label source. **Hash the plan before any data is touched.** This is pre-registration. The plan cannot quietly change after results are seen. |
 | `sample` | Draw the sample per the plan. v1.0: simple random sampling, and stratified with proportional or Neyman allocation. Deterministic under a recorded seed. |
 | `ingest-labels` | Read human labels (CSV/JSONL). Content is **sealed on ingest**: encrypted at rest, shown only as a safe preview (length, digest, harm flags). Every unseal is explicit and logged. |
-| `estimate` ▸ **A-5** | Compute prevalence with a correct interval. **The plan names the method and there is no default.** Which names are valid depends on the design, because a binomial interval and a design-based one are intervals for **different quantities**: under `design: srs`, `interval: wilson` or `interval: clopper_pearson`, both built on the sampled `(k, n)`; under `design: stratified`, `interval: design_wilson` or `interval: design_clopper_pearson`, both built on the design-weighted estimate and its standard error. **Neither pair has a primary.** The choice inside each is between coverage you can rely on and an interval that is narrower — Clopper-Pearson holds its nominal level, Wilson is tighter and can fall below it. You cannot have both, and the tool will not pick for you. **A binomial name under a stratified design is refused, and so is the reverse**, because one word meaning two arithmetics is a trap the reader of a published plan cannot see. Optional Rogan–Gladen correction when `sensitivity` and `specificity` are supplied — **as hashed plan fields, both or neither, validated at load.** They are a pre-registered commitment like any other: a plan that supplies one is refused, and correcting for a different figure than the one registered would be a different measurement. **Refuse with a named reason** rather than print a silently wrong number. |
+| `estimate` ▸ **A-6** | Compute prevalence with a correct interval. **The plan names the method and there is no default.** Which names are valid depends on the design, because a binomial interval and a design-based one are intervals for **different quantities**: under `design: srs`, `interval: wilson` or `interval: clopper_pearson`, both built on the sampled `(k, n)`; under `design: stratified`, `interval: design_wilson` or `interval: design_korn_graubard`, both built on the design-weighted estimate and its standard error. **Neither pair has a primary.** Under `srs` the choice is between coverage you can rely on and an interval that is narrower — Clopper-Pearson holds its nominal level, Wilson is tighter and can fall below it. **Under `stratified` neither holds its nominal level at rare rates** — §8 carries the measured figures — and where the design standard error is zero there is **no interval at all**, which `sample` predicts before any labelling is paid for. You cannot have both, and the tool will not pick for you. **A binomial name under a stratified design is refused, and so is the reverse**, because one word meaning two arithmetics is a trap the reader of a published plan cannot see. Optional Rogan–Gladen correction when `sensitivity` and `specificity` are supplied — **as hashed plan fields, both or neither, validated at load.** They are a pre-registered commitment like any other: a plan that supplies one is refused, and correcting for a different figure than the one registered would be a different measurement. **Refuse with a named reason** rather than print a silently wrong number. |
 | `verify` | Re-check the whole chain: plan hash, sample determinism, ledger integrity, estimate reproduction. An outsider must be able to verify a published number from the sealed record alone. |
 | `emit-report` | Stamped Markdown and JSON: estimate, interval, design, n, every hash, and a mandatory **Honest Limits** block, asserted present by a test. |
 
@@ -321,6 +321,33 @@ concrete finding that only FULL-tier ceremony would have produced.
   never drops below 91%, when the measurement already shows it does. **Round a bound in the
   direction that keeps it true.** **This is why the plan must name the method.** A default would be this
   project choosing, for an operator who did not know there was a choice. Added 2026-08-29, A-4.
+- **The stratified intervals do not hold their nominal level, and at rare rates the gap is large.**
+  Measured by exhaustive enumeration over the full product space of per-stratum outcomes, retained
+  mass at least 1 − 1e-12, on four design structures × eight true rates × three nominal levels =
+  **96 points**. Coverage is stated **conditional on the interval existing**, because an undefined
+  interval is a different failure and is disclosed separately below.
+
+  | nominal | `design_wilson` | `design_korn_graubard` |
+  |---|---|---|
+  | 0.90 | **0.0000** at `wide`, p = 0.001 | **0.7472** at `rare`, p = 0.01 |
+  | 0.95 | **0.0000** at `wide`, p = 0.001 | **0.7937** at `rare`, p = 0.01 |
+  | 0.99 | **0.2938** at `two_stratum`, p = 0.001 | **0.8549** at `rare`, p = 0.01 |
+
+  **These are worst values over a grid, so the true worst is at most this and may be lower** — the
+  same reading as the binomial table above, and the same reason the figures are rounded **down**
+  rather than to nearest. **It is not a boundary artifact**: at `rare`, p = 0.02, where the interval
+  exists 99.8% of the time, asking for **99% gets 91.5%** and asking for 95% gets 90.0%.
+
+  **Korn-Graubard is the better of the two and still does not hold**: closer to nominal at every
+  level and at **32 of 32** points at nominal 0.95, and below nominal at 7 of 32 there. Wilson is
+  below at 21 of 32. **Neither is Clopper-Pearson**, whose guarantee is a property of the exact
+  binomial construction that an approximation on an effective sample size inherits nothing from.
+
+  **And the interval is often not there at all.** When every sampled unit comes back negative the
+  design standard error is zero and no interval exists: **87.8%** of samples at `two_stratum` with
+  p = 0.001, **74.1%** at `rare`. **`sample` computes this in closed form and says it before the
+  label budget is spent** — the product over strata of `(1 − p_h)` to the `n_h`, from the plan's own
+  `expected_rate` and the allocation. Added 2026-08-30, A-6.
 - **What we ship is limited by what we can witness.** Section 6 says every estimator is validated
   against an authoritative reference before it ships. That rule has a price, and this is it. S-1.1 —
   our own anchor — recommends the Jeffreys interval for small samples and Agresti–Coull for larger
@@ -367,6 +394,7 @@ Every change to this charter after ratification gets a row here.
 
 | # | Date | Change | Ruled by | Verbatim ruling |
 |---|---|---|---|---|
+| A-6 | 2026-08-30 | **§4's `estimate` row a third time, and §8 gains the stratified limits.** A-5 named four interval words; **one of them was wrong and the measurement is what found it.** `design_clopper_pearson` would have promised coverage at or above nominal — the only reason `clopper_pearson` is worth having — and the measured worst conditional coverage is **0.7472 against a nominal 0.90**. The construction is Korn-Graubard's, so the name is now `design_korn_graubard`. **Three names, not four.** §8 gains the 96-point coverage table, the note that neither design interval holds its level, and the second failure mode the binomial case never had: at rare rates the interval frequently **does not exist**. **No method is recommended** — A-4's reasoning held, even though Korn-Graubard is measurably better | Director | **Verbatim below** |
 | A-5 | 2026-08-30 | **§4's `estimate` row again.** Under **Q15** the plan's interval vocabulary **depends on the design**: `design_wilson` / `design_clopper_pearson` under `stratified`, the binomial pair under `srs`, and each refused under the other. Four words where A-4 named two, and **the cost is the ruling's rather than the drafting's**. The row also states **how** Se/Sp are supplied — hashed plan fields, both or neither, validated at load — which A-4 left to inference. Ruled after the witness gate passed: `svy` reproduces our stratified estimate, standard error and degrees of freedom exactly, so a stratified interval can be witnessed and D2.9's conclusion does not reach it | Director | **Verbatim below** |
 | A-4 | 2026-08-29 | **§4's `estimate` row and two honest limits.** Under **Q11 / D-37** the plan names the interval method and there is no default, so **neither interval is primary** and §4 said one was. Two limits added: what the choice costs in coverage at rare-event rates, and — the one that was invisible — **what we ship is limited by what we can witness**, since our own anchor recommends two intervals we cannot validate and therefore do not ship. Ruled after the builder raised it as a question about §6 reading as pure strength | Director | **Verbatim below** |
 | A-3 | 2026-08-29 | **§6.1's Rogan–Gladen sentence amended.** Two claims in it were false and one was true. **True and kept:** neither `survey` nor `svy` implements a misclassification correction. **False:** that it followed there is no witness — `epiR` 2.0.92 implements it, S-1.10. **False:** that the anchor is Lang & Reiczigel (2014) — D-31 ruled S-1.6 Reiczigel et al. (2010). The narrowing travels with the amendment and is not optional. Found by a fresh session reading the record before building; the builder raised it and did **not** edit the ratified document. §6.1's numbered points are untouched | Director | **Verbatim below** |
@@ -476,6 +504,27 @@ reported what the artifact showed, which is the rule this project has for pushba
 **The half that was right is the stronger half of the row.** A-4 said *"when sensitivity and
 specificity are supplied"* and left the mechanism to inference. The row now says **what the
 commitment is**.
+
+### A-6, ruled 2026-08-30 — the director's words, verbatim
+
+Recorded in full because it is the third amendment to one row in three days, and because the
+reason for the rename is the part a reader is most likely to mistake for pedantry.
+
+> **A-6 — approved. Apply it.**
+>
+> Three names, not four. The limits section is right to be longer than A-4's and the reason is
+> the honest one: **the news is worse.** Two intervals, neither holding, plus a failure mode the
+> binomial case never had. Declining to recommend Korn-Graubard even though it is measurably
+> better is A-4's reasoning held under pressure.
+
+**The figures in §8 were re-derived before they were written here, and they reproduce exactly.**
+The 96-point measurement existed only as figures in a commit message and three docstrings — no
+script, no artifact, so no reader could check it and no gate could defend it. Re-running the
+enumeration from the shipped estimators reproduces every published figure: `0.74720` at `rare`
+p = 0.01 nominal 0.90, `0.79374` and `0.85498` at the same point for 0.95 and 0.99, `0.00000` at
+`wide` p = 0.001, `0.29389` at `two_stratum` p = 0.001, and `0.90033` at `rare` p = 0.02 where the
+interval exists 99.767% of the time. **Rule 4 applies to a number this project is about to put in
+its own ratified charter more than to any other number it prints.**
 
 ### Standing directions in force
 

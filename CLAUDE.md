@@ -56,7 +56,7 @@ pytest
 ```
 
 `mypy` on its own is the **config form**. It covers `src` *and* `tests`. **Re-derived at this
-checkpoint:** `--strict src` reads **13** files, plain `mypy` reads **28**. Both numbers move as the
+checkpoint:** `--strict src` reads **14** files, plain `mypy` reads **36**. Both numbers move as the
 phase adds modules — re-derive them, do not carry them. The 12 written here an hour earlier was
 already stale.
 
@@ -219,14 +219,28 @@ confirms we implement the method as its author does. It does not independently c
 
 ## Where things stand
 
-**Phase 0** ratified. **Phase 1** closed at `d66d225`. **Phase 2 is in build**, **Q1–Q15 ruled**,
-**A-0 … A-5** applied to the charter and **A-6 drafted, not applied**.
-**D2.1 … D2.16 done**; D2.17 (the design-interval fixtures and estimators) built under O-26.
+**Phase 0** ratified. **Phase 1** closed at `d66d225`. **Phase 2 is built and NOT closed**,
+**Q1–Q15 ruled**, **A-0 … A-6 all applied to the charter**. **D2.1 … D2.17 done.**
 **The review stop is CLOSED.** It found **F-11**, the most serious defect in this project.
 
-**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **705 tests**, seven gate
+**The exit checklist was replaced before the hand-run, and that is the last thing that
+happened.** Contract §8 covered the phase as it was, not as it is: it named nine reason codes
+and omitted `EVIDENCE_NOT_PREREGISTERED`, `ESTIMATE_METHOD_MISMATCH`, `STRATUM_UNDECLARED` and
+`INTERVAL_UNDEFINED`, so **the hand-run would have certified Phase 2 without ever exercising
+F-11** — and the hand-run is the only instrument here that is not the builder's. **§8a
+supersedes it**, approved 2026-08-30, every command run before it was written. §8 is left
+unedited: it is a dated part of a binding document.
+
+**The director's own addition to it found one more.** Nothing in the draft ran `verify` — the
+verb whose `yes` is the entire product — so **F25** does. Writing that row exposed that
+`verify`'s `sample` line read *"redrawn from the frame, identical"* for **both designs**, so a
+reader could not tell a stratified redraw from a simple random one. `verify.py` redraws by
+design (F-10's third site) and **its output was silent about what it had checked.** It now
+names the draw.
+
+**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **721 tests**, seven gate
 checks green — **`check_claims` now runs twelve**, not seven; the gate block below is still
-seven commands. **CI last ran green at 705** on the 3.12 / 3.13 / 3.14 matrix, run `eb17c9a`.
+seven commands. **CI last ran green at 705** on the 3.12 / 3.13 / 3.14 matrix, run `eb17c9a` — **local is 720 and CI has not run since**, which is why the two are stated apart.
 A second workflow, `witness.yml`, rebuilds the R image and requires every fixture to regenerate
 **byte-identically** — it runs on `r/**` changes and on demand, not on every push.
 Local and CI figures are stated apart on purpose.
@@ -247,6 +261,8 @@ read anything else.** `check_figures` derives all three.
 | | |
 |---|---|
 | **D2.17 / O-26** | **The stratified intervals.** `design_wilson` and `design_korn_graubard`, witnessed by `svy` to **4.9e-13**, fixtures committed first at `e04a7aa`. **Neither holds nominal coverage at rare rates** — worst conditional 0.7472 (KG) and 0.0000 (Wilson) against 0.90 — and A-6 carries the figures to §8 |
+| **O-25 / O-27 / D-41** | **The three disclosures.** The report states what the chosen level actually delivers -- the measured coverage of the method used, the grid it came from, and **where this run sits on both axes**, because a worst case at n = 1000 does not bound n = 40. A one-stratum run says stratification gained it nothing. The no-interval odds are **stated, not refused** (D-41) |
+| **A-6** | **APPLIED.** Three interval names, not four. `design_clopper_pearson` was renamed **before it shipped** because the name promised coverage at or above nominal and the measurement says 0.7472 against 0.90. Charter §8 carries the 96-point table, and `tests/test_coverage_disclosure.py` **re-derives every figure in it** from the shipped estimators -- the measurement had lived only in a commit message and three docstrings |
 | **D2.16** | `stratallo` witnesses the **rounding** — 3/3 fixtures, 2000/2000 sweep — and **not** the variance, which is the without-replacement form. Fixture only |
 | **D2.14** | All four conditions. `check_claims` runs **twelve** checks; `counts`, `schema`, `open-items` are new. **Two fired on their first run** |
 | **D2.12 / D2.13** | T-1 and T-2. **41 of 44 corrections closed**, each naming its discharging commit |
@@ -331,12 +347,9 @@ rulings the director holds, two post-stop surface obligations, and the Phase 3 c
 
 | # | What | Owner |
 |---|---|---|
-| **A-6** | **DRAFTED, NOT APPLIED.** Charter §4 gains a third and fourth interval name — `design_wilson`, `design_korn_graubard` — and §8 gains the stratified coverage limits. **The charter is the director's**; the ruling is ready and was deferred to a session with a full window | **Director** |
-| **The no-interval notice** | `sample` computes the odds of producing no interval at all and **states** them. Whether it should **refuse** instead is the director's ruling, not the builder's — his instinct was to state, because an operator may legitimately want the point estimate knowing the interval is unlikely | **Director** |
-| **O-25** | The report must state the coverage of the interval **actually used, at the operating point actually observed** — D-37 condition 3. **Blocked on A-6**: which intervals exist under a stratified design has just changed, and the table it needs now exists | Post-stop |
-| **O-27** | D-38's one-stratum disclosure: the run records and the report states that the design has one stratum, so stratification delivered no precision gain | Post-stop |
+| **The hand-run** | **§8a is approved and is what the director runs.** Twenty-six rows, every command executed before it was written. Phase 2 closes on the evidence he produces from it | **Director** |
 | **O-19** | Re-pin `checkout` and `setup-python` before GitHub drops Node 20. **TW-4 fired and stays fired** | Phase 3 |
 | **O-21** | The rare-event specificity fact must reach the README | Phase 3 |
 | **O-28** | Pre-publication review of **git history**, not only the working tree. **Must reach the Phase 3 contract before the release** | Phase 3 |
-| **O-3, O-14, O-15** | Carried, low, no action. O-15 is deliberately unmet — a ledger schema version, added only if it is ever needed | Phase 3 |
-| **2 corrections open** | **C-1** (closes when the README credits `svy` — Phase 3) and **C-42**. 45 entries, 41 closed, 2 `noted`. **T-1 closed the other 41**, each naming its discharging commit. Derived and now machine-checked by `check_counts` | — |
+| **O-14, O-15** | Carried, low, no action. O-15 is deliberately unmet — a ledger schema version, added only if it is ever needed | Phase 3 |
+| **4 corrections open** | **C-1** (Phase 3), **C-42**, **C-43** and **C-44**. 47 entries, 41 closed, 2 `noted`. **T-1 closed the other 41**, each naming its discharging commit. Derived and machine-checked by `check_counts` | — |
