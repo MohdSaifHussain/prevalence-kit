@@ -240,7 +240,7 @@ names the draw.
 
 **Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **721 tests**, seven gate
 checks green — **`check_claims` now runs twelve**, not seven; the gate block below is still
-seven commands. **CI last ran green at 705** on the 3.12 / 3.13 / 3.14 matrix, run `eb17c9a` — **local is 720 and CI has not run since**, which is why the two are stated apart.
+seven commands. **CI last ran green at 721** on the 3.12 / 3.13 / 3.14 matrix, run `33326261706`, head `d95a014` — matching local. They are still stated apart because they are two measurements, not one.
 A second workflow, `witness.yml`, rebuilds the R image and requires every fixture to regenerate
 **byte-identically** — it runs on `r/**` changes and on demand, not on every push.
 Local and CI figures are stated apart on purpose.
