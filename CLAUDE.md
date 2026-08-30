@@ -202,7 +202,7 @@ confirms we implement the method as its author does. It does not independently c
 **Phase 0** ratified. **Phase 1** closed at `d66d225`. **Phase 2 is in build**, **Q1–Q12 ruled**,
 **A-1 … A-4** applied to the charter.
 
-**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **659 tests**, seven gate
+**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **676 tests**, seven gate
 checks green. **CI last ran green at 608** on the 3.12 / 3.13 / 3.14 matrix, four jobs, run
 `33269147849`, head `d096da0`. Local and CI figures are stated apart on purpose.
 
@@ -300,8 +300,7 @@ prevalence rates this tool is for, several ordinary intuitions fail, and here th
 | **O-21** | The rare-event specificity fact must reach the README | Phase 3 |
 | **D2.11** | The witness image is rebuilt by hand; CI never runs it. Static half closed | Phase 2 |
 | **O-22** | **DISCHARGED 2026-08-30.** `interval` is required, reaches the hash, **and is now read** — `_estimate_from` dispatches on it and `verify` cross-checks the estimate's method against the plan. The old row said: **Half built, and the open half was exact:** `interval` is a required key reaching `as_record()`, so the method is in the plan hash. But `CORRECTION_INTERVAL_UNSUPPORTED` is raised **only in `estimators.py`**, never at plan load, and the schema has **no `sensitivity`/`specificity` keys** — so **exit check F8d cannot be performed today**: the plan it describes cannot be written. Unknown keys are ignored, so a plan supplying Se/Sp loads silently and **hashes identically to one that does not**. Closes with D2.8's remaining half | D2.8 |
-| **O-29** | **Rogan-Gladen is built, validated to 7.3e-13, and unreachable** — no `sensitivity`/`specificity` field exists, so no plan can invoke the correction the charter promises | Wiring deliverable |
-| **O-23** | Q6's ledger + report disclosure. **Blocked behind O-29** — a disclosure about a correction nobody can invoke has nothing to disclose | Post-stop |
+| **O-23** | Q6's **report** disclosure. The **ledger half landed with O-29** — the raw bounds reach `estimate.json` now that an estimator writes them | Post-stop |
 | **O-28** | Pre-publication review of **git history**, not only the working tree. **Must reach the Phase 3 contract before the release** | Phase 3 |
 | **D2.14** | `check_claims` gaps: PDF paths, the CORRECTIONS counts table (**document its semantics, do not guess them**), the R artifacts. **The register gap is closed — D-34, `check_register`** | Phase 2 |
 | **O-3, O-14, O-15** | Carried. **O-4 discharged by D2.9 and O-13 by D2.10**, both 2026-08-30 | Phase 2 |

@@ -28,7 +28,13 @@ from typing import Any, cast
 
 from .canonical import JSONValue, canonical, digest, digest_bytes
 from .errors import Reason, Refusal
-from .estimators import Interval, clopper_pearson, wilson
+from .estimators import (
+    CorrectedInterval,
+    Interval,
+    clopper_pearson,
+    rogan_gladen_interval,
+    wilson,
+)
 from .ledger import Ledger
 from .plan import SUPPORTED_INTERVALS, Plan
 from .sampling import (
@@ -287,7 +293,7 @@ def do_ingest(ws: Workspace, plan: Plan, labels_path: Path) -> dict[str, str]:
     return labels
 
 
-def do_estimate(ws: Workspace, plan: Plan) -> Interval:
+def do_estimate(ws: Workspace, plan: Plan) -> Interval | CorrectedInterval:
     labels: dict[str, str] = ws.read_json("labels.json")
     interval = _estimate_from(plan, labels)
     estimate_digest = ws.write_json("estimate.json", interval.as_record())
@@ -295,7 +301,7 @@ def do_estimate(ws: Workspace, plan: Plan) -> Interval:
     return interval
 
 
-def _estimate_from(plan: Plan, labels: dict[str, str]) -> Interval:
+def _estimate_from(plan: Plan, labels: dict[str, str]) -> Interval | CorrectedInterval:
     _refuse_unestimable_design(plan)
     positives = 0
     for item_id, raw in labels.items():
@@ -305,6 +311,24 @@ def _estimate_from(plan: Plan, labels: dict[str, str]) -> Interval:
             # Re-raised with the item id so the operator can find the row. The
             # label value is a label, not content, so naming it leaks nothing.
             raise Refusal(exc.reason, f"Item {item_id}: {exc.detail}", exc.fix) from exc
+    if plan.sensitivity is not None and plan.specificity is not None:
+        # O-29. Charter section 4: "Optional Rogan-Gladen correction when
+        # sensitivity and specificity are supplied." Until this line the
+        # correction was built, validated to 7.3e-13 against epiR, and
+        # unreachable -- no plan could invoke it.
+        #
+        # `interval_method` is passed from the plan and has no default here for
+        # Q7 / D-33's reason. The plan-load check already refused any interval
+        # the correction cannot honour, so by this point the two agree; passing
+        # it explicitly is what stops the method becoming a constant in the
+        # source, which is what O-22 was about.
+        return rogan_gladen_interval(
+            positives,
+            len(labels),
+            float(plan.sensitivity),
+            float(plan.specificity),
+            interval_method=plan.interval,
+        )
     return _interval_for(plan, positives, len(labels))
 
 

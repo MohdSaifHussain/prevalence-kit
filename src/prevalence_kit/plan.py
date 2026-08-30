@@ -19,6 +19,7 @@ import yaml
 
 from .canonical import JSONObject, digest
 from .errors import Reason, Refusal
+from .estimators import CORRECTABLE_INTERVALS
 
 REQUIRED = (
     "estimand",
@@ -37,6 +38,44 @@ difference is large in the regime this tool is for. A default would be this
 project choosing for an operator who did not know there was a choice.
 """
 
+FIELD_KIND = {
+    # Behavioural: something in `src/` reads it, and changing it changes the
+    # sample, the estimate, or produces a refusal.
+    "population": "behavioural",
+    "labels": "behavioural",
+    "design": "behavioural",
+    "sample_size": "behavioural",
+    "seed": "behavioural",
+    "interval": "behavioural",
+    "allocation_rounding": "behavioural",
+    "strata": "behavioural",
+    "sensitivity": "behavioural",
+    "specificity": "behavioural",
+    "estimand.label_field": "behavioural",
+    "estimand.positive_when": "behavioural",
+    "estimand.threshold": "behavioural",
+    # Declarative: in the hash because it is part of the commitment, and it
+    # selects no behaviour. Changing it changes the plan's identity and no
+    # number, which is correct.
+    "estimand.description": "declarative",
+}
+"""What each hashed plan field is for, declared rather than inferred.
+
+**Two fields have been inert, and neither was found by an instrument.**
+`interval` was validated, hashed and read by nothing (**F-10**); `population` was
+read only to be printed and `labels` by nothing at all (**F-11**). One was found
+by reading code and asking what reads a field, the other by a probe the director
+named. **The third will be found the same way unless the schema says what it
+intends.**
+
+So the intent is declared here, and **D2.14(d)** builds the checker that asserts
+both halves: every `behavioural` field is read somewhere in `src/`, and no
+`declarative` field selects behaviour. Until that check exists this map is a
+statement of intent and not yet a guarantee -- which is exactly the gap it is
+meant to close, and saying so is the difference between a scope that is checked
+and one that is merely written down (**C-34**).
+"""
+
 SUPPORTED_DESIGNS = frozenset({"srs", "stratified"})
 SUPPORTED_COMPARISONS = frozenset({"equals", "at_least"})
 SUPPORTED_INTERVALS = frozenset({"wilson", "clopper_pearson"})
@@ -45,6 +84,33 @@ SUPPORTED_ROUNDING = frozenset({"largest_remainder"})
 `test_the_plan_vocabulary_matches_the_rounding_enum`. Two lists that must
 agree get something making them agree -- D-28.
 """
+
+
+def _read_rate(value: Any, field: str) -> str | None:
+    """A proportion from the plan, kept as the decimal string it was written as.
+
+    Returns None when absent. Refuses anything that is not a number in [0, 1] --
+    `PLAN_INVALID`, at load, so a plan that cannot mean what it says never gets a
+    hash printed against it.
+    """
+    if value is None:
+        return None
+    text = str(value).strip()
+    number = _as_number(text)
+    if isinstance(value, bool) or number is None:
+        raise Refusal(
+            Reason.PLAN_INVALID,
+            f"`{field}` is {value!r}, which is not a number.",
+            f"`{field}` is a proportion between 0 and 1 -- the fraction of items "
+            "your label process gets right. Write it as a decimal, e.g. 0.95.",
+        )
+    if not 0.0 <= number <= 1.0:
+        raise Refusal(
+            Reason.PLAN_INVALID,
+            f"`{field}` is {text}, outside [0, 1].",
+            f"`{field}` is a proportion, so it lies between 0 and 1.",
+        )
+    return text
 
 
 def _read_strata(block: Any) -> tuple[PlanStratum, ...]:
@@ -241,6 +307,23 @@ class Plan:
     """Required under `design: stratified`, absent otherwise. Q4 / D-30
     condition 1: the rounding rule is a commitment the operator makes, so it
     cannot be defaulted or live as a constant in the source."""
+    sensitivity: str | None = None
+    """The test's sensitivity, as a **decimal string**. Optional; supply both or
+    neither. **Behavioural** -- when present, `estimate` applies the Rogan-Gladen
+    correction, which changes the number. Charter section 4.
+
+    A decimal string for `Estimand.threshold`'s reason: `canonical()` refuses
+    floats, because they do not round-trip identically across platforms and this
+    value is in the pre-registration hash. **It has to be**: correcting for a
+    different Se than the one registered is a different measurement.
+    """
+    specificity: str | None = None
+    """The test's specificity, as a decimal string. See `sensitivity`.
+
+    **The pair is what makes the correction defined**, which is why they are
+    validated together: `Se + Sp <= 1` has no corrected estimate at all, and the
+    witness returns a lower bound above its upper bound there (S-1.10).
+    """
     strata: tuple[PlanStratum, ...] | None = None
     """Required under `design: stratified`, absent otherwise. Q13 / D-39.
 
@@ -355,6 +438,50 @@ class Plan:
                     "Remove the strata block, or set design: stratified.",
                 )
 
+        # O-29. Optional, but not independently optional: a correction needs both
+        # numbers, and one alone is a plan that says it wants a correction and
+        # cannot have one. Refused at load rather than at estimate, which is Q2's
+        # reason -- before the label budget is spent.
+        sensitivity = _read_rate(raw.get("sensitivity"), "sensitivity")
+        specificity = _read_rate(raw.get("specificity"), "specificity")
+        if (sensitivity is None) != (specificity is None):
+            absent = "specificity" if sensitivity is not None else "sensitivity"
+            raise Refusal(
+                Reason.PLAN_INVALID,
+                f"This plan supplies one of sensitivity/specificity but not "
+                f"{absent}. The Rogan-Gladen correction needs both.",
+                f"Add `{absent}:`, or remove the other and report an uncorrected "
+                "prevalence. Both are label-quality figures your rater process "
+                "produces; charter section 8 records that v1.0 does not estimate "
+                "them for you.",
+            )
+
+        # Q7 / D-33, and this is exit check F8d. The refusal belongs HERE, at plan
+        # load, not at the estimator: after `plan` the hash has already recorded a
+        # commitment the tool cannot honour, and it fails before the label budget.
+        #
+        # It could not be performed until now -- there was no way to write the plan
+        # it describes, because the schema had no Se/Sp fields. O-22's last half.
+        if sensitivity is not None and interval not in CORRECTABLE_INTERVALS:
+            raise Refusal(
+                Reason.CORRECTION_INTERVAL_UNSUPPORTED,
+                f"This plan pre-registers `interval: {interval}` and also supplies "
+                "sensitivity and specificity. This version builds the Rogan-Gladen "
+                "correction on a Clopper-Pearson interval only, because that is the "
+                "one an outside witness gave us expected values for: epiR 2.0.92 "
+                "builds its corrected interval by transforming a Clopper-Pearson "
+                f"interval endpoint by endpoint, and we have no witnessed expected "
+                f"value for a {interval}-based one. Handing you a Clopper-Pearson "
+                "interval instead would give you a number your plan did not commit "
+                "to, which is the one thing pre-registration exists to stop.",
+                "Either pre-register `interval: clopper_pearson` to keep the "
+                "correction, or remove `sensitivity` and `specificity` and report an "
+                "uncorrected prevalence. At rare-event rates the choice matters: a "
+                "95% Wilson interval covers as little as 90.98% of the time there, "
+                "and a 90% one as little as 85.32%, while Clopper-Pearson holds at "
+                "or above its nominal level.",
+            )
+
         # F-3: sample_size is in REQUIRED, so its absence is a missing field rather
         # than an empty sample wearing the wrong code. And a fractional size is
         # refused rather than silently truncated -- 40.7 used to become 40.
@@ -431,6 +558,8 @@ class Plan:
             seed=str(seed),
             interval=interval,
             allocation_rounding=rounding,
+            sensitivity=sensitivity,
+            specificity=specificity,
             strata=strata,
             source_path=source_path,
         )
@@ -455,6 +584,8 @@ class Plan:
             "seed": self.seed,
             "interval": self.interval,
             "allocation_rounding": self.allocation_rounding,
+            "sensitivity": self.sensitivity,
+            "specificity": self.specificity,
             "strata": (None if self.strata is None else [s.as_record() for s in self.strata]),
         }
 
