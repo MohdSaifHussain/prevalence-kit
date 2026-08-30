@@ -21,11 +21,11 @@ who writes the entries. The director raised that one himself and asked for it to
 | Chat reviewer (draft author) | 0 | 3 | **3** |
 | Research report (passed through unverified) | 0 | 2 | **2** |
 | Stale-at-draft-time, queued but built on anyway | **1** | 0 | **1** |
-| **Builder (Claude Code)** | **4** | **33** | **37** |
+| **Builder (Claude Code)** | **5** | **33** | **38** |
 | Reviewer instrument | **1** | **2** | **4** (1 noted) |
 | **Director** | 0 | **1** | **1** |
 | Tool artifact (noted, not a defect) | - | - | **1** (noted) |
-| **Total** | **6** | **41** | **49** |
+| **Total** | **7** | **41** | **50** |
 
 **Derived, and now checked — 2026-08-30.** Every figure above is computed from the entry blocks in
 this file rather than incremented as rows arrived. An earlier version said 36 open and 3
@@ -1417,6 +1417,46 @@ never carried -- the builder restated that phrase from the superseded section 8 
 from a rendered report. **The director ran the wrong expectation, looked at the artifact, and found
 a defect underneath it.** An argument for hand-runs that no test can make, and it is recorded as
 such rather than as luck.
+
+---
+
+## C-47 - The README told the world a phase was in progress after it closed
+
+| | |
+|---|---|
+| **Claimed** | `README.md`, line 3, in the first sentence a stranger reads: *"Pre-release. **Phase 2 of 4 in progress.** Nothing here is ready to rely on yet."* -- for the whole of the commit that closed Phase 2 |
+| **Actually** | Phase 2 closed on 31 August 2026. The line was **false at the moment of the commit that made it false**, and it is the most public sentence in the repository |
+| **Direction** | Understating progress, which is the unusual direction -- and irrelevant, because the defect is that **the check went green on it** |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | **The director, reading the README.** Not by any instrument: `check_figures` had a claim for exactly this line and **it passed** |
+| **Severity** | **Medium in effect, high in kind.** Nothing computed is wrong. But a checker that **affirms** a false statement is worse than no checker, and this one had been reported as covering the sentence |
+| **Replaced by** | *"Phase 2 of 4 complete; Phase 3 not started"*, and a rebuilt check that reads the **word** as well as the number, derives the state from the contract's own close line, and **fails when the sentence is absent** |
+| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+
+**One root, two opposite failures, and the pair is the lesson.** `current_phase` means *the
+highest-numbered contract that exists*. That is **not** *the phase in progress*, and two checks
+were built on the assumption that it was:
+
+| Where | What happened |
+|---|---|
+| `README.md` | The pattern read the number and never the word. Phase 2 closed, the number stayed 2, and the check **confirmed a false sentence** |
+| `CLAUDE.md` | The pattern had no true form once the phase closed, so the sentence came out and the claim **went silent** -- `findall` over no matches reports nothing |
+
+**C-34's class, and worse than C-34.** That one *stated* a scope it did not have. This one
+*validated* a claim that was untrue: the reader comes away not merely uninformed but reassured.
+
+**The builder's specific failure was not the design -- it was the sweep.** An hour before the
+director found this, the same session diagnosed `current_phase`'s meaning exactly, disclosed the
+`CLAUDE.md` half in writing, and **never asked what else used it.** One `grep` returned three
+call sites. `CLAUDE.md` rule 7 says *ask what a check does not read, in both directions*; the
+question was asked for one file and stopped there.
+
+**And the fix nearly shipped a second false sentence.** The rebuilt check first reported
+*"CLAUDE.md carries no `Phase N of 4 in progress` sentence"* -- wrong state, because a heredoc had
+turned `\b` into a literal backspace byte and the close marker could never match. **Acting on
+that message would have written "in progress" into the handoff file and turned the gate green on
+it.** The byte was found by printing the compiled source rather than trusting the message, and the
+repair went through a file rather than a heredoc -- which is the rule that was broken to create it.
 
 ---
 

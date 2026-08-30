@@ -579,3 +579,101 @@ def test_the_documented_scope_is_the_scope_walked() -> None:
     defined = module.defined_ids(root)["O"]
     for name in ("O-8", "O-16", "O-17", "O-18", "O-20", "O-21", "O-24"):
         assert name in defined, f"{name} is defined in a contract and still unseen"
+
+
+# ------------------------------------------------------- the phase sentence
+
+
+def _repo_copy(tmp_path: Path) -> Path:
+    """A copy of the repository, so a planted violation touches nothing real."""
+    import shutil
+
+    root = Path(__file__).resolve().parents[1]
+    target = tmp_path / "repo"
+    shutil.copytree(
+        root,
+        target,
+        ignore=shutil.ignore_patterns(".venv", ".git", "__pycache__", "*.pyc"),
+    )
+    return target
+
+
+def test_the_phase_sentence_is_checked_for_its_word_not_only_its_number(
+    tmp_path: Path,
+) -> None:
+    """**C-47.** The README said *in progress* for a phase that had closed.
+
+    The old check compared the NUMBER to the highest-numbered contract and never
+    read the word. `current_phase` means *the highest contract that exists*,
+    which is not *the phase in progress* -- so when Phase 2 closed the number
+    stayed 2 and **the check went green on a false sentence, in the most public
+    file this project has.** C-34's class: a checker that affirms a wrong claim
+    leaves the reader more confident and less correct.
+    """
+    module = _check_claims_module()
+    root = _repo_copy(tmp_path)
+    readme = root / "README.md"
+    readme.write_text(
+        readme.read_text(encoding="utf-8").replace(
+            "Phase 2 of 4 complete", "Phase 2 of 4 in progress"
+        ),
+        encoding="utf-8",
+    )
+
+    details = [p.detail for p in module.check_figures(root)]
+    assert any("in progress" in d and "complete" in d for d in details), details
+
+
+def test_deleting_the_phase_sentence_does_not_silence_the_check(
+    tmp_path: Path,
+) -> None:
+    """The other direction, and it is the half that went quiet.
+
+    Every other claim in `check_figures` iterates its matches, so a claim whose
+    sentence is deleted reports nothing. `CLAUDE.md`'s phase claim went vacuous
+    exactly that way when its old wording had no true form. **Absence is a
+    failure for this one**, so deleting the sentence cannot be a way to silence
+    it.
+    """
+    module = _check_claims_module()
+    root = _repo_copy(tmp_path)
+    for name in ("README.md", "CLAUDE.md"):
+        path = root / name
+        path.write_text(
+            path.read_text(encoding="utf-8").replace("Phase 2 of 4 complete", "Phase two"),
+            encoding="utf-8",
+        )
+
+    details = [p.detail for p in module.check_figures(root)]
+    assert sum("carries no" in d for d in details) == 2, details
+
+
+def test_the_phase_state_is_read_from_the_contract(tmp_path: Path) -> None:
+    """`complete` is derived from the contract recording its own close.
+
+    Not from a flag someone maintains beside it -- that is the arrangement this
+    project has been correcting all phase. The positive control is the live tree:
+    Phase 2's contract records the close, so the state is `complete`.
+    """
+    module = _check_claims_module()
+    root = Path(__file__).resolve().parents[1]
+    assert module.phase_state(root) == (2, "complete")
+
+
+def test_a_contract_without_its_close_reads_as_in_progress(tmp_path: Path) -> None:
+    """The negative control for the state itself.
+
+    Remove the close line from the newest contract and the state must revert.
+    Without this the `complete` above could be a constant and nothing would tell.
+    """
+    module = _check_claims_module()
+    root = _repo_copy(tmp_path)
+    contract = root / "docs" / "contracts" / "PHASE-2-CONTRACT.md"
+    contract.write_text(
+        contract.read_text(encoding="utf-8").replace(
+            "**CLOSED \u2014 31 August 2026, ruled by the director.**",
+            "**Not closed yet.**",
+        ),
+        encoding="utf-8",
+    )
+    assert module.phase_state(root) == (2, "in progress")

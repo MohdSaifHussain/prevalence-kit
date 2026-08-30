@@ -1209,11 +1209,6 @@ def check_figures(root: Path) -> list[Problem]:
             re.compile(r"\*\*Q1.Q(\d+) ruled"),
             root / "CLAUDE.md",
         ),
-        "claude.md phase": (
-            current_phase(root),
-            re.compile(r"\*\*Phase (\d) is in build\*\*"),
-            root / "CLAUDE.md",
-        ),
     }
     for label, (actual, pattern, path) in claims.items():
         if not path.exists():
@@ -1225,6 +1220,79 @@ def check_figures(root: Path) -> list[Problem]:
                         "figures",
                         f"{path.relative_to(root)}",
                         f"{label}: states {stated}, artifact says {actual}",
+                    )
+                )
+    problems.extend(_phase_problems(root))
+    return problems
+
+
+PHASE_SENTENCE = re.compile(r"Phase (\d) of 4 (in progress|complete)")
+r"""The one canonical phase sentence, in the same shape in both public files.
+
+**It replaces two patterns that failed in opposite directions**, and the pair is
+worth keeping in mind because they came from one root:
+
+  README.md    `Phase (\d) of 4 in progress` compared the NUMBER to the highest
+               contract and never read the word. Phase 2 closed, the number
+               stayed 2, and the check **went green on a false sentence** --
+               C-34's class, in the most public file this project has.
+  CLAUDE.md    `\*\*Phase (\d) is in build\*\*` had no true form once the phase
+               closed, so the sentence was removed and the claim **went
+               vacuous**: `findall` over no matches reports nothing.
+
+**A checker that affirms a wrong claim is worse than one that says nothing**, and
+this project had one of each from a single cause: `current_phase` means *the
+highest-numbered contract that exists*, which is not *the phase in progress*.
+"""
+
+
+def phase_state(root: Path) -> tuple[int, str]:
+    """`(number, "in progress" | "complete")`, derived from the contract itself.
+
+    A phase is complete when its own contract records the close in its outcome
+    section. Both closures are written as a bold line at the start of it, which
+    is the marker read here rather than a hand-maintained flag somewhere else.
+    """
+    number = current_phase(root)
+    contract = root / "docs" / "contracts" / f"PHASE-{number}-CONTRACT.md"
+    closed = False
+    if contract.exists():
+        closed = bool(
+            re.search(
+                rf"^\*\*(?:Phase {number} )?CLOSED\b",
+                contract.read_text(encoding="utf-8"),
+                flags=re.M,
+            )
+        )
+    return number, "complete" if closed else "in progress"
+
+
+def _phase_problems(root: Path) -> list[Problem]:
+    """Both public files carry the phase sentence, and it must be true.
+
+    **Absence is a failure here, unlike every other figure claim.** The rest of
+    `check_figures` iterates its matches, so a claim whose sentence is deleted
+    reports nothing -- which is how the CLAUDE.md half of this went quiet.
+    Deleting the sentence must not be a way to silence the check.
+    """
+    number, state = phase_state(root)
+    problems: list[Problem] = []
+    for name in ("README.md", "CLAUDE.md"):
+        path = root / name
+        if not path.exists():
+            continue
+        found = PHASE_SENTENCE.findall(path.read_text(encoding="utf-8"))
+        if not found:
+            problems.append(Problem("figures", name, f"carries no `Phase N of 4 {state}` sentence"))
+            continue
+        for stated_number, stated_state in found:
+            if (int(stated_number), stated_state) != (number, state):
+                problems.append(
+                    Problem(
+                        "figures",
+                        name,
+                        f"phase: states 'Phase {stated_number} of 4 {stated_state}', "
+                        f"artifact says 'Phase {number} of 4 {state}'",
                     )
                 )
     return problems
@@ -1310,8 +1378,8 @@ def selftest() -> int:
             # The defect exactly as it was: the Total row over by one. C-36 sat
             # in the file with its own columns summing to 38 against a stated 37.
             "docs/CORRECTIONS.md",
-            "| **Total** | **6** | **41** | **49** |",
-            "| **Total** | **6** | **40** | **49** |",
+            "| **Total** | **7** | **41** | **50** |",
+            "| **Total** | **7** | **40** | **50** |",
         ),
         "schema": (
             # F-10's shape, planted: declare a field behavioural that nothing

@@ -6,7 +6,7 @@ report. **No AI ever touches the evidence or the estimate.**
 
 This project runs the **governed-orchestration** skill at **STANDARD** tier, manual-approve.
 
-**Phase 2 is CLOSED. Phase 3 has no contract yet, and writing one is the first build act.**
+**Phase 2 of 4 complete. Phase 3 has no contract yet, and writing one is the first build act.**
 
 > **First action of every session: invoke the `governed-orchestration` skill.** Do not wait to be
 > asked. The director had to remember it last session, and a handoff that depends on him remembering
@@ -252,7 +252,7 @@ reader could not tell a stratified redraw from a simple random one. `verify.py` 
 design (F-10's third site) and **its output was silent about what it had checked.** It now
 names the draw.
 
-**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **726 tests**, seven gate
+**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **730 tests**, seven gate
 checks green — **`check_claims` now runs twelve**, not seven; the gate block below is still
 seven commands. **CI last ran green at 726** on the 3.12 / 3.13 / 3.14 matrix, run `33339709317`, head `d5741dd` — matching local. They are still stated apart because they are two measurements, not one.
 A second workflow, `witness.yml`, rebuilds the R image and requires every fixture to regenerate
@@ -270,13 +270,13 @@ and the phase — because this file went stale within hours of being written and
 A stale README misleads a reader; **a stale CLAUDE.md misleads the next session before it has
 read anything else.** `check_figures` derives all three.
 
-> **One of the three is currently asserting nothing, and you are told rather than left to find
-> out.** The phase check matches the literal `**Phase N is in build**` and compares `N` to the
-> highest-numbered contract. Phase 2 is closed and Phase 3 has no contract, so **no true sentence
-> matches that pattern** — and `check_figures` iterates its matches, so a pattern that finds
-> nothing reports nothing. **The check passes vacuously until the Phase 3 contract exists.**
-> Left as-is deliberately: the alternative was writing a false sentence to keep a checker busy.
-> **Restoring it is a Phase 3 question, not a silent edit.**
+> **The phase figure was the weakest of the three and is now the strongest, because it broke
+> in both directions at once.** `README.md` said *in progress* after Phase 2 closed and the
+> check **passed** -- it compared the number to the highest contract and never read the word.
+> `CLAUDE.md`'s version had no true form once the phase closed, so its sentence came out and the
+> claim **went silent**. One canonical sentence now serves both files, `Phase N of 4 in progress`
+> or `complete`; the state is derived from the contract's own close line; and **absence is a
+> failure**, so deleting the sentence cannot silence it. **C-47.**
 
 ### Done in Phase 2 — kept as history, and the closed contract is the authority
 

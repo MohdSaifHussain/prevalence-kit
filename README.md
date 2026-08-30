@@ -1,6 +1,6 @@
 # prevalence-kit
 
-**Pre-release. Phase 2 of 4 in progress. Nothing here is ready to rely on yet.**
+**Pre-release. Phase 2 of 4 complete; Phase 3 not started. Nothing here is ready to rely on yet.**
 
 Audit-grade prevalence measurement for Trust & Safety.
 
