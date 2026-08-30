@@ -21,11 +21,11 @@ who writes the entries. The director raised that one himself and asked for it to
 | Chat reviewer (draft author) | 0 | 3 | **3** |
 | Research report (passed through unverified) | 0 | 2 | **2** |
 | Stale-at-draft-time, queued but built on anyway | **1** | 0 | **1** |
-| **Builder (Claude Code)** | **2** | **33** | **35** |
+| **Builder (Claude Code)** | **3** | **33** | **36** |
 | Reviewer instrument | **1** | **2** | **4** (1 noted) |
 | **Director** | 0 | **1** | **1** |
 | Tool artifact (noted, not a defect) | - | - | **1** (noted) |
-| **Total** | **4** | **41** | **47** |
+| **Total** | **5** | **41** | **48** |
 
 **Derived, and now checked — 2026-08-30.** Every figure above is computed from the entry blocks in
 this file rather than incremented as rows arrived. An earlier version said 36 open and 3
@@ -1353,6 +1353,37 @@ edited to match a document. **The document was the thing missing a row.**
 numbers are allocated in commit messages and listed in the contract, with nothing making
 *those* agree. **Two lists that must agree and no third thing making them.** That class now has
 three instances here -- V-16's gate, C-41's questions, and this one.
+
+---
+
+## C-45 - A row count nobody counted, and the overclaim beside it
+
+| | |
+|---|---|
+| **Claimed** | `CLAUDE.md`, committed at `d95a014`: *"**§8a is approved and is what the director runs.** Twenty-six rows, every command executed before it was written."* Repeated in the builder's handoff message, carried by the reviewer into the director's briefing, and repeated by the director in his own report of the hand-run |
+| **Actually** | **34 rows.** Counted from the file: F1-F8, F8b-F8h, F9, F10, F10b, F11, F17-F25b, F12-F16. **And the second half was false too**: the commands were run for the rows written new and **not** for the fifteen carried unchanged from section 8 |
+| **Direction** | **Up, and understating the work** -- the unusual direction for this register, which is the point of recording it. The overclaim beside it runs the usual way |
+| **Source** | **Builder (Claude Code)**, for both halves. **The reviewer owns carrying the figure without counting**, and says so; the director repeated it from the briefing |
+| **Caught by** | **The reviewer, counting**, after the hand-run was complete. Not by any instrument: `check_figures` covers three numbers in this file and a deliberately narrow set elsewhere, and a row count in a contract is not among them |
+| **Severity** | **Low in effect, high in kind.** No command was wrong and no result changed. But the figure sat in the file **the next session reads first**, beside a claim about verification coverage that was also untrue, and the director ran a 34-row checklist believing it had 26 |
+| **Replaced by** | The corrected row in `CLAUDE.md` naming the hand-run's dated reading, and `docs/contracts/PHASE-2-HAND-RUN.md`, whose header says **34 because it was counted** |
+| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+
+**Two claims in one sentence, and only one of them was even checkable.** *"Twenty-six rows"* is a
+number a reader could have verified in ten seconds and nobody did. *"Every command executed before
+it was written"* is not checkable from the artifact at all -- it is a claim about the past, and the
+only person who could falsify it was the one making it. **C-27's shape**, and this time the
+uncheckable half was the one that mattered: it is what made the checklist look verified when
+fifteen of its rows were inherited.
+
+**The count travelled through three people and was checked by none of them.** The builder asserted
+it, the reviewer carried it into a briefing, the director repeated it back. **Each stage looked
+like corroboration and none of them was a measurement** -- the same structure as C-24's ratio and
+C-7's file count, at the scale of a working relationship rather than a file.
+
+**Why it is recorded even though nothing broke.** The admission rule counts claims that reached a
+commit. This one reached `CLAUDE.md` at `d95a014`, and `CLAUDE.md` is the file that misleads the
+next session **before it has read anything else**.
 
 ---
 

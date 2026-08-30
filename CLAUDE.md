@@ -347,7 +347,7 @@ rulings the director holds, two post-stop surface obligations, and the Phase 3 c
 
 | # | What | Owner |
 |---|---|---|
-| **The hand-run** | **§8a is approved and is what the director runs.** Twenty-six rows, every command executed before it was written. Phase 2 closes on the evidence he produces from it | **Director** |
+| **The hand-run** | **DONE 2026-08-31** — `docs/contracts/PHASE-2-HAND-RUN.md`, a dated reading. **34 rows**, 32 as stated, 2 not: **H-1** (the design-interval positive count is `round(point * n)`, stated as a count in three artifacts) and **H-2** (F9 names a refusal no command can reach). **The phase outcome is still the director's ruling** | **Director** |
 | **O-19** | Re-pin `checkout` and `setup-python` before GitHub drops Node 20. **TW-4 fired and stays fired** | Phase 3 |
 | **O-21** | The rare-event specificity fact must reach the README | Phase 3 |
 | **O-28** | Pre-publication review of **git history**, not only the working tree. **Must reach the Phase 3 contract before the release** | Phase 3 |
