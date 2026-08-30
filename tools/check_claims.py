@@ -85,9 +85,23 @@ whole id rather than its parts, because `check_register` asks a set question --
 their numbered questions as `Q1`, without the hyphen, so they do not collide
 with the register's `Q-1` and `Q-2`.
 """
-PATH_LIKE = re.compile(r"(?<![\w./-])((?:src|tests|docs|tools)/[\w./-]+\.(?:py|md|toml|txt))")
+PATH_LIKE = re.compile(
+    r"(?<![\w./-])((?:src|tests|docs|tools|r|svy|examples)/[\w./-]+"
+    r"\.(?:py|md|toml|txt|pdf|json|R|sh|yml))"
+)
 """A repository path. The lookbehind matters: without it `awesome-safety-tools/README.md`
-matched on its `tools/README.md` suffix and was reported as a missing file."""
+matched on its `tools/README.md` suffix and was reported as a missing file.
+
+**D2.14(a), 2026-08-30.** Both directory prefixes and extensions were too narrow, and the
+register said so about itself: *"`check_paths` only looks at paths under `src/`, `tests/`,
+`docs/` or `tools/` that end in `.py`, `.md`, `.toml` or `.txt`. Neither PDF matches -- wrong
+folder, wrong extension."* The R witness, the `svy` fixtures and the shipped example were
+invisible for the same reason.
+
+**Widened by the two axes that were wrong**, rather than by naming the files that were missed
+-- a check that names its question generalises; one that names a row does not (D-23, V-15).
+`.pdf` is here because the register cites two of them and neither was covered; one is tracked
+and one is deliberately absent, which is what `KNOWN_ABSENT` is for."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -212,6 +226,10 @@ names a row does not. V-15.
 
 
 KNOWN_ABSENT = {
+    # Quoted from another package as D-18's evidence: svy's own source, read to
+    # establish that its Wilson is a different estimator. Widening PATH_LIKE for
+    # D2.14(a) made this spelling visible where `src/svy/...` already was.
+    "svy/estimation/base.py",
     # Quoted as evidence from another package, not a path in this repository.
     # docs/DECISIONS.md D-18 quotes svy 0.25.0's source by file and line.
     "src/svy/estimation/base.py",
@@ -644,6 +662,266 @@ def _normalise_command(cmd: str) -> str:
     return " ".join(cmd.split())
 
 
+def check_counts(root: Path) -> list[Problem]:
+    """**D2.14(b).** The counts table in `docs/CORRECTIONS.md`, derived rather than trusted.
+
+    That table counts this project's own counting errors and was maintained by
+    hand. It was **over by one** -- C-36 -- and its own Total column summed to 38
+    against a stated 37, visible to anyone who added it up.
+
+    The semantics are written down in the file itself and this encodes them:
+
+      * an **entry** is one `## C-n` or `## V-n` heading. Three corrections carry
+        `V-` numbers because they were found as review findings; the letter
+        records where they were found, not what they are;
+      * **Open** counts entries whose `Status` row says `OPEN`;
+      * `noted` is excluded from Open and included in Total.
+
+    **A class tally is a different population from this table**, and reading one
+    into the other is how the reviewer-instrument row reached 3. That is why this
+    reads the entries and never the classes.
+    """
+    path = root / "docs" / "CORRECTIONS.md"
+    if not path.exists():
+        return [Problem("counts", "docs/CORRECTIONS.md", "is missing")]
+    text = path.read_text(encoding="utf-8")
+
+    entries = re.split(r"^## ((?:C|V)-\d+)", text, flags=re.M)
+    blocks = list(zip(entries[1::2], entries[2::2], strict=True))
+    if not blocks:
+        return [Problem("counts", "docs/CORRECTIONS.md", "no C-n or V-n entries found")]
+
+    total = len(blocks)
+    noted = sum(1 for _, body in blocks if _status(body) == "noted")
+    still_open = sum(1 for _, body in blocks if _status(body) == "open")
+
+    problems: list[Problem] = []
+    row = re.search(
+        r"^\|\s*\*\*Total\*\*\s*\|\s*\*\*(\d+)\*\*\s*\|\s*\*\*(\d+)\*\*\s*\|"
+        r"\s*\*\*(\d+)\*\*\s*\|",
+        text,
+        flags=re.M,
+    )
+    if row is None:
+        return [Problem("counts", "docs/CORRECTIONS.md", "has no Total row to check")]
+    stated_open, stated_total = int(row.group(1)), int(row.group(3))
+    if stated_open != still_open:
+        problems.append(
+            Problem(
+                "counts",
+                "docs/CORRECTIONS.md",
+                f"Total row says {stated_open} open, entries say {still_open}",
+            )
+        )
+    if stated_total != total:
+        problems.append(
+            Problem(
+                "counts",
+                "docs/CORRECTIONS.md",
+                f"Total row says {stated_total} entries, file has {total}",
+            )
+        )
+    unclassified = [ident for ident, body in blocks if _status(body) == "?"]
+    if unclassified:
+        problems.append(
+            Problem(
+                "counts",
+                "docs/CORRECTIONS.md",
+                f"no readable Status row: {', '.join(unclassified)}",
+            )
+        )
+    _ = noted
+    return problems
+
+
+def _status(body: str) -> str:
+    """`open`, `noted`, or `?` when the entry has no readable Status row."""
+    found = re.search(r"\*\*Status\*\*\s*\|\s*(?:\*\*)?([A-Za-z]+)", body)
+    if found is None:
+        return "?"
+    word = found.group(1).lower()
+    if word == "open":
+        return "open"
+    if word == "noted":
+        return "noted"
+    return "?"
+
+
+def _hashed_fields(source: str) -> set[str] | None:
+    """The keys `Plan.as_record` puts in the hashed record, read structurally.
+
+    **`ast`, not a regex.** The first version of this matched indentation and
+    reported every field as undeclared, which is C-23's rule arriving on the
+    checker written to enforce the other three: read an artifact the way its real
+    consumer reads it. Python source has one correct parser and this is it.
+
+    Nested one level, because `estimand` is a dict inside the record and its four
+    fields are commitments in their own right.
+    """
+    tree = ast.parse(source)
+    for node in ast.walk(tree):
+        if not (isinstance(node, ast.ClassDef) and node.name == "Plan"):
+            continue
+        for item in node.body:
+            if not (isinstance(item, ast.FunctionDef) and item.name == "as_record"):
+                continue
+            for statement in ast.walk(item):
+                if not (
+                    isinstance(statement, ast.Return) and isinstance(statement.value, ast.Dict)
+                ):
+                    continue
+                fields: set[str] = set()
+                for key, value in zip(statement.value.keys, statement.value.values, strict=True):
+                    if not (isinstance(key, ast.Constant) and isinstance(key.value, str)):
+                        continue
+                    fields.add(key.value)
+                    if isinstance(value, ast.Dict):
+                        fields.discard(key.value)
+                        for inner in value.keys:
+                            if isinstance(inner, ast.Constant) and isinstance(inner.value, str):
+                                fields.add(f"{key.value}.{inner.value}")
+                return fields
+    return None
+
+
+def check_schema(root: Path) -> list[Problem]:
+    """**D2.14(d).** Every hashed plan field declares what it is for, and the
+    declaration is checked against the code rather than believed.
+
+    **Two plan fields have been inert and neither was found by an instrument.**
+    `interval` was validated, hashed and read by nothing (F-10); `population` was
+    read only to be printed and `labels` by nothing at all (F-11). One was found
+    by reading code and asking what reads a field, the other by a probe the
+    director named at the review stop.
+
+    So `plan.FIELD_KIND` declares each field **behavioural** or **declarative**,
+    and this asserts both halves:
+
+      * every hashed field has a declared kind, and every declared kind names a
+        hashed field -- both directions, D-28's rule;
+      * every **behavioural** field is **read somewhere in `src/`** outside the
+        plan module itself. A field only `plan.py` touches is a field nothing
+        acts on, which is exactly what `interval` was.
+
+    **What it cannot do, said here rather than left to be assumed.** It cannot
+    prove a `declarative` field selects no behaviour -- absence is not
+    observable this way. It checks the direction that has actually failed twice.
+    """
+    plan_py = root / "src" / "prevalence_kit" / "plan.py"
+    if not plan_py.exists():
+        return [Problem("schema", "src/prevalence_kit/plan.py", "is missing")]
+
+    source = plan_py.read_text(encoding="utf-8")
+    block = re.search(r"^FIELD_KIND = \{(.*?)^\}", source, flags=re.M | re.S)
+    if block is None:
+        return [Problem("schema", "src/prevalence_kit/plan.py", "has no FIELD_KIND map")]
+    declared = dict(re.findall(r'"([\w.]+)":\s*"(behavioural|declarative)"', block.group(1)))
+
+    hashed = _hashed_fields(source)
+    if hashed is None:
+        return [Problem("schema", "src/prevalence_kit/plan.py", "has no Plan.as_record to read")]
+
+    problems: list[Problem] = []
+    for field in sorted(hashed - set(declared)):
+        problems.append(
+            Problem(
+                "schema",
+                "src/prevalence_kit/plan.py",
+                f"{field} is hashed but FIELD_KIND does not declare it",
+            )
+        )
+    for field in sorted(set(declared) - hashed):
+        problems.append(
+            Problem(
+                "schema",
+                "src/prevalence_kit/plan.py",
+                f"FIELD_KIND declares {field} but as_record does not hash it",
+            )
+        )
+
+    # The half that has actually failed: a behavioural field nothing reads.
+    others = [p for p in (root / "src" / "prevalence_kit").glob("*.py") if p.name != "plan.py"]
+    elsewhere = "\n".join(p.read_text(encoding="utf-8") for p in others)
+    for field, kind in sorted(declared.items()):
+        if kind != "behavioural":
+            continue
+        attribute = field.split(".")[-1]
+        if not re.search(rf"\.{attribute}\b", elsewhere):
+            problems.append(
+                Problem(
+                    "schema",
+                    "src/prevalence_kit/plan.py",
+                    f"{field} is declared behavioural but nothing outside plan.py "
+                    f"reads it -- F-10's shape",
+                )
+            )
+    return problems
+
+
+def check_open_items(root: Path) -> list[Problem]:
+    """**D2.14(c).** An open-items row naming an item the record marks discharged.
+
+    `CLAUDE.md`'s *Open, by name* table is a **live figure written in prose**, and
+    nothing checked it. Its three machine-checked figures were current while
+    **four hand-maintained rows in the same file had drifted**, inside about six
+    hours: charter §6.1 (discharged by A-3), O-20 and O-22 (both moved at
+    `d25e6fe`), and the corrections range.
+
+    **The condition, as ruled:** an obligation or correction identifier appearing
+    in an open-items row, whose owning record marks it discharged, is a failure.
+
+    **What it cannot do**, said here rather than left to be assumed. It cannot
+    tell that a row's *prose* has gone stale while its identifier is still
+    genuinely open -- only that a row names something already closed. That is the
+    direction that has actually failed, and claiming the other would be C-34.
+    """
+    claude = root / "CLAUDE.md"
+    if not claude.exists():
+        return [Problem("open-items", "CLAUDE.md", "is missing")]
+
+    table = re.search(
+        r"^### Open, by name\n(.*?)(?:\n## |\Z)",
+        claude.read_text(encoding="utf-8"),
+        flags=re.M | re.S,
+    )
+    if table is None:
+        return [Problem("open-items", "CLAUDE.md", "has no 'Open, by name' table")]
+
+    named: set[str] = set()
+    for line in table.group(1).splitlines():
+        if not line.startswith("|"):
+            continue
+        named |= set(re.findall(r"\b(O-\d+)\b", line.split("|")[1]))
+
+    discharged = _discharged_obligations(root)
+    problems = [
+        Problem(
+            "open-items",
+            "CLAUDE.md",
+            f"{ident} is listed as open but the record marks it discharged",
+        )
+        for ident in sorted(named & discharged)
+    ]
+    return problems
+
+
+def _discharged_obligations(root: Path) -> set[str]:
+    """Obligations the record marks discharged, closed or done.
+
+    Read from the same files `defined_ids` walks -- one definition of where
+    obligations live, so the two cannot drift (C-34's structural fix, reused).
+    """
+    discharged: set[str] = set()
+    for pattern in OBLIGATION_SOURCES:
+        for path in sorted(root.glob(pattern)):
+            for line in path.read_text(encoding="utf-8").splitlines():
+                if not re.search(r"\b(DISCHARGED|CLOSED)\b", line):
+                    continue
+                head = line.split("|")[1] if line.startswith("|") else line
+                discharged |= set(re.findall(r"\b(O-\d+)\b", head))
+    return discharged
+
+
 def check_gate(root: Path) -> list[Problem]:
     """The documented gate and the executed gate must be one list.
 
@@ -860,6 +1138,9 @@ CHECKS = {
     "fixtures": check_fixtures,
     "figures": check_figures,
     "gate": check_gate,
+    "counts": check_counts,
+    "schema": check_schema,
+    "open-items": check_open_items,
 }
 
 
@@ -922,6 +1203,30 @@ def selftest() -> int:
             "| V-12 | high | closed | "
             "`test_the_tampered_plan_is_caught_without_the_flag` | D-24 |\n",
             "",
+        ),
+        "counts": (
+            # The defect exactly as it was: the Total row over by one. C-36 sat
+            # in the file with its own columns summing to 38 against a stated 37.
+            "docs/CORRECTIONS.md",
+            "| **Total** | **42** | **0** | **44** |",
+            "| **Total** | **41** | **0** | **44** |",
+        ),
+        "schema": (
+            # F-10's shape, planted: declare a field behavioural that nothing
+            # outside plan.py reads. `interval` was exactly this for four
+            # commits -- validated, hashed, and read by nothing.
+            "src/prevalence_kit/plan.py",
+            '    "estimand.description": "declarative",',
+            '    "estimand.description": "declarative",\n    "seed": "behavioural",\n'
+            '    "nothing_reads_me": "behavioural",',
+        ),
+        "open-items": (
+            # A row naming an obligation the record already marks discharged.
+            # O-4 was discharged by D2.9; listing it as open is the drift this
+            # check exists for.
+            "CLAUDE.md",
+            "| **O-21** | The rare-event specificity fact must reach the README | Phase 3 |",
+            "| **O-4** | Listed as open after the record discharged it | Phase 2 |",
         ),
         "figures": (
             "src/prevalence_kit/run.py",

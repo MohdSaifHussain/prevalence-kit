@@ -119,6 +119,32 @@ def render_markdown(report: JSONObject) -> str:
         "",
         f"{est['positives']} of {est['n']} sampled items were positive.",
         "",
+    ]
+
+    # O-23 / D-32 condition 2. A clamped bound is a CONSTRUCTION, not a
+    # measurement, and a reader comparing two of this tool's intervals has no
+    # way to tell unless it says so. The director's words: a silently clamped
+    # bound is a small lie in the artifact an outsider reads.
+    #
+    # Placed immediately under the interval rather than in a footnote, because
+    # the sentence is about the number directly above it. The raw bound is
+    # quoted so the reader can see what the arithmetic produced before policy
+    # touched it -- condition 3, which the ledger already carries.
+    if est.get("clamped"):
+        clamped = est["clamped"]
+        assert isinstance(clamped, list)
+        for end in clamped:
+            raw = est["low_raw"] if end == "low" else est["high_raw"]
+            limit = "0" if end == "low" else "1"
+            lines += [
+                f"> **The {end} bound is a construction, not a measurement.** The "
+                f"arithmetic produced {raw}, which is outside [0, 1], and a "
+                f"prevalence cannot be. It is shown as {limit}. The raw value is "
+                f"in the record, and `verify` re-derives both.",
+                "",
+            ]
+
+    lines += [
         "## What was measured",
         "",
         f"- **Estimand:** {estimand['description']}",
@@ -134,6 +160,14 @@ def render_markdown(report: JSONObject) -> str:
         )
     lines += [
         f"- **Interval method:** {est['method']}",
+    ]
+    if est.get("sensitivity") is not None:
+        lines.append(
+            f"- **Corrected for label quality:** sensitivity {est['sensitivity']}, "
+            f"specificity {est['specificity']} (Rogan-Gladen). The uncorrected "
+            f"apparent prevalence was {_percent(str(est['apparent']['point']))}."
+        )
+    lines += [
         "",
         "## The record",
         "",

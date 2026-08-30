@@ -20,7 +20,7 @@ from .canonical import digest
 from .errors import Reason, Refusal
 from .ledger import Entry
 from .plan import Plan
-from .run import INTERVAL_METHOD, Workspace, _estimate_from
+from .run import Workspace, _estimate_from, expected_method
 from .sampling import (
     draw_srs,
     draw_stratified,
@@ -385,12 +385,12 @@ def _verify_estimate(ws, by_step, plan, checks) -> None:  # type: ignore[no-unty
     # This comparison does not depend on the dispatch being right. That is the
     # whole point: dispatch makes the two artifacts agree today, and this catches
     # the next plan field that goes inert the same way.
-    expected_method = INTERVAL_METHOD.get(plan.interval)
-    if expected_method is not None and str(recorded["method"]) != expected_method:
+    wanted = expected_method(plan)
+    if str(recorded["method"]) != wanted:
         raise Refusal(
             Reason.ESTIMATE_METHOD_MISMATCH,
             f"The plan pre-registers interval {plan.interval!r}, which this tool "
-            f"records as {expected_method!r} -- but estimate.json records method "
+            f"records as {wanted!r} -- but estimate.json records method "
             f"{str(recorded['method'])!r}. Two artifacts in this run "
             "disagree about how the number was produced.",
             "Do not publish this number. The plan is the commitment, so either the "

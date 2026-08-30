@@ -21,15 +21,19 @@ who writes the entries. The director raised that one himself and asked for it to
 | Chat reviewer (draft author) | 3 | 0 | **3** |
 | Research report (passed through unverified) | 2 | 0 | **2** |
 | Stale-at-draft-time, queued but built on anyway | 1 | 0 | **1** |
-| **Builder (Claude Code)** | **30** | **0** | **30** |
+| **Builder (Claude Code)** | **33** | **0** | **33** |
 | Reviewer instrument | **2** | 0 | **3** (1 noted) |
 | **Director** | **1** | 0 | **1** |
 | Tool artifact (noted, not a defect) | - | - | **1** (noted) |
-| **Total** | **39** | **0** | **41** |
+| **Total** | **42** | **0** | **44** |
 
-**Derived, not maintained — 2026-08-30.** Every figure above was computed from the entry blocks in
+**Derived, and now checked — 2026-08-30.** Every figure above is computed from the entry blocks in
 this file rather than incremented as rows arrived. An earlier version said 36 open and 3
 reviewer-instrument, and both were over by one: **C-36**.
+
+**`check_claims`' `counts` check enforces it from D2.14(b).** The semantics below are its
+specification, and the Total row failing against the entries is now a red gate rather than
+something a reader has to add up. It fired on its first run, on the two rows C-40 and C-41 added.
 
 ### What these columns mean, written down so nobody has to re-derive them
 
@@ -1192,6 +1196,60 @@ ledger, because **the record is what happened and the plan is only what was prom
 
 ---
 
+## C-40 - A containment claim that my own table disproved
+
+| | |
+|---|---|
+| **Claimed** | Review-stop report, O-26's witness question, 2026-08-30: *"In `two_stratum` the binomial interval **does not contain the design estimate at all**."* |
+| **Actually** | It contains it. `0.180098 <= 0.305000 <= 0.326781`. So do the other two: `0.080000` in `[0.059298, 0.107106]`, and `0.011333` in `[0.009198, 0.042940]`. **All three are contained**, and all six numbers were printed in the table immediately above the sentence |
+| **Direction** | Toward the conclusion I was arguing for. It made the case look stronger than the evidence, in the paragraph doing the persuading |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | The director, checking the sentence against the table above it |
+| **Severity** | **Medium.** Nothing was built on it and the ruling it supported was correct for a different reason. What is medium is where it sat: a false claim inside a request for a ruling, which is the one place a claim is doing work rather than describing it |
+| **Replaced by** | The true argument, which does not depend on a coincidence of three designs: **containment is not validity.** The pooled `k/n` estimates a **different quantity** from the design-weighted estimate, so a binomial interval around it is not an interval for the design estimate whether or not the two happen to overlap. **Coverage is the test, not containment**, and coverage is precisely what an interval built on the wrong estimand cannot deliver |
+| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+
+**The class, counted from the artifact rather than from memory: this is the fifth**, after
+C-27, C-28, C-29 and C-31. A figure that is right, carrying a sentence about it that nobody
+checked. **The numbers were not merely available -- they were in the table the sentence sat
+under.**
+
+**Why the argument survived it, which is the part worth keeping.** Two of the three designs
+give a pooled `k/n` that is a **different number** from the design estimate -- `0.020000`
+against `0.011333`, and `0.246154` against `0.305000`. That is the real defect and it is
+enough on its own: an interval centred on the wrong quantity is not an interval for the right
+one. **Overlap was never the question.** I reached for the more dramatic claim when the
+duller one was true and sufficient.
+
+---
+
+## C-41 - A question number issued twice
+
+| | |
+|---|---|
+| **Claimed** | The O-26 ruling request numbered its question **Q13** |
+| **Actually** | **Q13 and Q14 were already taken** -- Q13 is strata membership (**D-39**) and Q14 is `STRATUM_UNDECLARED` (**D-40**), both ruled 2026-08-30. The question is **Q15** |
+| **Direction** | Against the record's own citation scheme. This project cites questions by number across the contract, the decisions log and the code |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | The director |
+| **Severity** | **Low in effect, and it has a root cause worth more than the fix.** A duplicate number in a record whose questions are cited by number would send a later reader to the wrong ruling |
+| **Replaced by** | Renumbered to **Q15**, and **Q13 and Q14 written into the contract**, which is where the collision came from |
+| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+
+**The root cause, and it is D-28's shape.** Question numbers are **allocated in
+`docs/DECISIONS.md`** -- D-39 says *"the director's Q13 ruling"*, D-40 says *"Q14"* -- while
+the visible list of questions is the `### Qn` sections in the **phase contract**. Q13 and Q14
+were ruled and recorded as decisions and **never got contract sections**. So scanning the
+contract for the next free number returned 13, correctly, against a list that was missing two.
+
+**Two lists that must agree, with nothing making them agree.** That is the same defect as
+V-16's documented-versus-executed gate and `SUPPORTED_ROUNDING` versus `Rounding`, and it has
+the same answer: **something has to make them agree.** Both sections are written now, and the
+reconciliation is folded into **D2.14** -- every `Q-n` a decision claims must have a section
+in the contract that opened it.
+
+---
+
 ## Classes, tracked separately from the count
 
 A correction gets a C-number when it reached a commit. A **class** keeps its own tally, because a
@@ -1248,6 +1306,7 @@ half-checked one deflects it, because the part a reader can verify is right.
 | 2 | **C-28** | "reconciled against the code by `tools/check_claims.py`" -- it did reconcile | "20 accepted, 20 closed" -- 18 were closed, and four accepted findings had no row |
 | 3 | **C-29** | "423 tests, selftest 9/9" -- true of the tree I measured | "seven green" -- false of the tree I committed, which failed 3 tests |
 | 4 | **C-31** | S-1.1 calls Jeffreys' **average** coverage excellent -- it does | read as "coverage", when the same section records a deep spike near p = 0 |
+| 5 | **C-40** | six figures printed in a table, all correct | *"does not contain the design estimate at all"* -- written directly under the table that disproves it |
 
 **The rule: when a checked figure sits in a sentence with an unchecked property, either check the
 property or split the sentence.**

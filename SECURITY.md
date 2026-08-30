@@ -229,7 +229,7 @@ later needed, it is achievable via AES-GCM AAD. Full reasoning: `docs/DECISIONS.
 **Having declined the specification that solves whole-message integrity, we carry that obligation
 ourselves.** The manifest above is the cost of that choice, paid rather than deferred. D-14.
 
-### 3.8 The ledger records where the plan file was, and that travels
+### 3.8 The ledger records where the files were, and that travels
 
 `plan` writes the working plan file's path into the plan ledger entry, so `verify` can check the
 working file without being told where it is. That closes a real hole: forgetting `--plan` used to
@@ -239,6 +239,23 @@ give a clean `verify` on a tampered plan (V-12).
 published, or attached to an audit carries that path with it. Paths already appear in refusal
 messages; this is the first time one is written into the ledger, which is the artifact most likely
 to be handed to someone else.
+
+**Widened 2026-08-30 by F-11, and recorded rather than absorbed.** Two more paths now travel the
+same way, and one of them reaches a second artifact:
+
+- The **frame** and **labels** paths are recorded in the ledger beside the values the plan
+  declared (`population_used`, `labels_used`). F-11 required this: the run must record which
+  evidence produced the number, not only which evidence was promised.
+- **The report now prints the population path**, taken from the ledger rather than from the plan.
+  That is F-11's ruling -- the report used to print the plan's value while the number could have
+  come from a different file -- and it means **the path reaches the artifact most likely to be
+  published**, not merely the one most likely to be shared.
+
+**The control below covers all of it unchanged, and that was checked rather than assumed.** All
+three paths are recorded **as invoked**, so running from the plan's own directory with bare
+filenames writes bare filenames into the ledger *and* the report. Verified end to end:
+`- **Population:** frame.txt`. Storing them resolved would have made the check easier to write
+and would have taken this control away.
 
 **The path recorded is the one you typed, not a resolved absolute path.** Verified both ways:
 

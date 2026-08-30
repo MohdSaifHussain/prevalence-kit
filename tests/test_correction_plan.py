@@ -205,3 +205,36 @@ def test_every_hashed_field_declares_what_it_is_for() -> None:
     assert set(FIELD_KIND.values()) == {"behavioural", "declarative"}
     assert FIELD_KIND["sensitivity"] == "behavioural"
     assert FIELD_KIND["estimand.description"] == "declarative"
+
+
+def test_the_expected_method_matches_what_the_estimator_stamps() -> None:
+    """`expected_method` is checked against behaviour, not against a second copy.
+
+    **This test exists because the first version was wrong.** The cross-check
+    compared `INTERVAL_METHOD[plan.interval]` alone, which held while the
+    correction was unreachable and became false the moment O-29 wired it: `verify`
+    refused a correct corrected run, because `estimate.json` said
+    `rogan-gladen/clopper-pearson` and the check expected `clopper-pearson`.
+
+    **The cross-check was right and its input was wrong** -- two artifacts really
+    did disagree. So the fix is not a wider comparison, it is deriving the
+    expected string from the plan the same way the estimator derives it, in one
+    place, and walking every constructible plan shape here to prove they agree.
+
+    `wilson` + Se/Sp is not in the list because it cannot be constructed: Q7 /
+    D-33 refuses it at plan load.
+    """
+    from prevalence_kit.run import expected_method
+
+    shapes: list[dict[str, Any]] = [
+        {"interval": "wilson"},
+        {"interval": "clopper_pearson"},
+        {"interval": "clopper_pearson", "sensitivity": "0.90", "specificity": "0.999"},
+    ]
+    for over in shapes:
+        plan = Plan.from_mapping(BASE | over)
+        stamped = _estimate_from(plan, LABELS).method
+        assert expected_method(plan) == stamped, (
+            f"expected_method predicts {expected_method(plan)!r} but the estimator "
+            f"stamps {stamped!r} for {over}"
+        )

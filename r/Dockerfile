@@ -48,12 +48,30 @@ RUN R -q -e 'install.packages("epiR"); \
              stopifnot(as.character(packageVersion("epiR")) == "2.0.92"); \
              cat("epiR", as.character(packageVersion("epiR")), "pinned\n")'
 
+# stratallo is D2.16's witness, and it is ALREADY IN THE SNAPSHOT -- no new pin,
+# no network call this image does not already make. Found by going to official
+# sources on stratified design, and it is the third "no witness exists" claim
+# this project made and got wrong (charter NEXT queue, S-1.12).
+#
+# What it witnesses: `round_oric` is the FIRST outside check R has ever given
+# D-30's largest-remainder rounding, because `survey` has no allocator at all
+# (F-9). `var_st` is a second opinion on a variance `survey` already witnesses.
+#
+# The narrowing travels with it, in epiR's words: these are the algorithm
+# authors' own implementation of their own papers. They confirm we compute what
+# they compute; they do not independently confirm the method.
+#
+# `rnabox` is NOT adopted -- deferred on scope, not on witness.
+RUN R -q -e 'install.packages("stratallo"); \
+             stopifnot(as.character(packageVersion("stratallo")) == "3.0.1")'
+
 WORKDIR /witness
 COPY barnett_table_2b.R /witness/barnett_table_2b.R
 COPY stratified_fixtures.R /witness/stratified_fixtures.R
 COPY clopper_pearson_fixtures.R /witness/clopper_pearson_fixtures.R
 COPY rogan_gladen_fixtures.R /witness/rogan_gladen_fixtures.R
 COPY coverage_fixtures.R /witness/coverage_fixtures.R
+COPY stratallo_fixtures.R /witness/stratallo_fixtures.R
 
 # Default is the anchor. D2.2 is run by naming its script:
 #   docker run ... <image> /witness/stratified_fixtures.R

@@ -106,7 +106,7 @@ Each names the top standard it must follow.
 | D2.11 | CI wiring: fixtures in the gate, R image pinned by digest | S-6 toolchain |
 | **D2.12** | **T-1.** Close every discharged correction, each naming the commit that discharged it | Tier trim, ruled 2026-08-29 |
 | **D2.13** | **T-2.** Apply the decision-entry rule to the log, and state it in `docs/DECISIONS.md`. **The rule governs choices the builder makes alone. A question put to the director and ruled is recorded because it was ruled, whatever its operator visibility.** Without that line, Q3 — same CLI, same codes, invisible to an operator — would be suppressed by the first rule written to shrink the log, which is the one thing it must never do. | Tier trim, ruled 2026-08-29 |
-| D2.14 | Extend `check_claims` to the new artifacts (fixtures directory, R script). **Two more gaps found 2026-08-29, ruled into this deliverable:** (a) `check_paths` does not cover either PDF — wrong directory prefix *and* wrong extension; (b) **the counts table in `docs/CORRECTIONS.md` is not covered by `check_figures`, and was updated by hand.** That is the count treadmill, in the table that counts our own counting errors. ▸ **The semantics are now written down — `docs/CORRECTIONS.md`, "What these columns mean" — so the check has a specification rather than a number to copy, ruled 2026-08-30. The table was derived and found over by one: C-36. What remains owed is the machine check.** The definition it must encode: an **entry** is a `## C-n` or `## V-n` heading, `Open` counts `Status: OPEN`, `noted` is excluded from Open and included in Total, and **a class tally is a different population from this table** — which is how the reviewer-instrument row reached 3. **(c) Ruled in 2026-08-29, by the director, from four stale rows found by reading: an open-items row naming an item the record says is discharged must fail the gate.** `CLAUDE.md`'s "Open, by name" table is a **live figure written in prose**, and nothing checks it. Its three machine-checked figures were current while four hand-maintained rows in the same file had drifted, **inside about six hours** — §6.1 (discharged by A-3), O-20 and O-22 (both moved at `d25e6fe`), and the corrections range. **The minimum condition: an obligation or correction identifier in an open-items row, whose owning record marks it discharged, is a failure.** ▸ **(d) Ruled 2026-08-30 at the review stop: the plan schema declares each field *behavioural* or *declarative*, and a checker asserts both halves** — every behavioural field is read somewhere in `src/`, and no declarative field selects behaviour. **Two fields have now been inert** — `interval` (F-10) and `population` / `labels` (F-11) — **and neither was found by an instrument**: one by reading code and asking what reads a field, one by a probe the director named. `estimand.description` is inert and correct, and nothing today distinguishes that from an accident. **The third will be found the same way unless the schema declares its own intent** The three figures are checked because they went stale once and nobody noticed; this table went stale the same way and was caught only by a session that read carefully. **That assumption is the one `check_figures` exists to remove** | D-23's stated limit |
+| D2.14 ▸ **DONE 2026-08-30** — all four conditions, and **three new checks with both controls**: `counts`, `schema`, `open-items`. `check_claims` now runs **twelve**. (a) `PATH_LIKE` widened on the two axes that were wrong — directory prefixes and extensions — rather than by naming the files it missed, so `r/`, `svy/`, `examples/` and both PDFs are covered. (b) the counts table is **derived and checked**; it fired on its first run. (c) an open-items row naming a discharged item fails, and **it fired on its first run too**, on a genuinely stale O-23. (d) `FIELD_KIND` is asserted against the code: every hashed field declared both ways, and every behavioural field read outside `plan.py` — F-10's shape, made a gate | Extend `check_claims` to the new artifacts (fixtures directory, R script). **Two more gaps found 2026-08-29, ruled into this deliverable:** (a) `check_paths` does not cover either PDF — wrong directory prefix *and* wrong extension; (b) **the counts table in `docs/CORRECTIONS.md` is not covered by `check_figures`, and was updated by hand.** That is the count treadmill, in the table that counts our own counting errors. ▸ **The semantics are now written down — `docs/CORRECTIONS.md`, "What these columns mean" — so the check has a specification rather than a number to copy, ruled 2026-08-30. The table was derived and found over by one: C-36. What remains owed is the machine check.** The definition it must encode: an **entry** is a `## C-n` or `## V-n` heading, `Open` counts `Status: OPEN`, `noted` is excluded from Open and included in Total, and **a class tally is a different population from this table** — which is how the reviewer-instrument row reached 3. **(c) Ruled in 2026-08-29, by the director, from four stale rows found by reading: an open-items row naming an item the record says is discharged must fail the gate.** `CLAUDE.md`'s "Open, by name" table is a **live figure written in prose**, and nothing checks it. Its three machine-checked figures were current while four hand-maintained rows in the same file had drifted, **inside about six hours** — §6.1 (discharged by A-3), O-20 and O-22 (both moved at `d25e6fe`), and the corrections range. **The minimum condition: an obligation or correction identifier in an open-items row, whose owning record marks it discharged, is a failure.** ▸ **(d) Ruled 2026-08-30 at the review stop: the plan schema declares each field *behavioural* or *declarative*, and a checker asserts both halves** — every behavioural field is read somewhere in `src/`, and no declarative field selects behaviour. **Two fields have now been inert** — `interval` (F-10) and `population` / `labels` (F-11) — **and neither was found by an instrument**: one by reading code and asking what reads a field, one by a probe the director named. `estimand.description` is inert and correct, and nothing today distinguishes that from an accident. **The third will be found the same way unless the schema declares its own intent** The three figures are checked because they went stale once and nobody noticed; this table went stale the same way and was caught only by a session that read carefully. **That assumption is the one `check_figures` exists to remove** | D-23's stated limit |
 | **D2.16** *(new, 2026-08-29)* | **`stratallo` fixtures. FIXTURE-ONLY — no new estimator.** A second independent witness for D2.3's stratified variance (`var_st` / `var_stsi`) and the **first** for D-30's rounding (`round_oric` / `round_ran`). Strengthens work already built at the cost of a fixture. **The `epiR` narrowing travels with it**: these are the algorithm authors' own implementation, so it confirms we compute what they compute and does **not** independently confirm the method | **S-1.12** |
 | D2.15 | Discharge or restate O-3, O-14, O-15 | rule 11 |
 
@@ -321,7 +321,7 @@ exists so that is a scheduled decision rather than a remembered intention.
 | **O-25** *(new, 2026-08-29)* | **D-37 condition 3: the report states the coverage of the interval actually used, at the operating point actually observed.** Not O-23's disclosure and not O-22's plan field — **a third thing, opened separately because two obligations living in the same post-stop surface is how one of them quietly does not happen.** If a run measures 0.2% with Wilson, the report says what Wilson's coverage is there. The plan records the choice; this records what the choice cost on this data | **Post-stop surface** |
 | **O-24** *(new, 2026-08-29)* | **Every S-entry must carry a read state, checked by machine.** The sweep is done and recorded in `docs/STANDARDS.md`, but nothing stops a new entry being added without one -- which is exactly how S-1.1 stayed silent for two phases. `check_claims` should require one of `full` / `partial` / `not read` / `not recorded` per entry. **And it carries a distinction, not just a mechanism:** *a source that anchors an arithmetic can be validated by reproduction; a source that anchors a decision has to be read.* S-1.4 and S-1.6 are `not recorded` and that is defensible -- the Rogan-Gladen formula either reproduces against `epiR` or it does not. S-1.1 was dangerous precisely because it anchors a **choice**, and no amount of reproduction can check a choice | **D2.14** |
 | **O-22** *(new, 2026-08-29)* | **Q7 / D-33 is honoured at the API and not yet at the plan file.** `rogan_gladen_interval()` takes `interval_method` as a **keyword-only argument with no default**, and `test_the_interval_method_cannot_be_defaulted` pins that, so the choice cannot become a constant in the source. Still owed: an `interval` field in the hashed plan record, and `CORRECTION_INTERVAL_UNSUPPORTED` firing **at `plan`** as exit check **F8d** specifies. **Exactly O-20's shape**, opened the same way and for the same reason -- everything built is real, and the omission is what would mislead if it went unnamed. C-12's class | **D2.8** |
-| **O-23** *(new, 2026-08-29)* ▸ **HALF DISCHARGED by O-29** — the ledger half is done; the **report** half remains | **Q6 / D-32's conditions 2 and 3 are carried by the estimate and not yet by an artifact.** `CorrectedInterval.note` produces the disclosure and `as_record()` carries `low_raw`, `high_raw` and `clamped`. But **no Phase 2 estimator is wired into `run.py` yet** — it still calls `wilson()` alone — so nothing writes the raw bound to a ledger and nothing renders the note to a report. That is the surface, deliberately after the review stop (§5). **Named here so "the output discloses it" is not read as already true.** | **Post-stop surface work** |
+| **O-23** *(new, 2026-08-29)* ▸ **DISCHARGED 2026-08-30** — the ledger half with O-29, which gave D-32 condition 3 something to write to; the **report** half with the disclosure that names the raw bound, sits with the interval it describes, and appears only when a bound was actually changed | **Q6 / D-32's conditions 2 and 3 are carried by the estimate and not yet by an artifact.** `CorrectedInterval.note` produces the disclosure and `as_record()` carries `low_raw`, `high_raw` and `clamped`. But **no Phase 2 estimator is wired into `run.py` yet** — it still calls `wilson()` alone — so nothing writes the raw bound to a ledger and nothing renders the note to a report. That is the surface, deliberately after the review stop (§5). **Named here so "the output discloses it" is not read as already true.** | **Post-stop surface work** |
 | **O-29** ▸ **DISCHARGED 2026-08-30** | `sensitivity` and `specificity` are optional plan fields, decimal strings, hashed, validated at load, and **read** -- `_estimate_from` applies the correction when both are present, and the wired path reproduces `epiR`'s `rare_event` bounds to every printed digit. **Exit check F8d is performable for the first time**: the plan it describes could not be written before, which was **O-22's last unbuilt half**. **O-23 is unblocked**, and D-32 condition 3 now actually happens -- the raw bounds reach `estimate.json` because there is finally an estimator writing them. Was: **Rogan-Gladen is built, validated, and unreachable.** No `sensitivity` / `specificity` field exists in the plan schema, and `rogan_gladen` is referenced only in `estimators.py`. **Charter §4 promises the correction and no plan can invoke it.** O-20 covered `allocation_rounding`, O-22 covered `interval`; **nothing covered these**. **O-23 is blocked behind it** — a disclosure about a correction nobody can invoke has nothing to disclose | **Whichever deliverable wires the correction** |
 | **O-28** *(new, 2026-08-30)* | **Before publication, the git history is reviewed, not only the working tree.** A repository's history goes public with it, and this one is **not rewritten** — the record cites commit hashes as evidence throughout, so the answer is a review **before** release rather than a repair after it. **This record was written for an audience of three**; Phase 3 is the first time it is read **as a stranger would** read it. The register's fourth rule and `CLAUDE.md` rule 20 govern what goes in from here; this is the one-time look backwards. **Must be written into the Phase 3 contract before the release** | **Phase 3** |
 | **O-26** *(new, 2026-08-30)* | **The stratified interval builder, governed by Q7 / D-33 — the plan names the method, no default.** `stratified_estimate` returns a `standard_error` and **no interval**. Until it exists, the stratified path computes a quantity nothing turns into a printed bound, and how far a stratified interval diverges from the binomial inversion is **unmeasured**. Named because Q12 exposed it as a hole with no name | **Post-stop surface** |
@@ -658,6 +658,148 @@ the charter would differ from its own anchor's advice, for a reason the anchor d
 would rather the charter say that out loud, it belongs here rather than buried in D-8.
 
 ---
+
+---
+
+### Q13 - Where does stratum membership come from?
+
+**RULED: A - 30 August 2026. D-39.** *Written into this contract 2026-08-30, after **C-41**:
+it was ruled and recorded as a decision without ever getting a section here, which is how a
+later question was numbered Q13 against a list missing two entries.*
+
+The plan declares strata by **name and expected rate**; the **frame** says which unit is in
+which stratum, via a `stratum` column. **B -- the plan enumerating item ids -- is not close**:
+the plan is hashed *before any data file is opened*, so a plan carrying the frame is a
+category error against **R1** itself. **C**, predicates over frame columns, puts a small
+interpreter in the evidence path and goes to **NEXT** by name.
+
+Two conditions travelled with the ruling. **`expected_rate` is a prior**: a wrong one costs
+efficiency, not validity, and the opposite belief would make an operator afraid of a field
+that cannot hurt them. **`M_h` is the count of *unique* ids**, inheriting **D-21** rather than
+restating it.
+
+---
+
+### Q14 - A frame unit in a stratum the plan does not declare
+
+**RULED: A - 30 August 2026. D-40.** *Also written in after C-41.*
+
+New code **`STRATUM_UNDECLARED`**, at `sample`. **S-1.13** makes strata mutually exclusive and
+covering, so dropping such units would change the **denominator** silently -- **V-7's class**,
+in the one number this tool exists to produce. Reusing `STRATA_UNDEFINED` was rejected: *the
+plan declares none* and *the frame names one the plan does not* send the operator to different
+artifacts, and **D-22** says that means two codes. A `.txt` frame lands on the same code, which
+is `PLAN_THRESHOLD_INVALID`'s precedent rather than a shortcut. Its converse is
+`STRATUM_EMPTY`, and the pair is complete.
+
+---
+
+### Q15 - What does the plan's `interval` word name under a stratified design?
+
+**RULED: B - 30 August 2026. Separate vocabulary.**
+
+**The witness gate passed first, and it changed the question.** D2.9 concluded `svy` cannot
+witness our intervals -- **measured on the binomial ones**, where `svy` substitutes an
+effective sample size and we do not. A stratified estimate is **itself design-based**, so that
+conclusion does not transfer, and it was re-measured rather than inherited:
+
+| case | our SE | `svy` SE | df | relative difference |
+|---|---|---|---|---|
+| balanced | 0.011776569773 | 0.011776569773 | 497 / 497 | 2.9e-16 |
+| rare | 0.007018422684 | 0.007018422684 | 297 / 297 | 2.0e-15 |
+| two_stratum | 0.045107110274 | 0.045107110274 | 128 / 128 | 1.4e-15 |
+
+**`svy` reproduces the stratified point estimate, standard error and degrees of freedom
+exactly**, so a stratified interval **can** be witnessed. Q1's problem -- shipping an estimator
+with no external witness -- does not arise here.
+
+**Why the binomial words cannot carry over.** The pooled `k/n` **estimates a different
+quantity** from the design-weighted estimate: `0.020000` against `0.011333` in `rare`, and
+`0.246154` against `0.305000` in `two_stratum`. An interval centred on the wrong quantity is
+not an interval for the right one, **whether or not the two overlap** -- coverage is the test,
+not containment. *The request for this ruling claimed the `two_stratum` interval did not
+contain the design estimate. It does, and all six figures were in the table above the
+sentence. **C-40.** The argument never needed it.*
+
+| | Option | Consequence |
+|---|---|---|
+| A | Same two words, design-based meanings under `stratified` | Simplest plan, and **the same word would mean different arithmetic depending on `design`** |
+| **B** | **`design_wilson` / `design_clopper_pearson`**, binomial words refused under `stratified` and design words refused under `srs` | **Ruled.** One word, one arithmetic. Costs vocabulary and a charter amendment |
+| C | One interval only under stratified, mirroring Q7 | Removes a choice D-37 deliberately gave the operator, with no witness-based reason -- `svy` witnesses both |
+
+**RULED: B**, and the director's grounds are recorded as given.
+
+**The builder's reason was decisive and stands:** this project spent two commits documenting
+that `svy` maps `clopper-pearson` to `korn-graubard` and that **nothing at the call site warns
+you**. Building the same collision into our own vocabulary one commit later would be
+indefensible to anyone reading that register entry.
+
+**The counter -- that `design: stratified` already disambiguates -- fails on where the word
+ends up.** The plan is **hashed and published**, and the report names the method. *A reader who
+sees `interval: wilson` on a published number and does not also parse `design` will assume the
+binomial Wilson.* **The collision reaches the artifact an outsider reads, and that artifact is
+the entire product.** **D-22** points the same way: things an operator must not confuse get
+different names, not the same name under different conditions.
+
+**The refusals must teach.** `interval: wilson` under `design: stratified` says what the
+design-based word is **and why the binomial one does not apply** -- a binomial interval is
+built on `(k, n)` and a stratified estimate is design-weighted, so they are intervals for
+different quantities. Same shape as `CORRECTION_INTERVAL_UNSUPPORTED`.
+
+**Charter §4 needs amending, and the builder does not apply it.** A-4's ratified text names
+only the two words with no mention of design-dependence. Drafted below as **A-5**.
+
+---
+
+## A-5 - DRAFT for the director's ruling. Not applied.
+
+**What it changes.** Charter §4's `estimate` verb row, which since **A-4** reads:
+
+> `estimate` | Compute prevalence with a correct interval. **The plan names the method and
+> there is no default** -- `interval: wilson` or `interval: clopper_pearson`. **Neither is
+> primary.** The choice is between coverage you can rely on and an interval that is narrower.
+> Clopper-Pearson holds its nominal level; Wilson is tighter and can fall below it. You cannot
+> have both, and the tool will not pick for you. Optional Rogan-Gladen correction when
+> sensitivity and specificity are supplied. **Refuse with a named reason** rather than print a
+> silently wrong number.
+
+**Why it must change under Q15.** The ruling adds two interval names and makes the valid set
+depend on the design. Under it, §4 describes a vocabulary the tool no longer has.
+
+### Draft replacement text
+
+> `estimate` | Compute prevalence with a correct interval. **The plan names the method and
+> there is no default.** Which names are valid depends on the design, because a binomial
+> interval and a design-based one are intervals for **different quantities**: under
+> `design: srs`, `interval: wilson` or `interval: clopper_pearson`, both built on the sampled
+> `(k, n)`; under `design: stratified`, `interval: design_wilson` or
+> `interval: design_clopper_pearson`, both built on the design-weighted estimate and its
+> standard error. **Neither pair has a primary.** The choice inside each is between coverage
+> you can rely on and an interval that is narrower -- Clopper-Pearson holds its nominal level,
+> Wilson is tighter and can fall below it. You cannot have both, and the tool will not pick for
+> you. **A binomial name under a stratified design is refused, and so is the reverse**, because
+> one word meaning two arithmetics is a trap the reader of a published plan cannot see.
+> Optional Rogan-Gladen correction when sensitivity and specificity are supplied. **Refuse with
+> a named reason** rather than print a silently wrong number.
+
+### What the director should weigh before ruling
+
+**It names four words where A-4 named two**, and that is the cost of the ruling rather than a
+drafting choice. The alternative was one word meaning two things depending on a field the
+reader may not parse.
+
+**It states *why* rather than only *what*.** "Intervals for different quantities" is the fact
+that makes the split non-arbitrary, and a reader who meets only the four names will assume it
+is bureaucracy.
+
+**It does not name a recommended method**, deliberately -- A-4's reasoning, unchanged: naming
+one would recreate the default in prose.
+
+**One thing it deliberately does not say.** It does not claim the design-based intervals hold
+their nominal level. **Their coverage at rare-event rates has not been measured** -- S-1.1's
+figures are for the binomial ones. Claiming the same trade-off applies would be an unmeasured
+transfer, which is the mistake D2.9's interval half spent itself proving. **If the director
+wants that sentence, it needs a measurement first.**
 
 ---
 

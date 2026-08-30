@@ -1,0 +1,107 @@
+# D2.11 -- the R witness, rebuilt and re-run by machine rather than by hand.
+#
+# WHAT THIS CLOSES. Every R fixture in this repository was produced by a human
+# running `bash r/run-witness.sh` on one laptop. `tests/test_fixtures.py` checks
+# them in the gate -- digests against the pin, declared verdicts against the
+# arithmetic -- but that is the STATIC half: it reads the committed JSON and
+# cannot tell whether the pinned image still produces it. D2.11's own words:
+# "It does not catch a fixture with a right digest and hand-edited contents."
+#
+# This job builds the digest-pinned image and regenerates every fixture, then
+# requires the result to be BYTE-IDENTICAL to what is committed. A hand-edited
+# fixture, a changed script, or a witness that has quietly started answering
+# differently all fail here.
+#
+# WHY IT IS NOT IN gate.yml, stated rather than left to be inferred. The seven
+# gate checks run on every push and take about ten seconds each. A cold image
+# build pulls R, the spatial stack epiR drags in, and four CRAN packages -- so
+# putting it in the gate would add minutes to every commit to buy a check of
+# something that only changes when `r/**` changes. It runs on exactly that
+# condition, and on demand.
+#
+# WHAT IT DOES NOT CATCH, because a job that names its scope invites the
+# question and one that does not answers it falsely (C-34). It does not watch
+# for DRIFT: the base image is digest-pinned and its CRAN mirror is frozen at
+# 2026-04-23, so between runs nothing should move -- and if the mirror ever
+# served something different, this job would not notice until someone touched
+# `r/**`. TW-5 is the instrument for that, and it is a phase-close ritual rather
+# than a red X, because a tripwire firing is a decision for the director.
+name: witness
+
+on:
+  push:
+    branches: [main]
+    paths: ["r/**", ".github/workflows/witness.yml"]
+  pull_request:
+    paths: ["r/**", ".github/workflows/witness.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  witness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Digest pin agrees with the register
+        # F16, run by machine. `r/run-witness.sh` refuses unless r/Dockerfile and
+        # docs/STANDARDS.md S-2.1a carry the same digest; this is that check on
+        # its own, so a mismatch fails before a long build rather than after it.
+        run: |
+          pinned="sha256:c3f39b365d1077fe24f8e9ab2742e352b6d3950897f51af1624a5bb5550c21c0"
+          grep -q "$pinned" r/Dockerfile
+          grep -q "$pinned" docs/STANDARDS.md
+          echo "digest pin agrees: $pinned"
+
+      - name: Build the witness
+        run: docker build -t prevalence-kit-witness:ci r/
+
+      - name: Regenerate every fixture
+        run: |
+          mkdir -p /tmp/regen
+          for script in barnett_table_2b stratified_fixtures clopper_pearson_fixtures \
+                        rogan_gladen_fixtures coverage_fixtures stratallo_fixtures; do
+            echo "--- $script"
+            docker run --rm -v /tmp/regen:/fixtures prevalence-kit-witness:ci \
+              "/witness/$script.R"
+          done
+
+      - name: The regenerated fixtures must equal the committed ones
+        # Byte-for-byte. Not "close enough": these files are the expected values
+        # every estimator in Phase 2 was written against, and a fixture that has
+        # drifted from its witness is a fixture that no longer witnesses.
+        run: |
+          failed=0
+          for path in /tmp/regen/*.json; do
+            name="$(basename "$path")"
+            if cmp -s "$path" "r/fixtures/$name"; then
+              echo "  $name: identical"
+            else
+              echo "  $name: DIFFERS from the committed fixture"
+              diff <(head -c 4000 "r/fixtures/$name") <(head -c 4000 "$path") || true
+              failed=1
+            fi
+          done
+          exit "$failed"
+
+      - name: The committed set is the regenerated set
+        # Both directions. A fixture nobody regenerates is a fixture no script
+        # produces any more -- the same defect from the other side, which is
+        # D-28's reason for checking a list both ways.
+        run: |
+          committed="$(cd r/fixtures && ls *.json | sort)"
+          regenerated="$(cd /tmp/regen && ls *.json | sort)"
+          if [ "$committed" != "$regenerated" ]; then
+            echo "committed:   $committed"
+            echo "regenerated: $regenerated"
+            echo "A committed fixture is produced by no script, or a script"
+            echo "produces a fixture nobody committed."
+            exit 1
+          fi
+          echo "both directions agree:"
+          echo "$committed"

@@ -383,6 +383,31 @@ actually returns, so the map cannot drift from the behaviour it describes.
 """
 
 
+def expected_method(plan: Plan) -> str:
+    """The `method` string the estimator will stamp for this plan.
+
+    **Derived from the plan, in one place, because two places drift.** `verify`
+    compares this against what `estimate.json` actually records -- F-10's durable
+    half -- and that comparison is only as good as this function.
+
+    It composes two layers because the method does: the interval the plan names,
+    and whether the plan asked for the Rogan-Gladen correction on top of it. The
+    first version compared `INTERVAL_METHOD[plan.interval]` alone, which was true
+    while the correction was unreachable and became **false the moment O-29 wired
+    it** -- `verify` then refused a perfectly correct corrected run.
+
+    That was the cross-check working, not failing: two artifacts really did
+    disagree, and the disagreement was here.
+    `test_the_expected_method_matches_what_the_estimator_stamps` walks every
+    constructible plan shape and checks this against the estimator's actual
+    output, so it cannot drift from the behaviour it predicts.
+    """
+    base = INTERVAL_METHOD[plan.interval]
+    if plan.sensitivity is not None:
+        return f"rogan-gladen/{base}"
+    return base
+
+
 def _interval_for(plan: Plan, positives: int, n: int) -> Interval:
     """The interval the plan pre-registered. Q11 / D-37, wired.
 
