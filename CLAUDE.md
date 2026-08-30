@@ -25,9 +25,9 @@ This project runs the **governed-orchestration** skill at **STANDARD** tier, man
 
 | File | What it is |
 |---|---|
-| `PROJECT_CHARTER.md` | **Binding.** Scope, six verbs, hard rules, honest limits. Amendments A-1, A-2 |
-| `docs/contracts/PHASE-2-CONTRACT.md` | **Binding, current.** Q1-Q5 ruled. D2.1-D2.5 done |
-| `docs/DECISIONS.md` | D-1 … D-31. Why each choice, and what was rejected |
+| `PROJECT_CHARTER.md` | **Binding.** Scope, six verbs, hard rules, honest limits. **Amendments A-0 … A-5 applied; A-6 drafted and awaiting the director** |
+| `docs/contracts/PHASE-2-CONTRACT.md` | **Binding, current.** **Q1–Q15 ruled. D2.1–D2.16 done**, D2.17 built. §11 carries the outcome |
+| `docs/DECISIONS.md` | **D-1 … D-40.** Why each choice, and what was rejected. **T-2's admission rule is at the head** |
 | `docs/CORRECTIONS.md` | Every claim that was wrong. **Counts claims that reached a commit *or changed a ruling*** |
 | `docs/FINDINGS.md` | Findings register. `check_claims` reconciles it against the code |
 | `docs/STANDARDS.md` | Every source pinned by version, date, digest or DOI. **S-8 pins the retrieval *procedures* too** |
@@ -129,7 +129,14 @@ confirms we implement the method as its author does. It does not independently c
    that *stated* a scope it did not have.** No stated scope invites the question; a wrong one
    answers it falsely, and the reader comes away more confident and less correct. **Make the scope
    the object the code walks, never a sentence beside it.**
-   **F-9 is the newest kind and it lies about nothing: a fixture that looks external and is not.**
+   **The SEVENTH kind leads the list, and it is the one to put in front of a reader before any
+   passing number: `verify` recomputes through the function it is checking.** `verify.py` calls
+   the same `_estimate_from` that produced the number, so when that function ignored
+   `plan.interval` it reproduced the same wrong method and reported the estimate verified. **It
+   has produced a live defect twice, and neither time was it caught by an instrument** — F-10 was
+   found by reading the code and asking what reads a field. Q-2 named this unclosable at Phase 1
+   and it still is: no test the builder writes can close *the suite is the builder's*.
+   **F-9 is the sixth kind and it lies about nothing: a fixture that looks external and is not.**
    `r/fixtures/stratified.json` holds allocation fixtures made in the pinned R image — but
    **`survey` has no allocator**, so those rows are our own formula re-implemented in R by its own
    author, sitting beside estimation fixtures that really are external. Every document is honest;
@@ -213,11 +220,16 @@ confirms we implement the method as its author does. It does not independently c
 ## Where things stand
 
 **Phase 0** ratified. **Phase 1** closed at `d66d225`. **Phase 2 is in build**, **Q1–Q15 ruled**,
-**A-1 … A-4** applied to the charter.
+**A-0 … A-5** applied to the charter and **A-6 drafted, not applied**.
+**D2.1 … D2.16 done**; D2.17 (the design-interval fixtures and estimators) built under O-26.
+**The review stop is CLOSED.** It found **F-11**, the most serious defect in this project.
 
 **Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **705 tests**, seven gate
-checks green. **CI last ran green at 608** on the 3.12 / 3.13 / 3.14 matrix, four jobs, run
-`33269147849`, head `d096da0`. Local and CI figures are stated apart on purpose.
+checks green — **`check_claims` now runs twelve**, not seven; the gate block below is still
+seven commands. **CI last ran green at 705** on the 3.12 / 3.13 / 3.14 matrix, run `eb17c9a`.
+A second workflow, `witness.yml`, rebuilds the R image and requires every fixture to regenerate
+**byte-identically** — it runs on `r/**` changes and on demand, not on every push.
+Local and CI figures are stated apart on purpose.
 
 *The exact patch versions are **not** carried here any more. The previous line said
 `3.12.14 / 3.13.15 / 3.14.7`, and that run's log does not print a `Successfully set up CPython`
@@ -234,6 +246,13 @@ read anything else.** `check_figures` derives all three.
 
 | | |
 |---|---|
+| **D2.17 / O-26** | **The stratified intervals.** `design_wilson` and `design_korn_graubard`, witnessed by `svy` to **4.9e-13**, fixtures committed first at `e04a7aa`. **Neither holds nominal coverage at rare rates** — worst conditional 0.7472 (KG) and 0.0000 (Wilson) against 0.90 — and A-6 carries the figures to §8 |
+| **D2.16** | `stratallo` witnesses the **rounding** — 3/3 fixtures, 2000/2000 sweep — and **not** the variance, which is the without-replacement form. Fixture only |
+| **D2.14** | All four conditions. `check_claims` runs **twelve** checks; `counts`, `schema`, `open-items` are new. **Two fired on their first run** |
+| **D2.12 / D2.13** | T-1 and T-2. **41 of 44 corrections closed**, each naming its discharging commit |
+| **D2.11** | `witness.yml` — the R image rebuilt by machine, fixtures regenerated byte-identically, both directions |
+| **D2.10 / O-13** | `svy`'s Wilson divergence measured: interior worst **0.117330** at n=10, **9.7e-05** at n=1000. At `k = n` svy returns a **zero-width** interval; at `k = 0`, none at all |
+| **D2.9 / O-4** | **`svy` witnesses the allocation and none of the intervals.** It maps `clopper-pearson` to `korn-graubard`. 2000/2000 designs identical |
 | **D2.1** | R witness reproduces **Barnett Table 2B** — `2098/828/584/256/234`, VVR 0.2000%, SD 0.0539 pp. `svydesign` SE against the closed form: 4e-16 |
 | **D2.2** | 4 allocation + 5 estimation fixtures from `survey` 4.5, through the one validated call |
 | **D2.3** | `stratified.py` — Neyman, largest-remainder rounding, stratified estimator. Worst disagreement with `survey`: **9.5e-15** |
@@ -307,14 +326,17 @@ prevalence rates this tool is for, several ordinary intuitions fail, and here th
 
 ### Open, by name
 
+**The review stop is closed and the whole table was closed out with it.** What remains is two
+rulings the director holds, two post-stop surface obligations, and the Phase 3 carry.
+
 | # | What | Owner |
 |---|---|---|
-| **O-19** | Re-pin `checkout` and `setup-python` before GitHub drops Node 20. **TW-4 fired** | Phase 3 |
+| **A-6** | **DRAFTED, NOT APPLIED.** Charter §4 gains a third and fourth interval name — `design_wilson`, `design_korn_graubard` — and §8 gains the stratified coverage limits. **The charter is the director's**; the ruling is ready and was deferred to a session with a full window | **Director** |
+| **The no-interval notice** | `sample` computes the odds of producing no interval at all and **states** them. Whether it should **refuse** instead is the director's ruling, not the builder's — his instinct was to state, because an operator may legitimately want the point estimate knowing the interval is unlikely | **Director** |
+| **O-25** | The report must state the coverage of the interval **actually used, at the operating point actually observed** — D-37 condition 3. **Blocked on A-6**: which intervals exist under a stratified design has just changed, and the table it needs now exists | Post-stop |
+| **O-27** | D-38's one-stratum disclosure: the run records and the report states that the design has one stratum, so stratification delivered no precision gain | Post-stop |
+| **O-19** | Re-pin `checkout` and `setup-python` before GitHub drops Node 20. **TW-4 fired and stays fired** | Phase 3 |
 | **O-21** | The rare-event specificity fact must reach the README | Phase 3 |
-| **D2.11** | The witness image is rebuilt by hand; CI never runs it. Static half closed | Phase 2 |
-| **O-22** | **DISCHARGED 2026-08-30.** `interval` is required, reaches the hash, **and is now read** — `_estimate_from` dispatches on it and `verify` cross-checks the estimate's method against the plan. The old row said: **Half built, and the open half was exact:** `interval` is a required key reaching `as_record()`, so the method is in the plan hash. But `CORRECTION_INTERVAL_UNSUPPORTED` is raised **only in `estimators.py`**, never at plan load, and the schema has **no `sensitivity`/`specificity` keys** — so **exit check F8d cannot be performed today**: the plan it describes cannot be written. Unknown keys are ignored, so a plan supplying Se/Sp loads silently and **hashes identically to one that does not**. Closes with D2.8's remaining half | D2.8 |
 | **O-28** | Pre-publication review of **git history**, not only the working tree. **Must reach the Phase 3 contract before the release** | Phase 3 |
-| **D2.14** | `check_claims` gaps: PDF paths, the CORRECTIONS counts table (**document its semantics, do not guess them**), the R artifacts. **The register gap is closed — D-34, `check_register`** | Phase 2 |
-| **O-3, O-14, O-15** | Carried. **O-4 discharged by D2.9 and O-13 by D2.10**, both 2026-08-30 | Phase 2 |
-| **O-26, O-27** | The stratified interval builder (**Q7 governs it — the plan names the method**), and D-38's one-stratum disclosure. `stratified_estimate` returns an SE and **no interval** | Post-stop |
-| **40 corrections open** | C-1 … C-39 **and V-13 … V-15**, which are corrections carrying finding numbers. 42 entries, 2 `noted`. **Derived from the entries, not maintained by hand** — the previous figure was over by one, C-36. Close under **T-1 (D2.12)**, each naming its commit | D2.12 |
+| **O-3, O-14, O-15** | Carried, low, no action. O-15 is deliberately unmet — a ledger schema version, added only if it is ever needed | Phase 3 |
+| **2 corrections open** | **C-1** (closes when the README credits `svy` — Phase 3) and **C-42**. 45 entries, 41 closed, 2 `noted`. **T-1 closed the other 41**, each naming its discharging commit. Derived and now machine-checked by `check_counts` | — |
