@@ -20,7 +20,7 @@ from .canonical import digest
 from .errors import Reason, Refusal
 from .ledger import Entry
 from .plan import Plan
-from .run import Workspace, _estimate_from, expected_method
+from .run import StratifiedDraw, Workspace, _estimate_from, expected_method
 from .sampling import (
     draw_srs,
     draw_stratified,
@@ -405,7 +405,8 @@ def _verify_estimate(ws, by_step, plan, checks) -> None:  # type: ignore[no-unty
         )
     )
 
-    recomputed = _estimate_from(plan, ws.read_json("labels.json")).as_record()
+    draw = StratifiedDraw.from_workspace(ws) if plan.design == "stratified" else None
+    recomputed = _estimate_from(plan, ws.read_json("labels.json"), draw).as_record()
     if recomputed != recorded:
         raise Refusal(
             Reason.ESTIMATE_MISMATCH,

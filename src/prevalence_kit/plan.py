@@ -78,7 +78,30 @@ and one that is merely written down (**C-34**).
 
 SUPPORTED_DESIGNS = frozenset({"srs", "stratified"})
 SUPPORTED_COMPARISONS = frozenset({"equals", "at_least"})
-SUPPORTED_INTERVALS = frozenset({"wilson", "clopper_pearson"})
+BINOMIAL_INTERVALS = frozenset({"wilson", "clopper_pearson"})
+"""Intervals on the sampled `(k, n)`. Valid under `design: srs` only."""
+
+DESIGN_INTERVALS = frozenset({"design_wilson", "design_korn_graubard"})
+"""Intervals on the design-weighted estimate and its standard error. Valid under
+`design: stratified` only.
+
+**Korn-Graubard, not `design_clopper_pearson`.** The A-5 draft used that name and
+it would have promised the property Clopper-Pearson is chosen for -- coverage at
+or above nominal. Measured, it does not hold it: worst conditional coverage
+**0.74720** against a nominal 0.90. **A-6** renamed it before it shipped.
+"""
+
+SUPPORTED_INTERVALS = BINOMIAL_INTERVALS | DESIGN_INTERVALS
+
+INTERVALS_FOR_DESIGN = {"srs": BINOMIAL_INTERVALS, "stratified": DESIGN_INTERVALS}
+"""**Q15 / A-6: which names are valid depends on the design.**
+
+A binomial interval and a design-based one are intervals for **different
+quantities** -- under stratification the pooled `k/n` is not even the design
+estimate, `0.020000` against `0.011333` on the `rare` fixture. One word meaning
+two arithmetics is a trap the reader of a published plan cannot see, and the plan
+is hashed and published.
+"""
 SUPPORTED_ROUNDING = frozenset({"largest_remainder"})
 """Mirrors `stratified.Rounding`, asserted equal by
 `test_the_plan_vocabulary_matches_the_rounding_enum`. Two lists that must
@@ -480,6 +503,35 @@ class Plan:
                 "95% Wilson interval covers as little as 90.98% of the time there, "
                 "and a 90% one as little as 85.32%, while Clopper-Pearson holds at "
                 "or above its nominal level.",
+            )
+
+        # Q15 / A-6, placed AFTER the rounding and strata checks on purpose.
+        # `test_a_stratified_plan_without_a_rounding_rule_refuses_first` pins
+        # that order as D-30 condition 1's, and a new check does not get to
+        # re-order a documented decision by arriving later.
+        #
+        # The refusal teaches rather than just refusing: an operator
+        # who wrote `interval: wilson` under a stratified design needs to know
+        # what the design-based word is AND why the binomial one does not apply.
+        allowed = INTERVALS_FOR_DESIGN.get(design, SUPPORTED_INTERVALS)
+        if interval not in allowed:
+            other = "binomial" if interval in BINOMIAL_INTERVALS else "design-based"
+            wanted = "design-based" if design == "stratified" else "binomial"
+            raise Refusal(
+                Reason.PLAN_INVALID,
+                f"This plan pre-registers `interval: {interval}`, which is a "
+                f"{other} interval, under `design: {design}`, which needs a "
+                f"{wanted} one. They are not two spellings of one thing: a "
+                f"binomial interval is built on the sampled counts `(k, n)`, and "
+                f"a stratified estimate is design-weighted, so they are intervals "
+                f"for different quantities. On this project's own `rare` fixture "
+                f"the pooled count gives 0.020000 where the design estimate is "
+                f"0.011333 -- an interval around one is not an interval for the "
+                f"other.",
+                f"Use one of: {', '.join(sorted(allowed))}. The names differ "
+                f"because the plan is hashed and published, and a reader who sees "
+                f"`interval: wilson` on a published number without also reading "
+                f"`design` would assume the binomial one.",
             )
 
         # F-3: sample_size is in REQUIRED, so its absence is a missing field rather

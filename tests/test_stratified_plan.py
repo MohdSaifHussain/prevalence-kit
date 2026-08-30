@@ -28,7 +28,12 @@ import yaml
 
 from prevalence_kit.errors import Reason, Refusal
 from prevalence_kit.estimators import wilson
-from prevalence_kit.plan import SUPPORTED_INTERVALS, Plan
+from prevalence_kit.plan import (
+    BINOMIAL_INTERVALS,
+    DESIGN_INTERVALS,
+    SUPPORTED_INTERVALS,
+    Plan,
+)
 from prevalence_kit.run import (
     INTERVAL_METHOD,
     Workspace,
@@ -56,7 +61,9 @@ def stratified_plan(**over: Any) -> dict[str, Any]:
         "population": "frame.csv",
         "design": "stratified",
         "sample_size": 300,
-        "interval": "clopper_pearson",
+        # Q15 / A-6: a stratified design takes a DESIGN interval name. The
+        # binomial words are refused here, which is the whole point of the split.
+        "interval": "design_korn_graubard",
         "allocation_rounding": "largest_remainder",
         "strata": [dict(s) for s in STRATA],
     }
@@ -96,9 +103,13 @@ def frame_csv(tmp_path: Path) -> Path:
 # ------------------------------------------------------- F-10: the plan's method
 
 
-@pytest.mark.parametrize("method", sorted(SUPPORTED_INTERVALS))
+@pytest.mark.parametrize("method", sorted(BINOMIAL_INTERVALS))
 def test_the_estimator_uses_the_interval_the_plan_names(method: str) -> None:
-    """F-10, the positive control, once per supported method.
+    """F-10, the positive control, once per method valid under `design: srs`.
+
+    Q15 / A-6 split the vocabulary by design, so this walks the BINOMIAL pair --
+    the design names are refused under `srs` and are covered in
+    `tests/test_design_intervals.py`.
 
     The bug this closes: `plan.interval` reached the hash and nothing read it.
     """
@@ -131,19 +142,31 @@ def test_a_clopper_pearson_plan_does_not_return_wilson() -> None:
 def test_every_supported_interval_stamps_the_method_the_map_claims() -> None:
     """`INTERVAL_METHOD` is checked against behaviour, not against a second copy.
 
-    The plan says `clopper_pearson`; the estimator stamps `clopper-pearson`. Two
-    vocabularies that must agree, so something makes them agree -- D-28. Comparing
-    them directly fired a false `ESTIMATE_METHOD_MISMATCH` on every correct
-    Clopper-Pearson run, and it was found by running the dispatch rather than by
-    reading it.
+    **Walks each design's own vocabulary**, because Q15 / A-6 made the valid names
+    depend on the design: a design name under `srs` is refused at load, so a flat
+    walk over `SUPPORTED_INTERVALS` would test a plan that cannot exist.
+
+    The map's completeness is still checked in both directions, which is what
+    caught `design_korn_graubard` missing from it -- `verify` raised a KeyError on
+    a correct run, one commit after the estimator landed.
     """
+    from prevalence_kit.plan import INTERVALS_FOR_DESIGN
+
     assert set(INTERVAL_METHOD) == set(SUPPORTED_INTERVALS), (
         "a supported interval has no entry in INTERVAL_METHOD, so verify's "
         "cross-check would skip it silently"
     )
-    for name in sorted(SUPPORTED_INTERVALS):
+    for name in sorted(BINOMIAL_INTERVALS):
         plan = Plan.from_mapping(PLAN_YAML | {"interval": name})
         assert _interval_for(plan, 9, 40).method == INTERVAL_METHOD[name]
+
+    # The design half, through the estimator that actually builds them.
+    from prevalence_kit.estimators import design_korn_graubard, design_wilson
+
+    builders = {"design_wilson": design_wilson, "design_korn_graubard": design_korn_graubard}
+    for name in sorted(DESIGN_INTERVALS):
+        assert builders[name](0.1, 0.02, 100, 150).method == INTERVAL_METHOD[name]
+    assert set(INTERVALS_FOR_DESIGN) == {"srs", "stratified"}
 
 
 def test_verify_refuses_when_the_estimate_method_contradicts_the_plan(
@@ -456,22 +479,30 @@ def test_a_declared_stratum_with_no_frame_units_is_refused(tmp_path: Path, frame
     assert "ghost" in caught.value.detail
 
 
-def test_a_stratified_run_refuses_to_estimate_by_name(tmp_path: Path, frame_csv: Path) -> None:
-    """The hazard this deliverable exists to close.
+def test_a_stratified_run_now_estimates(tmp_path: Path, frame_csv: Path) -> None:
+    """**O-26 discharged, and this test used to assert the opposite.**
 
-    Without this, `_estimate_from` answers a stratified draw with SRS Wilson: a
-    number that looks fine and is not the design. O-26 builds the interval, under
-    Q7 -- the plan names the method.
+    It was `test_a_stratified_run_refuses_to_estimate_by_name`, pinning
+    `DESIGN_NOT_ESTIMABLE` -- the honest placeholder while the stratified path
+    drew but could not estimate. The interval exists now, so the refusal it
+    pinned would be wrong, and the test asserts what replaced it.
+
+    Kept rather than deleted, with its history, because a test that changes
+    meaning should say so.
     """
+    from prevalence_kit.run import StratifiedDraw, _estimate_from
+
     plan = load_plan(tmp_path, stratified_plan())
     ws = Workspace(tmp_path / "run")
     do_plan(ws, plan)
     drawn = do_sample(ws, plan, frame_csv)
 
-    with pytest.raises(Refusal) as caught:
-        _estimate_from(plan, dict.fromkeys(drawn, "0.0"))
-    assert caught.value.reason is Reason.DESIGN_NOT_ESTIMABLE
-    assert "O-26" in caught.value.fix
+    labels = {item: ("0.9" if i % 20 == 0 else "0.1") for i, item in enumerate(drawn)}
+    got = _estimate_from(plan, labels, StratifiedDraw.from_workspace(ws))
+
+    assert got.method == "design-korn-graubard"
+    assert 0.0 < float(got.point) < 1.0
+    assert float(got.low) <= float(got.point) <= float(got.high)
 
 
 def test_an_srs_run_still_estimates(plan: Plan) -> None:

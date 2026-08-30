@@ -178,6 +178,7 @@ Each gets a distinct code, both controls, and a message that says what to do.
 | `PLAN_SEAL_MISSING` ▸ **AMENDED** *(**Q8** / D-35, 2026-08-29)* | The **sealed copy** of the plan is absent from the run. **Artifact: the run directory.** Remedy: restore the run. This is what protects **D-15 check (a)**, the check that makes R5 provable rather than aspirational |
 | ~~`PLAN_MISSING`~~ **SUPERSEDED** *(2026-08-29, **Q8** / D-35)* | Phase 1's single code for both situations above. **It had no control at either raise site** — C-27 — and D-22 says two artifacts means two codes. An operator who mistyped a path got a message telling them to restore their run directory: **worse than an undifferentiated refusal, because it sends them to the wrong artifact with confidence.** `docs/contracts/PHASE-1-CONTRACT.md` §4 still names it and **is not edited** — a contract is a dated document. `check_codes` reads the supersession from this row |
 | `STRATUM_UNDECLARED` *(new, 2026-08-30, **Q14 / D-40**)* | A frame unit is in a stratum the plan does not declare. **S-1.13** makes strata *mutually exclusive* and covering, so these units cannot be dropped: the frame is the denominator, and dropping them changes it silently -- **V-7's class**. **A `.txt` frame under `design: stratified` lands here too**: it carries no `stratum` column, so every unit is undeclared. Same artifact to open, same remedial act, direction carried in the detail text -- **D-22**, on `PLAN_THRESHOLD_INVALID`'s precedent. Its converse is `STRATUM_EMPTY`, and the pair is complete: a declared stratum with no units, and a unit in an undeclared stratum |
+| `INTERVAL_UNDEFINED` *(new, 2026-08-30, **O-26**)* | Every sampled unit in every stratum carries the same label, so the design standard error is **zero**, `n_eff` is undefined and there is nothing to invert. **At rare rates this is the most likely single outcome, not an edge case**: 87.8% of samples at the `two_stratum` fixture with p = 0.001, 74.1% at `rare`. Distinct from `DESIGN_NOT_ESTIMABLE`, which is about a design this version cannot estimate at all; this one is about a *sample* that carries no spread. **`sample` predicts the odds in closed form before the label budget is spent** -- the product over strata of `(1 - p_h)` to the `n_h` -- so an operator meets the number before paying rather than after |
 | `EVIDENCE_NOT_PREREGISTERED` *(new, 2026-08-30, **F-11**)* | The frame or labels file supplied is not the one the plan pre-registers. **The most serious defect found in this project.** `plan.population` was read only by the report, to print it; `plan.labels` was read by nothing at all — so a run could be drawn from a file the plan does not name, `verify` reported nine checks and exit 0, and **the report printed the pre-registered filename beside a number computed from a different file.** **V-1 defeated pre-registration of the plan; this defeated pre-registration of the evidence.** Refused at `sample` and at `ingest-labels`, before the label budget — Q2's reason. **Resolved paths, never strings**, with the plan's value resolved against the plan file's directory. One code under `PLAN_THRESHOLD_INVALID`'s precedent: both mismatches send the operator to a line in the plan and the command they typed |
 | `ESTIMATE_METHOD_MISMATCH` *(new, 2026-08-30, **F-10**)* | `estimate.json` records a method that is not the one the hashed plan pre-registered. **Two artifacts in one run directory contradicting each other, with nothing comparing them.** This is F-10's **durable** half: dispatching `_estimate_from` on `plan.interval` makes them agree today, and **this comparison does not depend on the dispatch being right** -- it catches the next plan field that goes inert the same way. Raised in `verify`, before the recomputation, because recomputing runs through the same function and therefore reproduces the same wrong method |
 | `DESIGN_NOT_ESTIMABLE` *(new, 2026-08-30)* | The plan's design draws correctly but cannot yet be estimated. Today that is `stratified`: `stratified_estimate` returns a standard error and no interval, and building one is **O-26** under **Q7**. **Refusing is the point.** The alternative is `_estimate_from` answering a stratified draw with SRS Wilson -- a number that looks fine, ignores the strata, and contradicts the design its own plan pre-registered. **A half-wired path that produces a number is worse than a refusal** |
@@ -213,7 +214,7 @@ was wrong in the other.
 `CORRECTION_UNDEFINED` and `CORRECTION_OUT_OF_RANGE`, and D-22's test decides them -- the first sends
 the operator to the Se/Sp pair, the second to the relationship between the plan and the sample.
 
-**37 reason codes in total**, across Phase 1's 23 and this phase's 14. Counted from `Reason` by
+**38 reason codes in total**, across Phase 1's 23 and this phase's 15. Counted from `Reason` by
 `tools/check_claims.py`, not maintained by hand -- the figure moved from the Phase 1 contract to here
 when Phase 2 added codes and the checker went on reading the closed phase's number.
 
@@ -887,7 +888,7 @@ only the two words with no mention of design-dependence. Drafted below as **A-5*
 
 ---
 
-## A-5 - DRAFT for the director's ruling. Not applied.
+## A-5 - APPLIED to the ratified charter, 2026-08-30. Ruled as drafted.
 
 **What it changes.** Charter §4's `estimate` verb row, which since **A-4** reads:
 
@@ -1020,6 +1021,75 @@ of the variance**. At `n = 40`, 9 positives: both give `0.225`, but the stratifi
 normal approximation the builder put on that SE to show the bases differ — and **no such interval
 is shipped**. What is proven is that the two paths compute different quantities. **O-26** and
 **O-27** carry the builder and the disclosure.
+
+## A-6 - DRAFT for the director's ruling. Not applied.
+
+**What it changes.** Charter §4's `estimate` row, amended yesterday as **A-5**, and §8's honest
+limits.
+
+**Why it must change, one day after A-5.** A-5 named **four** interval words, two of them
+`design_wilson` and `design_clopper_pearson`. **The director required the second name's property
+to be measured before it shipped**, and it does not hold: `design_clopper_pearson` would have
+promised coverage at or above nominal, which is the only reason `clopper_pearson` is worth having,
+and the measurement says **0.74720 against a nominal 0.90**. The construction is Korn-Graubard's
+and the name now says so.
+
+*A-5 was ruled and the fourth word was wrong. That is what measuring before shipping is for, and
+it is cheaper to amend a charter twice than to ship a name that lies.*
+
+### Draft replacement for §4's `estimate` row
+
+> Same as A-5, with one word changed and one clause added:
+>
+> …under `design: stratified`, `interval: design_wilson` or
+> `interval: **design_korn_graubard**`, both built on the design-weighted estimate and its
+> standard error. **Neither holds its nominal level at rare rates** -- §8 carries the measured
+> figures -- and where the design standard error is zero there is **no interval at all**, which
+> `sample` predicts before any labelling is paid for. …
+
+### Draft addition to §8, honest limits
+
+> **The stratified intervals do not hold their nominal level, and at rare rates the gap is
+> large.** Measured by exhaustive enumeration over the full product space of per-stratum outcomes,
+> retained mass ≥ 1 − 1e-12, on four design structures × eight true rates × three nominal levels
+> = **96 points**. Coverage is stated **conditional on the interval existing**, because an
+> undefined interval is a different failure and is disclosed separately below.
+>
+> | nominal | `design_wilson` | `design_korn_graubard` |
+> |---|---|---|
+> | 0.90 | **0.0000** at `wide`, p = 0.001 | **0.7472** at `rare`, p = 0.01 |
+> | 0.95 | **0.0000** at `wide`, p = 0.001 | **0.7937** at `rare`, p = 0.01 |
+> | 0.99 | **0.2938** at `two_stratum`, p = 0.001 | **0.8549** at `rare`, p = 0.01 |
+>
+> **These are worst values over a grid, so the true worst is at most this and may be lower** --
+> the same reading as the binomial table, and the same reason the figures are rounded **down**
+> rather than to nearest. **It is not a boundary artifact**: at `rare`, p = 0.02, where the
+> interval exists 99.8% of the time, asking for **99% gets 91.5%** and asking for 95% gets 90.0%.
+>
+> **Korn-Graubard is the better of the two and still does not hold**: closer to nominal at every
+> level and at **32 of 32** points at nominal 0.95, and below nominal at 7 of 32 there. Wilson is
+> below at 21 of 32. **Neither is Clopper-Pearson**, whose guarantee is a property of the exact
+> binomial construction that an approximation on an effective sample size inherits nothing from.
+>
+> **And the interval is often not there at all.** When every sampled unit comes back negative the
+> design standard error is zero and no interval exists: **87.8%** of samples at `two_stratum` with
+> p = 0.001, **74.1%** at `rare`. **`sample` computes this in closed form and says it before the
+> label budget is spent** — the product over strata of `(1 − p_h)` to the `n_h`, from the plan's
+> own `expected_rate` and the allocation.
+
+### What the director should weigh
+
+**Three names, not four.** `wilson` and `clopper_pearson` under `srs`; `design_wilson` and
+`design_korn_graubard` under `stratified`. The fourth word A-5 named does not exist.
+
+**The limits are longer than A-4's and the reason is that the news is worse.** A-4 disclosed one
+interval falling to 90.98%. This discloses two intervals, neither holding, plus a second failure
+mode the binomial case never had.
+
+**It does not recommend one**, which is A-4's reasoning held -- even though Korn-Graubard is
+measurably better. Naming a recommendation would recreate the default the plan exists to remove.
+
+---
 
 ## Approval
 

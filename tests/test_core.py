@@ -112,7 +112,12 @@ def test_a_stratified_plan_with_no_strata_block_is_refused() -> None:
     """
     with pytest.raises(Refusal) as exc:
         Plan.from_mapping(
-            PLAN_YAML | {"design": "stratified", "allocation_rounding": "largest_remainder"}
+            PLAN_YAML
+            | {
+                "design": "stratified",
+                "allocation_rounding": "largest_remainder",
+                "interval": "design_korn_graubard",
+            }
         )
 
     assert exc.value.reason is Reason.STRATA_UNDEFINED

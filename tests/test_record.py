@@ -105,16 +105,55 @@ def test_svy_wilson_is_not_the_textbook_interval() -> None:
     adds it as a witness for Wilson, this docstring is where they should look
     first.
     """
+    import ast
+
     from prevalence_kit import estimators
 
-    # Ours: n and z, per Brown, Cai & DasGupta (2001).
     source = Path(estimators.__file__).read_text(encoding="utf-8")
-    assert "NormalDist().inv_cdf" in source
-    assert "n_eff" not in source
-    assert "t_crit" not in source
 
-    # And the anchor is named where a reader will find it.
-    assert "10.1214/ss/1009213286" in source
+    # Ours: n and z, per Brown, Cai & DasGupta (2001).
+    assert "NormalDist().inv_cdf" in source
+    assert "10.1214/ss/1009213286" in source, "the anchor is not where a reader looks"
+
+    # **Narrowed 2026-08-30, and the narrowing is the same shape as S-2.4's.**
+    # This used to assert `n_eff` appeared NOWHERE in the file, which was a
+    # structural claim while the file held only binomial estimators. O-26 added
+    # the design intervals, which are BUILT on an effective sample size, so the
+    # file-level absence is gone.
+    #
+    # The claim it was making is still true and is now checked where it lives:
+    # the BINOMIAL `wilson` does not use an effective sample size, asserted by
+    # walking its call graph rather than by scanning the file.
+    tree = ast.parse(source)
+    defined = {n.name: n for n in tree.body if isinstance(n, ast.FunctionDef)}
+    reachable: set[str] = set()
+    stack = ["wilson"]
+    while stack:
+        name = stack.pop()
+        if name in reachable or name not in defined:
+            continue
+        reachable.add(name)
+        for node in ast.walk(defined[name]):
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+                stack.append(node.func.id)
+
+    assert "effective_n" not in reachable, (
+        "the binomial Wilson now reaches an effective sample size, so it is no "
+        "longer a different estimator from svy's -- D-18's evidence would need "
+        "re-reading"
+    )
+    # The control: the DESIGN Wilson does reach it, so this can tell them apart.
+    design_reachable: set[str] = set()
+    stack = ["design_wilson"]
+    while stack:
+        name = stack.pop()
+        if name in design_reachable or name not in defined:
+            continue
+        design_reachable.add(name)
+        for node in ast.walk(defined[name]):
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+                stack.append(node.func.id)
+    assert "effective_n" in design_reachable
 
 
 # ------------------------------------------------- plain ASCII, operator-facing

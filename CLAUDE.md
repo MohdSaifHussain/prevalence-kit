@@ -215,7 +215,7 @@ confirms we implement the method as its author does. It does not independently c
 **Phase 0** ratified. **Phase 1** closed at `d66d225`. **Phase 2 is in build**, **Q1–Q15 ruled**,
 **A-1 … A-4** applied to the charter.
 
-**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **694 tests**, seven gate
+**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **705 tests**, seven gate
 checks green. **CI last ran green at 608** on the 3.12 / 3.13 / 3.14 matrix, four jobs, run
 `33269147849`, head `d096da0`. Local and CI figures are stated apart on purpose.
 

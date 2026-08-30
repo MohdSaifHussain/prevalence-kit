@@ -22,10 +22,10 @@ who writes the entries. The director raised that one himself and asked for it to
 | Research report (passed through unverified) | 0 | 2 | **2** |
 | Stale-at-draft-time, queued but built on anyway | **1** | 0 | **1** |
 | **Builder (Claude Code)** | **0** | **33** | **33** |
-| Reviewer instrument | 0 | **2** | **3** (1 noted) |
+| Reviewer instrument | **1** | **2** | **4** (1 noted) |
 | **Director** | 0 | **1** | **1** |
 | Tool artifact (noted, not a defect) | - | - | **1** (noted) |
-| **Total** | **1** | **41** | **44** |
+| **Total** | **2** | **41** | **45** |
 
 **Derived, and now checked — 2026-08-30.** Every figure above is computed from the entry blocks in
 this file rather than incremented as rows arrived. An earlier version said 36 open and 3
@@ -1265,6 +1265,36 @@ V-16's documented-versus-executed gate and `SUPPORTED_ROUNDING` versus `Rounding
 the same answer: **something has to make them agree.** Both sections are written now, and the
 reconciliation is folded into **D2.14** -- every `Q-n` a decision claims must have a section
 in the contract that opened it.
+
+---
+
+## C-42 - A conclusion about a text from an incomplete reading of it
+
+| | |
+|---|---|
+| **Claimed** | Director's review of the A-5 draft, 2026-08-30: the replacement *"silently drops two clauses from the ratified text"* -- A-4's Rogan-Gladen promise and its general refusal principle -- and *"one of them is the correction you just built"* |
+| **Actually** | **Both were always there**, as the draft's last two sentences. A new sentence had been inserted **before** them, which is what makes the paragraph read as though it ends at the vocabulary. In the director's own words: *"I read 875,910p and concluded about text at 916"* |
+| **Direction** | Against a draft that had nothing wrong with it, and toward more work rather than less -- the instruction was to restore what was already present |
+| **Source** | **Reviewer instrument.** Attributed as the director gave it |
+| **Caught by** | The builder, checking the artifact before acting on the finding. The director then re-read and withdrew it |
+| **Severity** | **Low in effect** -- nothing was changed on the strength of it, because the check came first. Notable in kind |
+| **Replaced by** | Nothing to replace in the draft. **The half of the instruction that was right was applied**: A-4 said *"when sensitivity and specificity are supplied"* and left the mechanism to inference, and the row now states the commitment -- hashed plan fields, both or neither, validated at load |
+| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+
+**Second instance of one shape, and the director named it as such: concluding about an artifact
+from an incomplete reading of it.** The first was **C-26**, where a summarising fetch dropped a
+character and produced a finding about a spelling that was correct. Both were about **what a
+document says**, and in both the remedy was the same -- **go back to the artifact and read the
+part the conclusion is about.**
+
+**The rule this project already had is what caught it.** *When the director pushes back, treat
+it as a review finding: check, do not defend.* The check was cheap -- two `grep`s -- and it ran
+before anything was edited, which is the only reason this entry says "nothing was changed on
+the strength of it".
+
+**And the finding was still worth having.** The half that survived is the stronger half of the
+row. A reviewer wrong about one clause and right about another is the ordinary case, and
+treating the whole finding as void because part of it failed would be its own error.
 
 ---
 

@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import csv
 import json
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -32,6 +32,9 @@ from .estimators import (
     CorrectedInterval,
     Interval,
     clopper_pearson,
+    design_korn_graubard,
+    design_wilson,
+    probability_no_interval,
     rogan_gladen_interval,
     wilson,
 )
@@ -44,7 +47,7 @@ from .sampling import (
     stratified_sample_record,
 )
 from .seal import Manifest, SealedStore
-from .stratified import Rounding, Stratum, allocate
+from .stratified import Rounding, Stratum, allocate, stratified_estimate
 
 PLAN_ITEM = "__plan__"
 
@@ -295,14 +298,32 @@ def do_ingest(ws: Workspace, plan: Plan, labels_path: Path) -> dict[str, str]:
 
 def do_estimate(ws: Workspace, plan: Plan) -> Interval | CorrectedInterval:
     labels: dict[str, str] = ws.read_json("labels.json")
-    interval = _estimate_from(plan, labels)
+    draw = StratifiedDraw.from_workspace(ws) if plan.design == "stratified" else None
+    interval = _estimate_from(plan, labels, draw)
     estimate_digest = ws.write_json("estimate.json", interval.as_record())
     ws.ledger.append("estimate", {"estimate_digest": estimate_digest, "method": interval.method})
     return interval
 
 
-def _estimate_from(plan: Plan, labels: dict[str, str]) -> Interval | CorrectedInterval:
-    _refuse_unestimable_design(plan)
+def _estimate_from(
+    plan: Plan,
+    labels: dict[str, str],
+    design: StratifiedDraw | None = None,
+) -> Interval | CorrectedInterval:
+    """The estimate this plan pre-registered.
+
+    `design` is the recorded draw -- frame sizes and drawn ids per stratum -- and
+    it is **required for a stratified design**: the design estimate is a weighted
+    mean of per-stratum rates, and a flat label dict cannot say which unit sat
+    where.
+
+    **Both callers read it from the same recorded files.** `do_estimate` and
+    `verify` build it identically, so the writer's path and the auditor's path
+    cannot diverge -- which is F-10's lesson, where they shared a function and
+    therefore shared its defect.
+    """
+    if plan.design == "stratified":
+        return _stratified_interval(plan, labels, design)
     positives = 0
     for item_id, raw in labels.items():
         try:
@@ -330,6 +351,80 @@ def _estimate_from(plan: Plan, labels: dict[str, str]) -> Interval | CorrectedIn
             interval_method=plan.interval,
         )
     return _interval_for(plan, positives, len(labels))
+
+
+@dataclass(frozen=True, slots=True)
+class StratifiedDraw:
+    """What a stratified estimate needs from the record, and nothing more.
+
+    `frame_sizes` gives `M_h` -- unique frame units per stratum, D-21's rule --
+    and `drawn` gives the sampled ids. Both come from files `verify` digest-checks.
+    """
+
+    frame_sizes: Mapping[str, int]
+    drawn: Mapping[str, Sequence[str]]
+
+    @classmethod
+    def from_workspace(cls, ws: Workspace) -> StratifiedDraw:
+        """Read it from the recorded run, the one way, for both callers."""
+        frame = ws.read_json("frame.json")
+        sample = ws.read_json("sample.json")
+        sizes = {str(k): len(cast("list[str]", v)) for k, v in frame.items()}
+        by_stratum = cast("dict[str, list[str]]", sample["by_stratum"])
+        return cls(frame_sizes=sizes, drawn={str(k): v for k, v in by_stratum.items()})
+
+
+def _stratified_interval(
+    plan: Plan, labels: dict[str, str], design: StratifiedDraw | None
+) -> Interval:
+    """O-26. The design-based interval, built on the interval the plan named.
+
+    **The plan names it and there is no default** -- Q7's reasoning.
+    `INTERVALS_FOR_DESIGN` has already refused any binomial name at load, so by
+    this point the plan and the estimator agree by construction rather than by
+    care.
+
+    **Its coverage is disclosed rather than assumed.** Neither design interval
+    holds its nominal level at rare rates -- charter section 8 carries the
+    measured figures -- and the estimator refuses `INTERVAL_UNDEFINED` rather
+    than inventing one when the design standard error is zero.
+    """
+    if design is None:
+        raise Refusal(
+            Reason.DESIGN_NOT_ESTIMABLE,
+            "This plan uses design: stratified, but the recorded per-stratum draw "
+            "was not supplied, so the design-weighted estimate cannot be formed.",
+            "Estimate from a run directory so the recorded sample can be read. A "
+            "Python API caller passes `StratifiedDraw.from_workspace(ws)`.",
+        )
+
+    names = sorted(design.drawn)
+    total = sum(design.frame_sizes[name] for name in names)
+    weights: list[float] = []
+    positives: list[int] = []
+    sampled: list[int] = []
+    for name in names:
+        count = 0
+        drawn = list(design.drawn[name])
+        for item in drawn:
+            try:
+                count += 1 if plan.estimand.is_positive(labels[item]) else 0
+            except Refusal as exc:
+                raise Refusal(exc.reason, f"Item {item}: {exc.detail}", exc.fix) from exc
+        positives.append(count)
+        sampled.append(len(drawn))
+        weights.append(design.frame_sizes[name] / total)
+
+    estimate = stratified_estimate(
+        weights=tuple(weights), positives=tuple(positives), sampled=tuple(sampled)
+    )
+    builder = design_wilson if plan.interval == "design_wilson" else design_korn_graubard
+    return builder(
+        estimate.point,
+        estimate.standard_error,
+        estimate.degrees_of_freedom,
+        sum(sampled),
+    )
 
 
 def _refuse_unestimable_design(plan: Plan) -> None:
@@ -368,6 +463,8 @@ def _refuse_unestimable_design(plan: Plan) -> None:
 INTERVAL_METHOD = {
     "wilson": "wilson",
     "clopper_pearson": "clopper-pearson",
+    "design_wilson": "design-wilson",
+    "design_korn_graubard": "design-korn-graubard",
 }
 """Plan vocabulary -> the `method` string the estimator stamps on its result.
 
@@ -502,6 +599,27 @@ def _sample_stratified(ws: Workspace, plan: Plan, frame_path: Path) -> tuple[str
                 "Raise sample_size, or merge this stratum into a neighbour.",
             )
 
+    # The director's addition: predict whether this design will produce an
+    # interval AT ALL, before the label budget is spent.
+    #
+    # Closed form -- the product over strata of (1 - p_h) ** n_h -- so no
+    # simulation and no data beyond what the plan and the allocation already
+    # carry. At rare rates this is not an edge case: 87.8% of samples at the
+    # `two_stratum` fixture with p = 0.001 come back all-negative, and a design
+    # standard error of zero has no interval to invert.
+    #
+    # It is computed at `sample` rather than at `plan` because the allocation
+    # needs the frame sizes, and `plan` touches no data. That is still before
+    # any labelling is paid for, which is Q2's reason.
+    #
+    # `expected_rate` was added for Neyman allocation and documented as a prior
+    # that costs efficiency and never validity. It turns out to also predict
+    # whether the run yields an interval -- a field justified for one purpose
+    # earning a second.
+    blank_odds = probability_no_interval(
+        [declared[name].rate for name in allocation.strata], allocation.units
+    )
+
     total_rows = seen_rows
     total_unique = sum(len(ids) for ids in unique.values())
     frame_digest = ws.write_json("frame.json", {name: unique[name] for name in sorted(unique)})
@@ -521,6 +639,9 @@ def _sample_stratified(ws: Workspace, plan: Plan, frame_path: Path) -> tuple[str
             "n": len(drawn_ids),
             "design": "stratified",
             "strata": len(strata),
+            # Recorded, not only printed: an auditor reading the run later can
+            # see what the design's odds were before the labels were collected.
+            "probability_no_interval": f"{blank_odds:.12f}",
             "population_declared": plan.population,
             "population_used": str(frame_path),
         },

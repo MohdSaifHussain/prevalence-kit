@@ -107,6 +107,29 @@ def sample(plan_path: Path, frame_path: Path, run_dir: Path) -> None:
     measurement = Plan.load(plan_path)
     drawn = do_sample(Workspace(run_dir), measurement, frame_path)
     click.echo(f"drew {len(drawn)} items from {frame_path}")
+
+    # The design's odds of producing NO interval, said out loud before the label
+    # budget is spent. Q2's reason, and the same shape as
+    # CORRECTION_OUT_OF_RANGE: name the number that has to change, not just the
+    # fact that something is wrong.
+    #
+    # STATED, not refused, pending the director's ruling: an operator may
+    # legitimately want the point estimate knowing the interval is unlikely, and
+    # that is a judgment about how the tool is used rather than about arithmetic.
+    body = Workspace(run_dir).ledger.verify()[-1].body
+    odds = body.get("probability_no_interval")
+    if odds is not None and float(str(odds)) >= 0.05:
+        percent = float(str(odds)) * 100.0
+        click.echo("")
+        click.echo(
+            f"  NOTE: this design has a {percent:.1f}% chance of producing NO INTERVAL at all."
+        )
+        click.echo("  At the rates your plan declares, that share of samples this size come back")
+        click.echo("  entirely negative. The design standard error is then zero and there is no")
+        click.echo("  spread to build an interval from -- you would get a point estimate and a")
+        click.echo("  refusal, after paying for the labels.")
+        click.echo("  To lower it: raise sample_size, or raise the expected_rate of the stratum")
+        click.echo("  carrying most of the sample, if the plan's rates are pessimistic.")
     click.echo(f"first three: {', '.join(drawn[:3])}")
 
 

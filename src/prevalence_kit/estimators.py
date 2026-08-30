@@ -18,7 +18,7 @@ which Hard Rule 1 cares about.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from math import exp, fsum, isfinite, lgamma, log, log1p, sqrt
 from statistics import NormalDist
@@ -750,3 +750,252 @@ def rogan_gladen_interval(
         n=n,
         positives=positives,
     )
+
+
+# ===================================================================== design
+#
+# **Design-based intervals. A separate family, and the separation is the point.**
+#
+# A binomial interval inverts a distribution over `(k, n)` -- the count observed
+# out of the units drawn. A design-based interval replaces `n` with `n_eff`, the
+# sample size a simple random sample would have needed to reach this design's
+# precision. Under stratification the pooled `k/n` is not even the design
+# estimate -- 0.020000 against 0.011333 on the `rare` fixture -- so these are
+# intervals for **different quantities** and Q15 gave them different names.
+#
+# **THE INCOMPLETE BETA LIVES HERE AND NOWHERE ELSE.**
+#
+# `docs/STANDARDS.md` S-2.4 used to say there was no incomplete beta anywhere in
+# this package, which made D2.4's independence from base R's `qbeta` structural
+# rather than careful. That sentence was true and is now narrower: the beta is
+# below, the **binomial** Clopper-Pearson still root-finds on the tail and cannot
+# reach it, and `test_the_binomial_path_cannot_reach_the_incomplete_beta`
+# asserts that statically. Structure replaced, not removed -- the director's
+# condition on the narrowing.
+#
+# It is written rather than imported, so the comparison against `svy` on this
+# path is also two independent implementations. Agreement: 2.6e-14.
+
+
+def _betacf(a: float, b: float, x: float) -> float:
+    """Continued fraction for the incomplete beta. Lentz's algorithm."""
+    tiny = 1e-300
+    qab, qap, qam = a + b, a + 1.0, a - 1.0
+    c = 1.0
+    d = 1.0 - qab * x / qap
+    if abs(d) < tiny:
+        d = tiny
+    d = 1.0 / d
+    h = d
+    for m in range(1, 300):
+        m2 = 2 * m
+        step = m * (b - m) * x / ((qam + m2) * (a + m2))
+        d = 1.0 + step * d
+        if abs(d) < tiny:
+            d = tiny
+        c = 1.0 + step / c
+        if abs(c) < tiny:
+            c = tiny
+        d = 1.0 / d
+        h *= d * c
+        step = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2))
+        d = 1.0 + step * d
+        if abs(d) < tiny:
+            d = tiny
+        c = 1.0 + step / c
+        if abs(c) < tiny:
+            c = tiny
+        d = 1.0 / d
+        delta = d * c
+        h *= delta
+        if abs(delta - 1.0) < 1e-15:
+            break
+    return h
+
+
+def regularised_beta(a: float, b: float, x: float) -> float:
+    """`I_x(a, b)`. The only incomplete beta in this package -- S-2.4."""
+    if x <= 0.0:
+        return 0.0
+    if x >= 1.0:
+        return 1.0
+    front = exp(lgamma(a + b) - lgamma(a) - lgamma(b) + a * log(x) + b * log1p(-x))
+    if x < (a + 1.0) / (a + b + 2.0):
+        return front * _betacf(a, b, x) / a
+    return 1.0 - front * _betacf(b, a, 1.0 - x) / b
+
+
+def _beta_quantile(q: float, a: float, b: float) -> float:
+    """Inverse of `regularised_beta`, by bisection. Monotone, so bisection is safe."""
+    if q <= 0.0:
+        return 0.0
+    if q >= 1.0:
+        return 1.0
+    low, high = 0.0, 1.0
+    for _ in range(80):
+        mid = (low + high) / 2.0
+        if regularised_beta(a, b, mid) < q:
+            low = mid
+        else:
+            high = mid
+    return (low + high) / 2.0
+
+
+def _t_quantile(q: float, degrees_of_freedom: float) -> float:
+    """Student's t quantile, from the same incomplete beta.
+
+    One primitive serves both intervals: the t distribution's CDF is an
+    incomplete beta, so adding the beta added this rather than a second special
+    function.
+    """
+    if q == 0.5:
+        return 0.0
+    tail = 2.0 * min(q, 1.0 - q)
+    x = _beta_quantile(tail, degrees_of_freedom / 2.0, 0.5)
+    value = sqrt(degrees_of_freedom * (1.0 - x) / x)
+    return value if q > 0.5 else -value
+
+
+def effective_n(
+    point: float, standard_error: float, degrees_of_freedom: int, n: int, confidence: float
+) -> float:
+    """`n_eff`, with Korn-Graubard's degrees-of-freedom adjustment.
+
+        n_eff = p(1 - p) / se^2,  scaled by (t_{n-1} / t_df)^2
+
+    **The adjustment is the part that is easy to miss**, and missing it is what
+    the first implementation did: it agreed with `svy` only to 5e-04, which is
+    inside "looks right" and outside R2.3. Korn & Graubard (1998) eq 2.1 and 2.2.
+
+    `n` is the **nominal** sample size, not `n_eff`. The fixture records it for
+    that reason -- a fixture that omits what the estimator needs is a fixture the
+    estimator fills in from a guess.
+    """
+    if standard_error <= 0.0:
+        raise Refusal(
+            Reason.INTERVAL_UNDEFINED,
+            "Every sampled unit in every stratum carries the same label, so the "
+            "design standard error is zero and there is no spread to build an "
+            "interval from.",
+            "The point estimate stands and the sample sizes stand; the interval "
+            "does not exist for this sample. At rare rates this is the most "
+            "likely single outcome rather than an edge case -- `plan` reports the "
+            "chance of it before any labelling is paid for. Report the point "
+            "estimate and say the interval was undefined.",
+        )
+    n_eff = point * (1.0 - point) / (standard_error * standard_error)
+    if degrees_of_freedom > 0 and n > 1:
+        q = 1.0 - (1.0 - confidence) / 2.0
+        n_eff *= (_t_quantile(q, float(n - 1)) / _t_quantile(q, float(degrees_of_freedom))) ** 2
+    return n_eff
+
+
+def design_wilson(
+    point: float,
+    standard_error: float,
+    degrees_of_freedom: int,
+    n: int,
+    *,
+    confidence: float = 0.95,
+) -> Interval:
+    """Wilson's score interval on the effective sample size, with a t quantile.
+
+    **Witnessed by `svy` 0.25.0 `ci_method="wilson"`**, generated before this
+    function existed -- `svy/fixtures/design_intervals.json`, commit `e04a7aa`.
+    Worst endpoint disagreement **4.2e-14**.
+
+    **Its coverage is poor at rare rates and that is disclosed, not hidden.**
+    Worst conditional coverage measured **0.00000** against a nominal 0.90 at
+    `wide`, p = 0.001. Charter section 8 carries the figures.
+    """
+    _check_confidence(confidence)
+    n_eff = effective_n(point, standard_error, degrees_of_freedom, n, confidence)
+    t = _t_quantile(1.0 - (1.0 - confidence) / 2.0, float(degrees_of_freedom))
+    t2 = t * t
+    denominator = 1.0 + t2 / n_eff
+    centre = (point + t2 / (2.0 * n_eff)) / denominator
+    half = (t / denominator) * sqrt(point * (1.0 - point) / n_eff + t2 / (4.0 * n_eff * n_eff))
+    return Interval(
+        method="design-wilson",
+        point=_fixed(point),
+        low=_fixed(max(0.0, centre - half)),
+        high=_fixed(min(1.0, centre + half)),
+        confidence=_fixed(confidence),
+        n=n,
+        positives=round(point * n),
+    )
+
+
+def design_korn_graubard(
+    point: float,
+    standard_error: float,
+    degrees_of_freedom: int,
+    n: int,
+    *,
+    confidence: float = 0.95,
+) -> Interval:
+    """Korn-Graubard: the Clopper-Pearson construction on an effective sample size.
+
+    **Named for the method and not for Clopper-Pearson, deliberately.** The draft
+    of A-5 called it `design_clopper_pearson`, and the name would have promised
+    the one property Clopper-Pearson is chosen for: coverage at or above nominal.
+    **It does not hold it.** Measured worst conditional coverage **0.74720**
+    against a nominal 0.90 at `rare`, p = 0.01 -- and **0.90033** against 0.95 at
+    `rare`, p = 0.02, where the interval is defined 99.8% of the time, so it is
+    not a boundary artifact. Clopper-Pearson's guarantee is a property of the
+    **exact binomial** construction, and an approximation on `n_eff` inherits
+    nothing from it.
+
+    **It is still the better of the two**, which is why it ships: closer to
+    nominal at every level and at 32 of 32 points at nominal 0.95.
+
+    **Witnessed by `svy` 0.25.0 `ci_method="beta"`**, generated first. Worst
+    endpoint disagreement **2.6e-14**.
+    """
+    _check_confidence(confidence)
+    n_eff = effective_n(point, standard_error, degrees_of_freedom, n, confidence)
+    successes = n_eff * point
+    alpha = 1.0 - confidence
+    low = (
+        0.0 if successes <= 0.0 else _beta_quantile(alpha / 2.0, successes, n_eff - successes + 1.0)
+    )
+    high = (
+        1.0
+        if point >= 1.0
+        else _beta_quantile(1.0 - alpha / 2.0, successes + 1.0, n_eff - successes)
+    )
+    return Interval(
+        method="design-korn-graubard",
+        point=_fixed(point),
+        low=_fixed(max(0.0, low)),
+        high=_fixed(min(1.0, high)),
+        confidence=_fixed(confidence),
+        n=n,
+        positives=round(point * n),
+    )
+
+
+def probability_no_interval(rates: Sequence[float], allocation: Sequence[int]) -> float:
+    """The chance this design produces **no interval at all**, in closed form.
+
+        P = product over strata of (1 - p_h) ** n_h
+
+    Every sampled unit comes back negative, the design standard error is zero,
+    and there is nothing to build an interval from. At rare rates this is not an
+    edge case: **87.8%** at the `two_stratum` fixture with p = 0.001, **74.1%**
+    at `rare`.
+
+    **The plan already carries everything this needs** -- `expected_rate` per
+    stratum and the allocation -- so it is computable **before any data is
+    touched**, which is Q2's reason: tell the operator before the label budget is
+    spent.
+
+    **A field justified for one purpose earning a second.** `expected_rate` was
+    added for Neyman allocation and documented as a prior that costs efficiency
+    and never validity. It turns out to also predict whether the run will produce
+    an interval at all. Recorded because that is worth noticing.
+    """
+    probability = 1.0
+    for rate, drawn in zip(rates, allocation, strict=True):
+        probability *= (1.0 - rate) ** drawn
+    return probability

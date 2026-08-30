@@ -574,10 +574,28 @@ arithmetic:
 | R | inverts an **incomplete beta**, via `qbeta` |
 | prevalence-kit | root-finds on the **binomial tail**, in log space via `lgamma` |
 
-`lgamma` is the log of the *complete* gamma -- a log factorial. **There is no incomplete beta
-function anywhere in this package.** So the failure the director warned about -- checking `betainc`
-against `betainc`, which would look like agreement and mean nothing -- cannot occur here by
-construction rather than by care.
+`lgamma` is the log of the *complete* gamma -- a log factorial. So the failure the director warned
+about -- checking `betainc` against `betainc`, which would look like agreement and mean nothing --
+cannot occur here **by construction rather than by care**.
+
+> **Narrowed 2026-08-30, and the structure is replaced rather than removed.** This sentence used
+> to read *"there is no incomplete beta function anywhere in this package."* **That is no longer
+> true**: the design-based intervals (**O-26**) need one, and it is written in
+> `src/prevalence_kit/estimators.py`.
+>
+> **A guarantee that becomes a habit is not a guarantee**, so the narrowing was allowed only on
+> the director's condition that the structure be replaced. The narrowed claim is:
+>
+> **The binomial `clopper_pearson` root-finds on the tail and *cannot reach* the incomplete
+> beta**, asserted statically by `test_the_binomial_path_cannot_reach_the_incomplete_beta`, which
+> walks its call graph. Same shape as `test_no_ai_module_reaches_the_evidence_path` -- a cage
+> checked rather than a promise in a docstring. The test carries its own control: the **design**
+> path does reach the beta, so it can tell the two apart.
+>
+> **One thing the narrowing gained.** The beta is **written, not imported**, so the design-path
+> comparison against `svy` is *also* two independent implementations -- `svy` calls `scipy`, we
+> call our own. The witness relationship survives on both paths rather than only the binomial one.
+> Agreement: **4.9e-13** across all 30 rows.
 
 **Measured across all 69 cases: n = 1 to n = 1,999,514, k across each, and confidence in
 {0.90, 0.95, 0.99}.** The figures below were first published as 7.1e-11 and 6.9e-09, which were

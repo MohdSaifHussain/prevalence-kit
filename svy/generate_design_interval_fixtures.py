@@ -15,14 +15,14 @@ relative at worst -- so the interval built on top of them can be witnessed.
 
 **The mapping, and the reason each name means what it does.**
 
-    design_wilson           -> svy `wilson`
-    design_clopper_pearson  -> svy `beta`
+    design_wilson         -> svy `wilson`
+    design_korn_graubard  -> svy `beta`
 
 `svy`'s own documentation: `beta` is *"Korn-Graubard CI matching R's
 `survey::svyciprop(method="beta")`. Uses df-adjusted effective sample size (no
 truncation) and the incomplete Beta function (Clopper-Pearson formulation)."*
 That is the Clopper-Pearson construction on a design-based effective `n`, which is
-what `design_clopper_pearson` names.
+what `design_korn_graubard` names.
 
 **Not `korn-graubard`**, which adds NCHS truncation of the effective sample size.
 It is a third construction and this version does not offer it -- deferred by name
@@ -52,7 +52,14 @@ DESIGNS: dict[str, dict[str, tuple[int, int, int]]] = {
 
 CONFIDENCES = [0.90, 0.95, 0.99]
 
-METHODS = {"design_wilson": "wilson", "design_clopper_pearson": "beta"}
+METHODS = {"design_wilson": "wilson", "design_korn_graubard": "beta"}
+"""**Korn-Graubard, not `design_clopper_pearson`, and the rename is a finding.**
+
+The A-5 draft called it `design_clopper_pearson`. That name promises the one
+property Clopper-Pearson is chosen for -- coverage at or above nominal -- and the
+measurement says it does not hold: worst conditional coverage **0.74720** against
+a nominal 0.90. The construction is Korn-Graubard's and the name now says so.
+"""
 
 
 def build(spec: dict[str, tuple[int, int, int]]) -> pl.DataFrame:
@@ -86,9 +93,7 @@ def main(out_path: str) -> None:
         for ours, theirs in METHODS.items():
             rows = []
             for confidence in CONFIDENCES:
-                est = svy.Estimation(sample).prop(
-                    "y", ci_method=theirs, alpha=1 - confidence
-                )
+                est = svy.Estimation(sample).prop("y", ci_method=theirs, alpha=1 - confidence)
                 row = next(r for r in est.to_dicts() if int(r["y_level"]) == 1)
                 rows.append(
                     {
@@ -96,6 +101,14 @@ def main(out_path: str) -> None:
                         "point": float(row["est"]),
                         "se": float(row["se"]),
                         "df": int(row["df"]),
+                        # The NOMINAL sample size, not n_eff. Korn-Graubard's
+                        # eq 2.2 df-adjustment needs it -- n_eff is scaled by
+                        # (t_{n-1} / t_df)^2 -- and the first implementation
+                        # against this fixture missed the adjustment entirely
+                        # and agreed only to 5e-04. A fixture has to carry
+                        # everything the estimator needs, or the estimator
+                        # supplies the missing part from a guess.
+                        "n": int(sum(v[1] for v in spec.values())),
                         "low": float(row["lci"]),
                         "high": float(row["uci"]),
                     }

@@ -115,7 +115,7 @@ breaches it is a deviation to be recorded, not absorbed.
 | `plan` | Read a measurement plan (YAML): the estimand, the population, the sampling design, the label source. **Hash the plan before any data is touched.** This is pre-registration. The plan cannot quietly change after results are seen. |
 | `sample` | Draw the sample per the plan. v1.0: simple random sampling, and stratified with proportional or Neyman allocation. Deterministic under a recorded seed. |
 | `ingest-labels` | Read human labels (CSV/JSONL). Content is **sealed on ingest**: encrypted at rest, shown only as a safe preview (length, digest, harm flags). Every unseal is explicit and logged. |
-| `estimate` ▸ **A-4** | Compute prevalence with a correct interval. **The plan names the method and there is no default** — `interval: wilson` or `interval: clopper_pearson`. **Neither is primary.** The choice is between coverage you can rely on and an interval that is narrower. Clopper-Pearson holds its nominal level; Wilson is tighter and can fall below it. You cannot have both, and the tool will not pick for you. Optional Rogan–Gladen correction when sensitivity and specificity are supplied. **Refuse with a named reason** rather than print a silently wrong number. |
+| `estimate` ▸ **A-5** | Compute prevalence with a correct interval. **The plan names the method and there is no default.** Which names are valid depends on the design, because a binomial interval and a design-based one are intervals for **different quantities**: under `design: srs`, `interval: wilson` or `interval: clopper_pearson`, both built on the sampled `(k, n)`; under `design: stratified`, `interval: design_wilson` or `interval: design_clopper_pearson`, both built on the design-weighted estimate and its standard error. **Neither pair has a primary.** The choice inside each is between coverage you can rely on and an interval that is narrower — Clopper-Pearson holds its nominal level, Wilson is tighter and can fall below it. You cannot have both, and the tool will not pick for you. **A binomial name under a stratified design is refused, and so is the reverse**, because one word meaning two arithmetics is a trap the reader of a published plan cannot see. Optional Rogan–Gladen correction when `sensitivity` and `specificity` are supplied — **as hashed plan fields, both or neither, validated at load.** They are a pre-registered commitment like any other: a plan that supplies one is refused, and correcting for a different figure than the one registered would be a different measurement. **Refuse with a named reason** rather than print a silently wrong number. |
 | `verify` | Re-check the whole chain: plan hash, sample determinism, ledger integrity, estimate reproduction. An outsider must be able to verify a published number from the sealed record alone. |
 | `emit-report` | Stamped Markdown and JSON: estimate, interval, design, n, every hash, and a mandatory **Honest Limits** block, asserted present by a test. |
 
@@ -367,6 +367,7 @@ Every change to this charter after ratification gets a row here.
 
 | # | Date | Change | Ruled by | Verbatim ruling |
 |---|---|---|---|---|
+| A-5 | 2026-08-30 | **§4's `estimate` row again.** Under **Q15** the plan's interval vocabulary **depends on the design**: `design_wilson` / `design_clopper_pearson` under `stratified`, the binomial pair under `srs`, and each refused under the other. Four words where A-4 named two, and **the cost is the ruling's rather than the drafting's**. The row also states **how** Se/Sp are supplied — hashed plan fields, both or neither, validated at load — which A-4 left to inference. Ruled after the witness gate passed: `svy` reproduces our stratified estimate, standard error and degrees of freedom exactly, so a stratified interval can be witnessed and D2.9's conclusion does not reach it | Director | **Verbatim below** |
 | A-4 | 2026-08-29 | **§4's `estimate` row and two honest limits.** Under **Q11 / D-37** the plan names the interval method and there is no default, so **neither interval is primary** and §4 said one was. Two limits added: what the choice costs in coverage at rare-event rates, and — the one that was invisible — **what we ship is limited by what we can witness**, since our own anchor recommends two intervals we cannot validate and therefore do not ship. Ruled after the builder raised it as a question about §6 reading as pure strength | Director | **Verbatim below** |
 | A-3 | 2026-08-29 | **§6.1's Rogan–Gladen sentence amended.** Two claims in it were false and one was true. **True and kept:** neither `survey` nor `svy` implements a misclassification correction. **False:** that it followed there is no witness — `epiR` 2.0.92 implements it, S-1.10. **False:** that the anchor is Lang & Reiczigel (2014) — D-31 ruled S-1.6 Reiczigel et al. (2010). The narrowing travels with the amendment and is not optional. Found by a fresh session reading the record before building; the builder raised it and did **not** edit the ratified document. §6.1's numbered points are untouched | Director | **Verbatim below** |
 | A-2 | 2026-08-29 | **Honest limits gain a second line**: at rare-event prevalence an ordinary-sounding specificity makes the Rogan-Gladen correction undefined rather than imprecise. From the `fpr_exceeds_prevalence` case, found by the D2.5 fixture contradicting its own author's note. | Director | D2.5 review, this session |
@@ -440,6 +441,41 @@ upper bound on the worst case, and then wrote the bullet as a point fact anyway.
 *"'about 91%' reads as a point fact about typical behaviour. 'As little as' is both what the
 measurement supports and the framing an operator needs."*
 
+
+### A-5, ruled 2026-08-30 — the director's words, verbatim
+
+Recorded in full because it is the second amendment to the same row, and because the reason for
+the split is the part a reader is most likely to mistake for fussiness.
+
+> **A-5 approved as drafted.**
+>
+> The counter — that `design: stratified` already disambiguates — **fails on where the word ends
+> up.** The plan is hashed and published, and the report names the method. *A reader who sees
+> `interval: wilson` on a published number and does not also parse `design` will assume the
+> binomial Wilson.* **The collision reaches the artifact an outsider reads, and that artifact is
+> the entire product.**
+>
+> **D-22 points the same way:** things an operator must not confuse get different names, not the
+> same name under different conditions.
+>
+> The rest reads well. Four words where A-4 named two, with the cost stated as **the ruling's
+> rather than the drafting's**; *"intervals for different quantities"* as the reason, so a reader
+> meeting only the four names does not take it for bureaucracy; and **no recommended method**,
+> which is A-4's reasoning held.
+
+**One correction came with the ruling, and it was the director's own.** The ruling first held
+that the draft had **dropped** A-4's two closing clauses — the Rogan–Gladen promise and the
+refusal principle. **Both were always there**, as the draft's last two sentences; a new sentence
+had been inserted before them. In the director's words: *"I read 875,910p and concluded about
+text at 916."*
+
+**Recorded as the reviewer's — the second instance of concluding about an artifact from an
+incomplete reading of it, after Ózsvári.** The builder checked before changing anything and
+reported what the artifact showed, which is the rule this project has for pushback.
+
+**The half that was right is the stronger half of the row.** A-4 said *"when sensitivity and
+specificity are supplied"* and left the mechanism to inference. The row now says **what the
+commitment is**.
 
 ### Standing directions in force
 

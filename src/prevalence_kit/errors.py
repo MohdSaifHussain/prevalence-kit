@@ -90,6 +90,15 @@ class Reason(StrEnum):
     # goes inert the same way.
     ESTIMATE_METHOD_MISMATCH = "ESTIMATE_METHOD_MISMATCH"
 
+    # A design-based interval needs spread to exist. When every sampled unit in
+    # every stratum carries the same label the design standard error is zero,
+    # n_eff is undefined, and there is nothing to invert.
+    #
+    # AT RARE RATES THIS IS THE MOST LIKELY SINGLE OUTCOME, not an edge case:
+    # 87.8% of samples at the two_stratum fixture with p = 0.001. `plan` now
+    # predicts it in closed form before any labelling is paid for -- Q2's reason.
+    INTERVAL_UNDEFINED = "INTERVAL_UNDEFINED"
+
     # The stratified path draws but does not yet estimate: `stratified_estimate`
     # returns a standard error and no interval, and building one is O-26 under
     # Q7 -- the plan names the method. Until it exists this refuses BY NAME
