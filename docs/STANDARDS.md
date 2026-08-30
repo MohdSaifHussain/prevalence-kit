@@ -611,11 +611,31 @@ Read from `svy/estimation/base.py` in the pinned build:
 | `korn-graubard` | The same, plus truncation of the effective sample size at `n` (NCHS) |
 | `wilson` | The design-based Wilson **D-18** already recorded -- `n_eff = p(1-p)/se^2`, t-quantile |
 
-**And the alias is the tell.** `svy` maps **`"clopper-pearson"` to `"korn-graubard"`**.
-Asking it for Clopper-Pearson does not return the textbook interval this project ships. So
-D-18's finding about Wilson was not a quirk of one method: **it is true of every interval
-`svy` has**, for the same structural reason -- each substitutes an effective sample size for
-`n`, and ours do not.
+#### The alias, recorded in its own right because it will mislead someone
+
+> **`svy` maps the interval name `"clopper-pearson"` to `"korn-graubard"`.**
+> `svy/estimation/base.py`, 0.25.0: `{"clopper-pearson": "korn-graubard", "kg":
+> "korn-graubard", "score": "wilson"}`.
+
+**Two libraries, one name, two different intervals.** A reader comparing `svy`'s API to
+ours would reasonably assume `clopper-pearson` means the same thing in both. It does not:
+ours is the textbook Clopper-Pearson inverted from the binomial tail, and `svy`'s is
+Korn-Graubard on a df-adjusted **effective** sample size. Nothing in either API says so at
+the call site.
+
+**This is why D-18's finding was never a quirk of one method.** D-18 recorded that `svy`'s
+*Wilson* is a different estimator from ours. That reads like a fact about Wilson. It is not
+-- **it is structural**: every interval `svy` offers substitutes an effective sample size
+for `n`, because `svy` is a **design-based** survey library and we compute **textbook
+binomial** intervals on `(k, n)`. The two are answering different questions, and the name
+collision hides that.
+
+**What it costs us, stated plainly:** `svy` cannot witness any interval this project ships,
+now or later, unless we adopt a design-based one. **Not a gap to close** -- a boundary to
+know. D-3 planned to check every estimator against both libraries, and this is the second
+of D-3's assumptions to fall to measurement, after D-18.
+
+
 
 **Allocation is the one place the two coincide, and it is the place we most needed one.**
 `svy.selection.allocation._neyman_allocation` computes `measure = N * S`, then
@@ -653,6 +673,54 @@ there, and **only the output is committed**. `svy` is not in `[project.dependenc
 the dev extras, and not in the project virtualenv. The zero-network guard walks
 `[project.dependencies]`; **it does not look at a throwaway environment, and its silence is
 not evidence about one** -- this paragraph is the evidence.
+
+### O-13 discharged -- how far `svy`'s Wilson is from ours, measured
+
+**D2.10, 2026-08-30.** **D-18** established that `svy`'s Wilson is a *different
+estimator* -- `n_eff = p(1-p)/se^2`, t-quantile -- and then said plainly that the
+builder's claim the two *"will not agree to 4 significant digits at small n"* was **a
+claim about magnitude the evidence did not carry**. O-13 carried the measurement
+forward. This is it.
+
+**The invocation is `svy`'s.** `svy.Estimation(svy.Sample(frame, Design(row_index='unit',
+wgt='wgt', psu='unit'))).prop('y', ci_method='wilson', alpha=1-confidence)`, taking the
+`y_level == 1` row. The standard error and degrees of freedom come from `svy`'s own design
+build, not from values we chose -- §2.2's residual, where the witness is external and the
+invocation is still the builder's.
+
+**Axes: `n` in {10, 20, 40, 80, 160, 500, 1000}, `k` in {0, 1, 2, 3, n/4, n/2, n-1, n},
+confidence in {0.90, 0.95, 0.99}.** `svy` 0.25.0, numpy 2.5.2, polars 1.44.1, CPython 3.14.0.
+144 rows.
+
+**Interior, `0 < k < n` -- 123 cases.** Worst absolute endpoint difference, by `n`:
+
+| n | 10 | 20 | 40 | 80 | 160 | 500 | 1000 |
+|---|---|---|---|---|---|---|---|
+| worst | **0.117330** | 0.047907 | 0.015472 | 0.004687 | 0.001590 | 0.000274 | **0.000097** |
+
+The worst point is `n = 10, k = 9, conf 0.99`: ours `[0.492768, 0.988148]`, `svy`
+`[0.375438, 0.992633]`. **D-18's unmeasured claim is confirmed in direction and now has a
+size**: the two are far apart at small `n` and converge as `n` grows, and even at
+`n = 1000` they do not agree to four significant digits.
+
+**Two boundaries, and they are differences in kind rather than in magnitude.**
+
+- **`k = n`:** `svy`'s standard error is 0, so its effective sample size gives a
+  **zero-width interval** -- `[1.0, 1.0]`, certainty from ten observations. All 21 boundary
+  rows are degenerate. Ours returns `[0.601146, 1.0]` at `n = 10, conf 0.99`. **The raw
+  all-cases worst of 0.398854 is about this boundary and not about the method**, which is
+  why the table above excludes it.
+- **`k = 0`:** `prop` returns one row per level **present in the data**, so there is no
+  `y_level == 1` row and **no interval at all**. **Two invocations were tried** -- a plain
+  integer column and a polars `Enum` declaring both levels -- and neither produces one.
+  Stated at the width of that search, per rule 9. **This matters because `k = 0` is the most
+  common honest result in rare-event work** -- the fact that struck `CORRECTION_DEGENERATE`.
+  Ours returns `[0, upper]`.
+
+**None of this is a defect in `svy`.** A design-based interval is answering a different
+question, and at `k = 0` or `k = n` a design-based standard error genuinely carries no
+information about spread. It is recorded so nobody reads the two libraries' `wilson` as the
+same interval -- which is the same trap as the `clopper-pearson` alias above.
 
 ## S-3 — Platform methodology (context; sets the honest limits)
 

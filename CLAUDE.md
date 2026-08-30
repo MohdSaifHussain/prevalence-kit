@@ -202,7 +202,7 @@ confirms we implement the method as its author does. It does not independently c
 **Phase 0** ratified. **Phase 1** closed at `d66d225`. **Phase 2 is in build**, **Q1–Q12 ruled**,
 **A-1 … A-4** applied to the charter.
 
-**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **648 tests**, seven gate
+**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **652 tests**, seven gate
 checks green. **CI last ran green at 608** on the 3.12 / 3.13 / 3.14 matrix, four jobs, run
 `33269147849`, head `d096da0`. Local and CI figures are stated apart on purpose.
 
@@ -228,6 +228,7 @@ read anything else.** `check_figures` derives all three.
 | **D2.5** | Rogan-Gladen point estimate, 11 cases from `epiR`. Two refusals, both controls |
 | **D2.6** | Rogan-Gladen **interval** — the corrected bounds are the apparent Clopper-Pearson bounds transformed endpoint by endpoint. Against `epiR`: **7.3e-13**. **O-8 discharged.** Clamped both ends (Q6/D-32), Clopper-Pearson only (Q7/D-33) |
 | **D2.7** | Refusals proved to fire. **Mutation sweep** over all 31 codes found two nothing could distinguish (**C-27**); a **boundary probe** found **F-8**, `confidence` unvalidated everywhere. Ninth checker check, `controls` |
+| **D2.10** | **O-13 measured, and the boundaries mattered more than the magnitude.** Interior worst endpoint gap **0.117330** at n=10, **9.7e-05** at n=1000, over `n` {10…1000} x `k` x confidence {0.90, 0.95, 0.99}. At **`k = n` `svy` returns a zero-width interval**; at **`k = 0` it returns none at all** — the most common honest result in rare-event work |
 | **D2.9** | **`svy` cross-check — and the narrowing decided the scope.** Every `svy` interval is design-based; it maps `clopper-pearson` to `korn-graubard`, so **none witnesses ours**. Its Neyman allocation **is** ours, rounding included: **2000/2000** identical over a stated space. **The first external witness the allocation has ever had** — R `survey` has no allocator (F-9). `svy` never enters this environment |
 | **D2.8** *(part)* | **confidence is a fixture axis** — 69 CP cases, 33 RG, at 0.90/0.95/0.99. Found **C-30**. **Coverage** replaces the width test, anchored on S-1.1's published limits, which our code reproduces (0.8382 vs 0.838). **Q11/D-37**: the plan names the interval, no default |
 
@@ -302,6 +303,6 @@ prevalence rates this tool is for, several ordinary intuitions fail, and here th
 | **O-23** | Q6's ledger + report disclosure. **D2.6 built the estimator half only** | Post-stop |
 | **O-28** | Pre-publication review of **git history**, not only the working tree. **Must reach the Phase 3 contract before the release** | Phase 3 |
 | **D2.14** | `check_claims` gaps: PDF paths, the CORRECTIONS counts table (**document its semantics, do not guess them**), the R artifacts. **The register gap is closed — D-34, `check_register`** | Phase 2 |
-| **O-3, O-13, O-14, O-15** | Carried. **O-4 discharged 2026-08-30 by D2.9**; O-13 (the `svy` Wilson divergence at small *n*) is D2.10 and still open | Phase 2 |
+| **O-3, O-14, O-15** | Carried. **O-4 discharged by D2.9 and O-13 by D2.10**, both 2026-08-30 | Phase 2 |
 | **O-26, O-27** | The stratified interval builder (**Q7 governs it — the plan names the method**), and D-38's one-stratum disclosure. `stratified_estimate` returns an SE and **no interval** | Post-stop |
 | **39 corrections open** | C-1 … C-38 **and V-13 … V-15**, which are corrections carrying finding numbers. 41 entries, 2 `noted`. **Derived from the entries, not maintained by hand** — the previous figure was over by one, C-36. Close under **T-1 (D2.12)**, each naming its commit | D2.12 |

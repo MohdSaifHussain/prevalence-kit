@@ -44,6 +44,7 @@ import random
 import sys
 from pathlib import Path
 
+import numpy
 import svy
 from svy.selection.allocation import _neyman_allocation
 
@@ -74,7 +75,14 @@ EDGES = {
 """Only the edges where both implementations produce an *unconstrained*
 allocation. `min_n` and `cap_at_population` are `svy` policy, and where they bite
 we refuse instead -- those cases belong in the divergence note, not in a fixture
-that asserts agreement."""
+that asserts agreement.
+
+**These cases carry a numpy version for a reason.** `svy` orders tied fractional
+parts with `numpy.argsort`, whose **default sort is not stable**. So agreement on
+an exact tie is a **measurement on this numpy build**, not a property of `svy`'s
+algorithm: a different numpy could order equal keys differently and the agreement
+would evaporate with nothing being wrong. The axes rule, applied to a dependency
+rather than to a parameter."""
 
 
 def allocate_via_svy(weights: list[float], rates: list[float], n: int) -> list[int]:
@@ -91,6 +99,7 @@ def main(out_path: str) -> None:
         "deliverable": "D2.9",
         "register": "S-2.2",
         "svy_version": version,
+        "numpy_version": numpy.__version__,
         "python": sys.version.split()[0],
         "exact_call": (
             "svy.selection.allocation._neyman_allocation("

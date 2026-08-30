@@ -3,6 +3,7 @@
  "deliverable": "D2.9",
  "register": "S-2.2",
  "svy_version": "0.25.0",
+ "numpy_version": "2.5.2",
  "python": "3.14.0",
  "exact_call": "svy.selection.allocation._neyman_allocation(group_sizes, group_sds, n_total, min_n=1, cap_at_population=True)",
  "frame_total": 1000000,
