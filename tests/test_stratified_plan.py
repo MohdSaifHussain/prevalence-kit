@@ -166,7 +166,7 @@ def test_every_supported_interval_stamps_the_method_the_map_claims() -> None:
 
     builders = {"design_wilson": design_wilson, "design_korn_graubard": design_korn_graubard}
     for name in sorted(DESIGN_INTERVALS):
-        assert builders[name](0.1, 0.02, 100, 150).method == INTERVAL_METHOD[name]
+        assert builders[name](0.1, 0.02, 100, 150, positives=15).method == INTERVAL_METHOD[name]
     assert set(INTERVALS_FOR_DESIGN) == {"srs", "stratified"}
 
 
@@ -728,3 +728,126 @@ def test_the_report_names_the_population_the_run_actually_sampled(
     built = report_mod.build(ws, plan)
     assert built["population"] == str(frame), "the report is not reading the ledger"
     assert built["population_declared"] == "frame.txt"
+
+
+# ------------------------------------------------------------- F-12: the count
+
+
+def _f12_run(tmp_path: Path, frame_csv: Path, positives: int) -> tuple[Workspace, Plan]:
+    """A multi-stratum run whose positives are concentrated in the small stratum.
+
+    **Concentration is what makes the case discriminating.** `high` carries
+    weight 0.04 and `low` carries 0.80, so positives landing in `high` move the
+    pooled count a long way and the design-weighted estimate very little. That is
+    exactly where `round(point * n)` parts company with the truth.
+    """
+    plan = load_plan(tmp_path, stratified_plan())
+    ws = Workspace(tmp_path / "run")
+    do_plan(ws, plan)
+    drawn = do_sample(ws, plan, frame_csv)
+    labels_path = write_labels(tmp_path, list(drawn), positives=positives)
+    do_ingest(ws, plan, labels_path)
+    do_estimate(ws, plan)
+    return ws, plan
+
+
+def test_the_recorded_positive_count_is_the_count_not_the_estimate(
+    tmp_path: Path, frame_csv: Path
+) -> None:
+    """**F-12.** `positives` was `round(point * n)` -- not a count of anything.
+
+    The director found it by reading a report: his labels held 10 positives and
+    the report said 5. `verify` returned exit 0 throughout, because it recomputes
+    through the same estimator that produced the number -- the seventh
+    instrument-limit kind, third live occurrence.
+
+    **This test asserts the two numbers differ before asserting which one is
+    recorded.** A case where they agree proves nothing, and the one-stratum case
+    agrees *by construction*: at `L = 1` the design estimate is the pooled
+    proportion, so `round(point * n)` is the true count. A test built there would
+    have passed for the whole life of the defect.
+    """
+    ws, _ = _f12_run(tmp_path, frame_csv, positives=40)
+    record = ws.read_json("estimate.json")
+
+    back_computed = round(float(str(record["point"])) * int(str(record["n"])))
+    assert back_computed != 40, (
+        "the back-computed count happens to equal the true count here, so this "
+        "case cannot tell the defect from the fix -- pick a more skewed design"
+    )
+    assert record["positives"] == 40
+    assert record["n"] == 300
+
+
+def test_the_report_and_the_estimate_agree_with_the_labels(tmp_path: Path, frame_csv: Path) -> None:
+    """The same count in the artifact an outsider reads. F-12 reached three.
+
+    `report.md`, `report.json` and the estimate record all carried the
+    back-computed number; the console line printed it too, from the same field.
+    """
+    from prevalence_kit.report import build, render_markdown
+
+    ws, plan = _f12_run(tmp_path, frame_csv, positives=40)
+    report = build(ws, plan)
+    text = render_markdown(report)
+
+    assert "40 of 300 sampled items were positive." in text
+    estimate = report["estimate"]
+    assert isinstance(estimate, dict)
+    assert estimate["positives"] == 40
+
+
+def test_the_report_shows_what_each_stratum_contributed(tmp_path: Path, frame_csv: Path) -> None:
+    """**F-12's other half, and F4's expectation made true.**
+
+    A design-weighted estimate is not `k / n`, so a reader given only the pooled
+    count cannot reconstruct the number above it. The weights are what explains
+    the gap, and the exit checklist expected this table before it existed.
+    """
+    from prevalence_kit.report import build, render_markdown
+
+    ws, plan = _f12_run(tmp_path, frame_csv, positives=40)
+    text = render_markdown(build(ws, plan))
+
+    assert "### What each stratum contributed" in text
+    assert "| Stratum | Sampled | Positive | Design weight |" in text
+    for name in ("high", "mid", "low"):
+        assert f"| {name} |" in text
+    # The weights are the design's, not equal shares.
+    assert "0.040000" in text
+    assert "0.800000" in text
+
+
+def test_an_srs_run_has_no_stratum_table_and_an_unchanged_record(
+    run: Workspace, plan_path: Path
+) -> None:
+    """The control, in both directions.
+
+    The binomial path never back-computed its count, so F-12's fix must leave it
+    **byte-identical**: `strata` is absent from the record rather than present
+    and empty, so no existing digest moves.
+    """
+    from prevalence_kit.report import build, render_markdown
+
+    plan = Plan.load(plan_path)
+    record = run.read_json("estimate.json")
+    assert "strata" not in record
+
+    text = render_markdown(build(run, plan))
+    assert "What each stratum contributed" not in text
+
+
+def test_the_design_builders_cannot_default_the_count() -> None:
+    """`positives` is keyword-only with no default, so it cannot go back.
+
+    D-30 and D-33's discipline, applied to a count: the value a caller must
+    supply cannot quietly become a constant in the source again.
+    """
+    import inspect
+
+    from prevalence_kit.estimators import design_korn_graubard, design_wilson
+
+    for builder in (design_wilson, design_korn_graubard):
+        parameter = inspect.signature(builder).parameters["positives"]
+        assert parameter.kind is inspect.Parameter.KEYWORD_ONLY
+        assert parameter.default is inspect.Parameter.empty

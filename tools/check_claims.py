@@ -1310,8 +1310,8 @@ def selftest() -> int:
             # The defect exactly as it was: the Total row over by one. C-36 sat
             # in the file with its own columns summing to 38 against a stated 37.
             "docs/CORRECTIONS.md",
-            "| **Total** | **5** | **41** | **48** |",
-            "| **Total** | **5** | **40** | **48** |",
+            "| **Total** | **6** | **41** | **49** |",
+            "| **Total** | **6** | **40** | **49** |",
         ),
         "schema": (
             # F-10's shape, planted: declare a field behavioural that nothing

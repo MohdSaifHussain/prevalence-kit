@@ -21,11 +21,11 @@ who writes the entries. The director raised that one himself and asked for it to
 | Chat reviewer (draft author) | 0 | 3 | **3** |
 | Research report (passed through unverified) | 0 | 2 | **2** |
 | Stale-at-draft-time, queued but built on anyway | **1** | 0 | **1** |
-| **Builder (Claude Code)** | **3** | **33** | **36** |
+| **Builder (Claude Code)** | **4** | **33** | **37** |
 | Reviewer instrument | **1** | **2** | **4** (1 noted) |
 | **Director** | 0 | **1** | **1** |
 | Tool artifact (noted, not a defect) | - | - | **1** (noted) |
-| **Total** | **5** | **41** | **48** |
+| **Total** | **6** | **41** | **49** |
 
 **Derived, and now checked — 2026-08-30.** Every figure above is computed from the entry blocks in
 this file rather than incremented as rows arrived. An earlier version said 36 open and 3
@@ -1384,6 +1384,39 @@ C-7's file count, at the scale of a working relationship rather than a file.
 **Why it is recorded even though nothing broke.** The admission rule counts claims that reached a
 commit. This one reached `CLAUDE.md` at `d95a014`, and `CLAUDE.md` is the file that misleads the
 next session **before it has read anything else**.
+
+---
+
+## C-46 - The report stated a count that was not a count
+
+| | |
+|---|---|
+| **Claimed** | Every stratified report, console `estimate` line and `estimate.json` since `eb17c9a`: *"N of M sampled items were positive"* |
+| **Actually** | For both design intervals `N` was **`round(point * n)`** -- the design-weighted estimate multiplied back out. **Not a count of anything.** The director's hand-run printed `5` beside a `labels.csv` holding **10**; the builder's reproduction printed `3` beside a file holding **5** |
+| **Direction** | **Either way, and that is what makes it worse than an overstatement.** It tracks the estimate, so it understates when positives concentrate in a low-weight stratum and overstates when they concentrate in a high-weight one |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | **The director, reading a report by hand at the phase-close ritual** -- and reached through **F4, a checklist row that was wrong about something else entirely**. The reviewer then found the second instance, on the console line, in the transcript |
+| **Severity** | **High.** A false statement of fact in the artifact an outsider reads, with `verify` returning nine checks and exit 0 |
+| **Replaced by** | The true count, supplied by the caller that counted the labels, plus a per-stratum table -- **F-12** |
+| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+
+**C-16's class, and the third live instance of the seventh instrument-limit kind.** `verify`
+recomputes through `_estimate_from`, the same function that produced the number, so it reproduced
+the same fabricated count and reported the estimate verified. **No instrument in this project
+could have caught it**, and the record already said so: *"no test the builder writes can close
+`the suite is the builder's`."*
+
+**The one-stratum case would have hidden it, and nearly did.** At `L = 1` the design estimate
+**is** the pooled proportion, so `round(point * n)` equals the true count by construction. The
+project shipped a one-stratum disclosure and a one-stratum test the day before, both green. **A
+test written on the obvious case would have passed for the whole life of the defect**, which is
+why F-12's closing test asserts the two numbers *differ* before asserting which one is recorded.
+
+**What made it reachable at all was a wrong row.** F4 expected per-stratum figures the report had
+never carried -- the builder restated that phrase from the superseded section 8 without deriving it
+from a rendered report. **The director ran the wrong expectation, looked at the artifact, and found
+a defect underneath it.** An argument for hand-runs that no test can make, and it is recorded as
+such rather than as luck.
 
 ---
 

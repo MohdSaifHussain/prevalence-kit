@@ -73,6 +73,11 @@ def test_the_design_intervals_reproduce_svy(method: str) -> None:
                 entry["se"],
                 entry["df"],
                 entry["n"],
+                # The fixture carries no label count and does not need to: this
+                # test is about the ENDPOINTS. F-12 made `positives` required so
+                # it cannot be back-computed, and a placeholder here is honest --
+                # nothing below reads it.
+                positives=0,
                 confidence=entry["confidence"],
             )
             worst = max(
@@ -90,8 +95,8 @@ def test_the_two_intervals_are_not_the_same_interval() -> None:
     data = fixture()
     case = next(c for c in data["cases"] if c["label"] == "rare")
     entry = next(e for e in case["intervals"]["design_wilson"] if e["confidence"] == 0.95)
-    wilson = design_wilson(entry["point"], entry["se"], entry["df"], entry["n"])
-    kg = design_korn_graubard(entry["point"], entry["se"], entry["df"], entry["n"])
+    wilson = design_wilson(entry["point"], entry["se"], entry["df"], entry["n"], positives=1)
+    kg = design_korn_graubard(entry["point"], entry["se"], entry["df"], entry["n"], positives=1)
     assert (wilson.low, wilson.high) != (kg.low, kg.high)
 
 
@@ -106,7 +111,7 @@ def test_a_zero_standard_error_refuses_by_name() -> None:
     """
     for builder in BUILDERS.values():
         with pytest.raises(Refusal) as caught:
-            builder(0.0, 0.0, 100, 150)
+            builder(0.0, 0.0, 100, 150, positives=0)
         assert caught.value.reason is Reason.INTERVAL_UNDEFINED
         # **The verb has to be the one that actually reports the odds.** This
         # line asserted `plan` and passed, because the fix text said `plan` --
@@ -120,7 +125,7 @@ def test_a_zero_standard_error_refuses_by_name() -> None:
 def test_a_real_standard_error_is_accepted() -> None:
     """The positive control for the refusal above."""
     for builder in BUILDERS.values():
-        assert builder(0.1, 0.02, 100, 150).point == "0.100000000000"
+        assert builder(0.1, 0.02, 100, 150, positives=15).point == "0.100000000000"
 
 
 def test_the_odds_of_no_interval_match_the_exhaustive_measurement() -> None:

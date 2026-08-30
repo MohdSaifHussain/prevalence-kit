@@ -238,9 +238,9 @@ reader could not tell a stratified redraw from a simple random one. `verify.py` 
 design (F-10's third site) and **its output was silent about what it had checked.** It now
 names the draw.
 
-**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **721 tests**, seven gate
+**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **726 tests**, seven gate
 checks green — **`check_claims` now runs twelve**, not seven; the gate block below is still
-seven commands. **CI last ran green at 721** on the 3.12 / 3.13 / 3.14 matrix, run `33326261706`, head `d95a014` — matching local. They are still stated apart because they are two measurements, not one.
+seven commands. **CI last ran green at 721** on the 3.12 / 3.13 / 3.14 matrix, run `33338927291`, head `e30aeb5`; local is **726** after F-12. They are still stated apart because they are two measurements, not one.
 A second workflow, `witness.yml`, rebuilds the R image and requires every fixture to regenerate
 **byte-identically** — it runs on `r/**` changes and on demand, not on every push.
 Local and CI figures are stated apart on purpose.
@@ -347,9 +347,9 @@ rulings the director holds, two post-stop surface obligations, and the Phase 3 c
 
 | # | What | Owner |
 |---|---|---|
-| **The hand-run** | **DONE 2026-08-31** — `docs/contracts/PHASE-2-HAND-RUN.md`, a dated reading. **34 rows**, 32 as stated, 2 not: **H-1** (the design-interval positive count is `round(point * n)`, stated as a count in three artifacts) and **H-2** (F9 names a refusal no command can reach). **The phase outcome is still the director's ruling** | **Director** |
+| **The hand-run** | **DONE 2026-08-31** — `docs/contracts/PHASE-2-HAND-RUN.md`, a dated reading. **34 rows**, 32 as stated. **H-1 is fixed as F-12**; **H-2 is amended into contract §8b**, which leaves §8a unedited because it is what he actually ran. **The phase outcome is still the director's ruling** | **Director** |
 | **O-19** | Re-pin `checkout` and `setup-python` before GitHub drops Node 20. **TW-4 fired and stays fired** | Phase 3 |
 | **O-21** | The rare-event specificity fact must reach the README | Phase 3 |
 | **O-28** | Pre-publication review of **git history**, not only the working tree. **Must reach the Phase 3 contract before the release** | Phase 3 |
 | **O-14, O-15** | Carried, low, no action. O-15 is deliberately unmet — a ledger schema version, added only if it is ever needed | Phase 3 |
-| **4 corrections open** | **C-1** (Phase 3), **C-42**, **C-43** and **C-44**. 47 entries, 41 closed, 2 `noted`. **T-1 closed the other 41**, each naming its discharging commit. Derived and machine-checked by `check_counts` | — |
+| **6 corrections open** | **C-1** (Phase 3), **C-42** … **C-46**. 49 entries, 41 closed, 2 `noted`. **T-1 closed the other 41**, each naming its discharging commit. Derived and machine-checked by `check_counts` | — |

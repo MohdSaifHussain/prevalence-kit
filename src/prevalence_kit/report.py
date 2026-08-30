@@ -192,6 +192,7 @@ def render_markdown(report: JSONObject) -> str:
             f"specificity {est['specificity']} (Rogan-Gladen). The uncorrected "
             f"apparent prevalence was {_percent(str(est['apparent']['point']))}."
         )
+    lines += _per_stratum_block(est)
     lines += _one_stratum_disclosure(report)
     lines += _coverage_block(report, level)
     lines += [
@@ -229,6 +230,44 @@ def render_markdown(report: JSONObject) -> str:
     lines += [f"- {limit}" for limit in limits]
     lines += ["", f"_Emitted {report['emitted_at']} by {report['tool']}._", ""]
     return "\n".join(lines)
+
+
+def _per_stratum_block(est: JSONObject) -> list[str]:
+    """**F-12.** What each stratum contributed, on a design-based estimate.
+
+    **The headline count is not the estimate, and that is the whole reason this
+    table exists.** A design-weighted number is `sum(W_h * k_h / n_h)`, not
+    `k / n`, so a reader given only *"5 of 100 were positive"* will divide and
+    get a different number from the one printed above it -- with nothing on the
+    page to explain the gap. The weights are what explains it.
+
+    **It also replaces a false line rather than merely adding a true one.** Until
+    F-12 the count itself was `round(point * n)`, a back-computation from the
+    estimate presented as a count of labels: 5 positives in the file, `3 of 100`
+    in the report, and `verify` returning exit 0 because it recomputes through
+    the same estimator.
+    """
+    rows = est.get("strata")
+    if not isinstance(rows, list) or not rows:
+        return []
+    lines = [
+        "",
+        "### What each stratum contributed",
+        "",
+        "| Stratum | Sampled | Positive | Design weight |",
+        "|---|---|---|---|",
+    ]
+    for row in rows:
+        assert isinstance(row, dict)
+        weight = float(str(row["weight"]))
+        lines.append(f"| {row['name']} | {row['n']} | {row['positives']} | {weight:.6f} |")
+    lines += [
+        "",
+        "The estimate is the weighted sum of the per-stratum rates, **not** the "
+        "pooled count divided by the sample size. Those two numbers differ "
+        "whenever the strata differ, which is the reason for stratifying at all.",
+    ]
+    return lines
 
 
 def _one_stratum_disclosure(report: JSONObject) -> list[str]:

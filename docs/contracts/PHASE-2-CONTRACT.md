@@ -349,6 +349,53 @@ prose and once as *verify the R image digest*, which is a different sense of the
 have told a stratified redraw from a simple random one by reading it. The check was real and
 its output was silent about what it had checked. It now names the draw.
 
+## 8b. Amendment to section 8a — H-2, ruled 31 August 2026
+
+**Section 8a is not edited.** It is the checklist the director actually ran, and rewriting it
+would destroy the evidence of what he ran against. This section amends it, and both amendments
+come from **H-2** in `docs/contracts/PHASE-2-HAND-RUN.md`.
+
+### F9 becomes a test-only row
+
+**As written, F9 could not be performed.** A plan allocating a stratum zero units refuses
+`ALLOCATION_TOO_THIN` at `sample` -- **Q2's floor** -- so `STRATUM_UNSAMPLED` is unreachable from
+the command line. `src/prevalence_kit/run.py` says so in its own comment at the raise site, and
+the director confirmed it by running it: exit 2, the wrong code for the row.
+
+| # | Command | Expected |
+|---|---|---|
+| **F9** ▸ **AMENDED** | `pytest -k unsampled_stratum` | Passes. **A test rather than a hand-run, and the reason is a ruling rather than a limitation.** `ALLOCATION_TOO_THIN` holds the floor at 2 units per stratum (**Q2**), so no plan can reach `sample` with a stratum allocated zero. The branch is kept because **that floor is Q2's ruling, not an invariant of the function**: relax the floor and this is the honest refusal, sending the operator to the sample rather than the frame. Same shape as **F19** |
+
+**The code is not struck.** D-22's reasoning still holds -- `STRATUM_UNSAMPLED` and
+`STRATUM_EMPTY` point at different artifacts -- and `check_codes` keeps it reconciled against the
+contract. What changed is the claim about **how it is demonstrated**, not whether it exists.
+
+### The preamble is narrowed to what was actually re-run
+
+Section 8a says: *"Every command below was run before it was written here."* **That is false, and
+the half that was true is what carried it.**
+
+> **Narrowed, 31 August 2026.** Every command in the rows **written new for section 8a** was run
+> before it was written: F2, F4's chain, F10b, F12, F13, F14, F17, F18, F20, F21, F22, F23, F24,
+> F25 and F25b. The rows **carried unchanged from section 8** -- F1, F5, F6, F7, F8, F8b, F8c,
+> F8d, F8e, F8f, F8g, F9, F10, F11, F15, F16 and F8h -- were **not re-run**, and two of them were
+> wrong: **F9** could not be performed at all, and **F15** omitted an exit code.
+
+**Why this is recorded rather than corrected in place.** *"Every command"* is the construction
+that stops a reader asking which ones, and the sentence's verifiable half made the unverifiable
+half ride along -- **C-27's shape**, in the preamble of the document the director then ran
+against. A silent edit would remove the evidence that it happened. **C-45** carries the count that
+travelled with it.
+
+### F15 and F19, from the hand-run's accuracy notes
+
+| # | Command | Expected |
+|---|---|---|
+| **F15** ▸ **AMENDED** | `tools/check_tripwires.py --check` | Five tripwires reported, **exit 1 while any tripwire is fired**, and TW-4 is. **The exit 1 is the tripwire working, not a failure** -- it is a phase-close ritual and a decision for the director, never a CI job, which is why it is not in the gate. Offline, with no `--check`, it exits 0 |
+| **F19** ▸ **AMENDED** | `pytest -k "method_contradicts or method_matches"` | **Three tests pass, not two.** The selector also matches `test_the_expected_method_matches_what_the_estimator_stamps` in `tests/test_correction_plan.py`, which is the right thing for it to match and was simply not counted |
+
+---
+
 ## 9. Tier — re-asked and discharged
 
 **Ruling: remain at STANDARD.** Discharged 2026-08-29 by the director.
@@ -486,7 +533,7 @@ follows is the builder's evidence, offered for that.
 | **D2.14** | All four conditions. `check_claims` runs **twelve** checks; `counts`, `schema` and `open-items` are new and each has both controls. Two of them **fired on their first run** |
 | **D2.15** | O-3 discharged (every fixture records version and exact call, asserted by `test_fixtures.py`). **O-14 and O-15 restated as carried** — see below |
 | **D2.16** | `stratallo` witnesses the **rounding** — 3/3 fixtures, 2000/2000 sweep — and **not** the variance, which is the without-replacement form. Fixture only |
-| **D2.17** | Design intervals against `svy`: **4.9e-13** across 30 fixture rows. Coverage measured by exhaustive enumeration -- **neither holds its nominal level**, worst conditional 0.7472 (KG) and 0.0000 (Wilson) against 0.90. **A-6 renamed `design_clopper_pearson` before it shipped** |
+| **D2.17** | Design intervals against `svy`: **4.9e-13** across 30 fixture rows. **F-12 fixed after the hand-run** — the recorded positive count was `round(point * n)` and is now the count, with a per-stratum table beside it. Coverage measured by exhaustive enumeration -- **neither holds its nominal level**, worst conditional 0.7472 (KG) and 0.0000 (Wilson) against 0.90. **A-6 renamed `design_clopper_pearson` before it shipped** |
 
 ### Requirements
 

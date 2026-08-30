@@ -98,6 +98,34 @@ def _well_formed(low: float, point: float, high: float, where: str) -> None:
 
 
 @dataclass(frozen=True, slots=True)
+class StratumSummary:
+    """What one stratum contributed. **F-12.**
+
+    `weight` is `M_h / M`, the design weight the estimate is built from, as a
+    decimal string because it reaches the pre-registration-adjacent record and
+    `canonical()` refuses floats.
+
+    **Why the report needs this at all.** A design-weighted estimate is not
+    `k / n`, so a reader given only the pooled count cannot reconstruct the
+    number in front of them and has no way to see that the strata differ. The
+    pooled count was not merely absent -- it was **wrong** until F-12.
+    """
+
+    name: str
+    n: int
+    positives: int
+    weight: str
+
+    def as_record(self) -> JSONObject:
+        return {
+            "name": self.name,
+            "n": self.n,
+            "positives": self.positives,
+            "weight": self.weight,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class Interval:
     """A point estimate and its interval. Stored as strings; see canonical.py."""
 
@@ -108,9 +136,16 @@ class Interval:
     confidence: str
     n: int
     positives: int
+    strata: tuple[StratumSummary, ...] = ()
+    """Per-stratum composition, on a design-based interval only. **F-12.**
+
+    Empty on every binomial interval, and the key is then absent from the record
+    rather than present and empty: an SRS run's estimate record is unchanged, so
+    no existing digest moves.
+    """
 
     def as_record(self) -> JSONObject:
-        return {
+        record: JSONObject = {
             "method": self.method,
             "point": self.point,
             "low": self.low,
@@ -119,6 +154,9 @@ class Interval:
             "n": self.n,
             "positives": self.positives,
         }
+        if self.strata:
+            record["strata"] = [s.as_record() for s in self.strata]
+        return record
 
 
 def _check_confidence(confidence: float) -> None:
@@ -896,6 +934,7 @@ def design_wilson(
     degrees_of_freedom: int,
     n: int,
     *,
+    positives: int,
     confidence: float = 0.95,
 ) -> Interval:
     """Wilson's score interval on the effective sample size, with a t quantile.
@@ -907,6 +946,15 @@ def design_wilson(
     **Its coverage is poor at rare rates and that is disclosed, not hidden.**
     Worst conditional coverage measured **0.00000** against a nominal 0.90 at
     `wide`, p = 0.001. Charter section 8 carries the figures.
+
+    **`positives` is required and has no default -- F-12.** It used to be
+    computed here as `round(point * n)`, which is not a count of anything: the
+    design-weighted estimate is not the pooled proportion, so the number differed
+    from the truth and was printed as *"N of M sampled items were positive"* in
+    the report, the console and `estimate.json`. **A count is supplied by
+    whoever counted**, on the same reasoning that makes `rounding` and
+    `interval_method` required arguments: the value cannot become a constant in
+    the source.
     """
     _check_confidence(confidence)
     n_eff = effective_n(point, standard_error, degrees_of_freedom, n, confidence)
@@ -922,7 +970,7 @@ def design_wilson(
         high=_fixed(min(1.0, centre + half)),
         confidence=_fixed(confidence),
         n=n,
-        positives=round(point * n),
+        positives=positives,
     )
 
 
@@ -932,6 +980,7 @@ def design_korn_graubard(
     degrees_of_freedom: int,
     n: int,
     *,
+    positives: int,
     confidence: float = 0.95,
 ) -> Interval:
     """Korn-Graubard: the Clopper-Pearson construction on an effective sample size.
@@ -951,6 +1000,9 @@ def design_korn_graubard(
 
     **Witnessed by `svy` 0.25.0 `ci_method="beta"`**, generated first. Worst
     endpoint disagreement **2.6e-14**.
+
+    **`positives` is required and has no default -- F-12**, for the reason given
+    on `design_wilson`. Both builders carried the same back-computed line.
     """
     _check_confidence(confidence)
     n_eff = effective_n(point, standard_error, degrees_of_freedom, n, confidence)
@@ -971,7 +1023,7 @@ def design_korn_graubard(
         high=_fixed(min(1.0, high)),
         confidence=_fixed(confidence),
         n=n,
-        positives=round(point * n),
+        positives=positives,
     )
 
 

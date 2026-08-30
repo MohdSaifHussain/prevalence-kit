@@ -218,6 +218,7 @@ def _conditional_coverage(
                 estimate.standard_error,  # type: ignore[attr-defined]
                 estimate.degrees_of_freedom,  # type: ignore[attr-defined]
                 estimate.n,  # type: ignore[attr-defined]
+                positives=estimate.positives,  # type: ignore[attr-defined]
                 confidence=confidence,
             )
         except Refusal:

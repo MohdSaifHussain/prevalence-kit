@@ -22,15 +22,17 @@ import csv
 import json
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any, cast
 
 from .canonical import JSONValue, canonical, digest, digest_bytes
 from .errors import Reason, Refusal
 from .estimators import (
+    DIGITS,
     CorrectedInterval,
     Interval,
+    StratumSummary,
     clopper_pearson,
     design_korn_graubard,
     design_wilson,
@@ -419,11 +421,27 @@ def _stratified_interval(
         weights=tuple(weights), positives=tuple(positives), sampled=tuple(sampled)
     )
     builder = design_wilson if plan.interval == "design_wilson" else design_korn_graubard
-    return builder(
+    interval = builder(
         estimate.point,
         estimate.standard_error,
         estimate.degrees_of_freedom,
         sum(sampled),
+        # F-12. The TRUE count, from the labels this function just read. The
+        # builders used to compute `round(point * n)` from the design-weighted
+        # estimate and call it a count -- a number that is not a count of
+        # anything, printed as one in three artifacts.
+        positives=sum(positives),
+    )
+    # F-12's other half: the composition the reader needs to make sense of a
+    # design-weighted number. Attached here rather than passed into the builder,
+    # because which units sat in which stratum is this function's knowledge and
+    # not the estimator's arithmetic.
+    return replace(
+        interval,
+        strata=tuple(
+            StratumSummary(name=name, n=size, positives=hits, weight=f"{weight:.{DIGITS}f}")
+            for name, size, hits, weight in zip(names, sampled, positives, weights, strict=True)
+        ),
     )
 
 
