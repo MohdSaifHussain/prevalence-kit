@@ -5,6 +5,37 @@ made. Decisions taken by default with no reason are recorded too, and marked as 
 
 A log that manufactures rationale after the fact is worse than no log, because it reads as evidence.
 
+## What gets an entry — T-2, ruled 2026-08-29, applied 2026-08-30
+
+This log had no stated admission rule, so it grew by habit. The rule is written here rather
+than remembered, and it has two halves that must both survive.
+
+**A choice the builder makes alone gets an entry when an operator could see its
+consequence.** Not every implementation detail: the test is whether someone running the tool,
+reading its output, or auditing its record could tell the difference. `csv.field_size_limit`
+at 64 MiB (D-19) is here because an operator meets it as a refusal. The order two private
+helpers are defined in is not.
+
+**A question put to the director and ruled gets an entry because it was ruled — whatever its
+operator visibility.** This half is the one that matters, and it is stated second because it
+overrides the first.
+
+> **Without that sentence, the first rule would delete Q3.**
+>
+> Q3 asked whether SRS should be folded into the stratified path as a one-stratum case. Same
+> CLI, same reason codes, same numbers: **invisible to an operator by construction.** The
+> first rule alone would suppress it — and Q3 is where the director found a third option
+> nobody had proposed, and where the condition that would reverse the ruling was written
+> down. *A rule written to shrink a log that deletes the log's best entry is the one thing it
+> must never do.*
+
+**Decisions taken by default, with no reason, are recorded and marked as such.** D-12 is the
+example: the name was carried from the vision because it was available, and no rationale is
+manufactured for it.
+
+**Amendments to a ratified document are the director's**, never the builder's. The builder
+drafts and raises; A-3, A-4 and A-5 are the record of that working.
+
 ---
 
 ## D-1 — Tier: STANDARD, manual-approve

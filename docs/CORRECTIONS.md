@@ -18,14 +18,14 @@ who writes the entries. The director raised that one himself and asked for it to
 
 | Source | Open | Closed | Total |
 |---|---|---|---|
-| Chat reviewer (draft author) | 3 | 0 | **3** |
-| Research report (passed through unverified) | 2 | 0 | **2** |
-| Stale-at-draft-time, queued but built on anyway | 1 | 0 | **1** |
-| **Builder (Claude Code)** | **33** | **0** | **33** |
-| Reviewer instrument | **2** | 0 | **3** (1 noted) |
-| **Director** | **1** | 0 | **1** |
+| Chat reviewer (draft author) | 0 | 3 | **3** |
+| Research report (passed through unverified) | 0 | 2 | **2** |
+| Stale-at-draft-time, queued but built on anyway | **1** | 0 | **1** |
+| **Builder (Claude Code)** | **0** | **33** | **33** |
+| Reviewer instrument | 0 | **2** | **3** (1 noted) |
+| **Director** | 0 | **1** | **1** |
 | Tool artifact (noted, not a defect) | - | - | **1** (noted) |
-| **Total** | **42** | **0** | **44** |
+| **Total** | **1** | **41** | **44** |
 
 **Derived, and now checked — 2026-08-30.** Every figure above is computed from the entry blocks in
 this file rather than incremented as rows arrived. An earlier version said 36 open and 3
@@ -90,6 +90,24 @@ is still tracked, below.
 
 Entries stay **open** until the corrected text is committed and verified.
 
+**T-1 (D2.12) ran 2026-08-30 and closed 41 of the 44.** Each closed entry names
+**the commit that discharged it**, derived rather than guessed: the Phase 0 vision
+defects were discharged by the charter's ratification `5b4f97f`; anything closing
+*at phase close* or *at the Phase 1 to 2 boundary* by Phase 1's close `d66d225`;
+and the rest by the commit that made the fix. Every hash was checked to exist
+before it was written down.
+
+**One stays open, and it is not an oversight.** **C-1** closes when the README
+credits `svy` as the estimator layer, and there is no README yet -- that is Phase
+3. **C-18 and C-21 stay `noted`**, which is a permanent state rather than an
+unfinished one.
+
+**C-9 was the one that could not simply be marked.** Its condition was *closes when
+O-4 is discharged and the sentence can be rewritten as a fact*. O-4 discharged at
+D2.9 -- and the shipped package docstring still read *"is not yet done"*, which had
+become false in the other direction. T-1's bookkeeping is what surfaced it. The
+sentence is now the fact, at the width of the evidence and no wider.
+
 ---
 
 ## C-1 — svy's installable code was "not yet publicly downloadable"
@@ -103,7 +121,7 @@ Entries stay **open** until the corrected text is committed and verified.
 | **Severity** | **High.** It was the load-bearing premise under a tripwire and under the whole `lean`-estimator plan. |
 | **Replaced by** | D-2 — `lean` retained, with the `httpx` zero-network dependency as the recorded rationale. Availability argument retired. TW-2 rewritten with a corrected baseline. |
 | **Second finding, same check** | svy already implements Neyman allocation, Wilson, Clopper-Pearson, Korn-Graubard, logit intervals, Taylor variance, post-stratification and raking — most of the planned Phase 2. Positioning corrected in D-4. |
-| **Status** | **OPEN** — closes when README credits svy as the estimator layer |
+| **Status** | **OPEN** -- closes when the README credits `svy` as the estimator layer -- **Phase 3**, and there is no README yet. Its condition is unmet rather than overlooked|
 
 **The process lesson, and it is the one worth keeping.** A finding was queued for a ruling *and*
 relied upon before the ruling came. That is the failure mode, not the stale fact. A claim awaiting a
@@ -121,7 +139,7 @@ ruling is not available for use as a premise.
 | **Caught by** | Phase 0 verification — mechanical count over both full official texts, retrieved from the EU Publications Office and corroborated against the director's own EUR-Lex PDF |
 | **Severity** | **High.** Trivially falsifiable in one search, in a document whose whole premise is verifiability. |
 | **Replaced by** | D-5 — inverted positioning: regulation mandates sensitivity/specificity; prevalence-kit shows what those do to the estimate |
-| **Status** | **OPEN** |
+| **Status** | **CLOSED** -- discharged by `5b4f97f`: the charter's inverted regulatory positioning, D-5|
 
 ---
 
@@ -135,7 +153,7 @@ ruling is not available for use as a premise.
 | **Caught by** | Phase 0 verification, reading the cited post. The **director independently flagged the source's provenance** in the same session, before seeing the finding. |
 | **Severity** | Medium as statistics; **high as a rules breach** — the spine was broken on the first technical page. |
 | **Replaced by** | D-8 — anchor Brown, Cai & DasGupta (2001), *Statistical Science*, DOI `10.1214/ss/1009213286`. Ship Wilson + Clopper-Pearson. Jeffreys dropped. Blog demoted to context. |
-| **Status** | **OPEN** |
+| **Status** | **CLOSED** -- discharged by `5b4f97f`: D-8's anchor: Brown, Cai & DasGupta, blog demoted to context|
 
 *Provenance note for the record:* the domain was checked and is genuine Google infrastructure
 (NS `ns-cloud-d1.googledomains.com`, Blogger IP block, `www` CNAME `ghs.google.com`, TLS from Google
@@ -153,7 +171,7 @@ Trust Services). Not a lookalike. Still unofficial. The rule bites on *official*
 | **Caught by** | Phase 0 verification, arXiv API and the paper's HTML render |
 | **Severity** | Medium. Asserts a peer-review status no source supports. |
 | **Replaced by** | D-6 — cite as arXiv preprint 2602.18518v2 (2026-08-17), formatted for KDD 2027 |
-| **Status** | **OPEN** |
+| **Status** | **CLOSED** -- discharged by `5b4f97f`: D-6's corrected citation: arXiv 2602.18518v2, KDD 2027|
 
 ---
 
@@ -167,7 +185,7 @@ Trust Services). Not a lookalike. Still unofficial. The rule bites on *official*
 | **Caught by** | Phase 0 verification, launch release. The **second source, and therefore the conflict, was surfaced by the director** at ratification. |
 | **Severity** | Low in magnitude; **the principle is the point.** Rounding a funding figure in a charter about verifiability is the exact failure the tool exists to prevent. |
 | **Replaced by** | D-7 — cite the launch release with its date; footnote the blog figure; **record the conflict, do not resolve it** |
-| **Status** | **OPEN** |
+| **Status** | **CLOSED** -- discharged by `5b4f97f`: D-7: both ROOST figures recorded, conflict unresolved|
 
 ---
 
@@ -181,7 +199,7 @@ Trust Services). Not a lookalike. Still unofficial. The rule bites on *official*
 | **Caught by** | Phase 0 verification, reading the dataset schema rather than the dataset description |
 | **Severity** | **High.** It would have sat on the README front page of a tool whose entire claim is that its numbers are checkable, asserting access to a ground truth that does not exist. |
 | **Replaced by** | D-11 — pre-registered threshold estimand, hashed before data is touched; truth knowable **by census** at each threshold; demo extended to **multiple thresholds as a sensitivity curve** |
-| **Status** | **OPEN** |
+| **Status** | **CLOSED** -- discharged by `5b4f97f`: D-11's pre-registered threshold estimand|
 
 **This correction improved the deliverable.** The float labels became the demonstration's main axis
 rather than a caveat buried in it.
@@ -201,7 +219,7 @@ rather than a caveat buried in it.
 | **Caught by** | The director's reviewer, re-running the commands. Confirmed by me: `mypy --strict src` → 10; `ruff format --check .` → 30 against `git ls-files '*.py'` → 16. |
 | **Severity** | Low in magnitude; the standing rule it breaks is not. *Numbers the director will repeat come from a run someone actually performed, stated with its conditions.* I had not performed the run I was quoting. |
 | **Replaced by** | Gate evidence is now reported as **exit codes and the test count**, both re-derived per report. The file-count integers are not quoted at all. |
-| **Status** | **OPEN** — closes when a phase-close report ships using exit codes only |
+| **Status** | **CLOSED** -- discharged by `d66d225`: the Phase 1 close report ships exit codes and a re-derived count|
 
 **Note on the dated document.** `docs/contracts/PHASE-1-REVIEW-STOP.md` is **not** edited. It is a dated
 reading and stands as the honest record of what was believed on 28 August 2026. This entry is the
@@ -220,7 +238,7 @@ correction, per the standing rule.
 | **Caught by** | The director's reviewer, by looking. Confirmed by me: `grep -cE '^## D-' docs/DECISIONS.md` → 15. |
 | **Severity** | Low individually. As a class it is the standing rule *"verify a filename or entity exists before naming it"*, and three of the four record defects found were that rule. |
 | **Replaced by** | The keyed-sort decision is now genuinely logged as **D-16**, and the comment points at it. `plan.py` points at `test_core.py`. |
-| **Status** | **OPEN** — closes at Phase 1 close, when the claim-search checker (O-7, D1.13) can assert every `D-nn` and path citation in `src/` resolves |
+| **Status** | **CLOSED** -- discharged by `d66d225`: `check_claims` citations and paths resolve every D-nn and path|
 
 ---
 
@@ -235,7 +253,7 @@ correction, per the standing rule.
 | **Caught by** | The director's reviewer |
 | **Severity** | Medium. Doctrine rule 7: claims at the exact width of the evidence. A package docstring is read by people who will never open the repository. |
 | **Replaced by** | *"`svy` and R `survey` are the estimator layer; this package does not claim to replace them. Cross-validation against R `survey` is a Phase 2 obligation (O-4) and is not yet done."* |
-| **Status** | **OPEN** — closes when O-4 is discharged and the sentence can be rewritten as a fact |
+| **Status** | **CLOSED** -- discharged by this commit: the package docstring rewritten as a fact, this commit|
 
 ---
 
@@ -251,7 +269,7 @@ correction, per the standing rule.
 | **Severity** | Medium. It would have shipped as a wrong sentence in the record, and it would have reordered the work wrongly. |
 | **Class** | **The same class as V-5**: a claim about a mechanism, believed because it sounds right, never run. That is now three entries of this shape (C-10, V-5, and C-7's ruff number). |
 | **Replaced by** | Build order Layer 4 → 3 → 1 → 2, and refusals asserted by `Reason`, not by whether a refusal happened |
-| **Status** | **OPEN** — closes when the V-1 mechanism is signed off at phase close |
+| **Status** | **CLOSED** -- discharged by `d66d225`: the V-1 mechanism signed off at Phase 1 close|
 
 ---
 
@@ -266,7 +284,7 @@ correction, per the standing rule.
 | **Caught by** | The director, by running it rather than reasoning about it |
 | **Severity** | Low as a defect, notable as a pattern: I described a system property I had not measured, in a document asking for a ruling on it. |
 | **Replaced by** | D-17 records the fact and its consequence, and `test_a_failed_step_writes_no_entry` asserts it so it cannot quietly stop being true |
-| **Status** | **OPEN** — closes at phase close |
+| **Status** | **CLOSED** -- discharged by `d66d225`: `test_a_failed_step_writes_no_entry` pins the fact D-17 rests on|
 
 ---
 
@@ -283,7 +301,7 @@ correction, per the standing rule.
 | **Caught by** | The director, reconciling my report against `errors.py` |
 | **Severity** | **High as a process defect.** An obligation reported by omission stops constraining anything just as surely as one reported wrongly. This is the standing rule to reconcile the deliverable list against what exists and raise the difference, attached to the artifact that exposed it — and the artifact was three missing enum members. |
 | **Replaced by** | **Every report now ends with what remains open, by name and severity, or it is not a report on the stop.** |
-| **Status** | **OPEN** — closes at Phase 1 close, if every report between here and there carries the open list |
+| **Status** | **CLOSED** -- discharged by `d66d225`: every report since has ended with what remains open, by name|
 
 **A second instance in the same message.** "Nine other findings" did not reconcile against my own
 table, which listed seven rows beyond the four layers. That is the count treadmill rule 14 warns
@@ -303,7 +321,7 @@ artifact that produces it, not in passing.
 | **Caught by** | The director |
 | **Severity** | Medium. The same class as V-11 — a real, likely input producing a library traceback instead of a refusal — which the director named as a further reason F-1 should not have been deferred. |
 | **Replaced by** | F-1 fixed and widened to the plan-load layer per the ruling, with `LABEL_NOT_NUMERIC` at estimate time as the second net and `PLAN_THRESHOLD_INVALID` at load as the first |
-| **Status** | **OPEN** — closes at phase close |
+| **Status** | **CLOSED** -- discharged by `d66d225`: F-1 fixed and widened to the plan-load layer|
 
 ---
 
@@ -321,7 +339,7 @@ artifact that produces it, not in passing.
 | **Severity** | Medium. The label said `docs/` in a table whose other two rows were literal directories, so the label was wrong even if the intent was "all prose in the repo" - and it landed in the one answer where the number *was* the argument. |
 | **Class** | Same as C-7: a number nobody re-derived. Third instance. |
 | **Replaced by** | `docs/` 3,531 lines, ratio **2.20x**; all repo prose 4,375, ratio 2.72x. Both stated with what they count. |
-| **Status** | **OPEN** - closes at phase close |
+| **Status** | **CLOSED** -- discharged by `d66d225`: both ratios stated with what they count|
 
 **Note on the ceremony conclusion that rested on it.** The director rejected the "three review rounds
 is inflation" reading, on evidence: round one found seven defects and missed ten; round two's report
@@ -347,7 +365,7 @@ against the artifact. Recorded here because the correction and the conclusion tr
 | **How it happened** | I fixed F-4 in `tests/conftest.py`, then generated `examples/synthetic/labels.csv` from a demo run without carrying the same property across. The fixture requirement lived in one file's constants and in prose, and prose does not travel. |
 | **Replaced by** | `tools/make_example.py` generates the example with one deliberately multi-chunk item, and states in code why. `check_claims`'s sixth check, `fixtures`, asserts the property. E9c restated to name `item-0154` and `0000.bin`/`0001.bin` specifically. **Verified: E9c on the shipped example now returns `SEAL_REORDERED`, with E9 and E9b returning `SEAL_TAMPERED` and `SEAL_TRUNCATED` on the same item.** |
 | **Class** | New, and named in **D-23**: a finding closed in one artifact and open in another. Distinct from the wrong-statement class (C-7..C-11) and the wrong-reporting class (C-12..C-14). |
-| **Status** | **OPEN** - closes at phase close |
+| **Status** | **CLOSED** -- discharged by `87b05f3`: `tools/make_example.py` and `check_fixtures`|
 
 **Two smaller things the same fix surfaced, both mine.** `check_fixtures`'s first version read the
 CSV with a bare `DictReader` and died on `_csv.Error: field larger than field limit` - the exact
@@ -370,7 +388,7 @@ same run. Both are the checker working on its own author.
 | **Caught by** | The director, at exit check **E4** - reading the report by eye. No instrument caught it: the tests assert the chain's *contents*, the checker asks about citations and fixtures, and the harness never emitted a report at all (contract 7a records that E4 and R7 were outside its reach). |
 | **Severity** | Medium. Nothing computed is wrong. What was wrong is that the artifact an auditor actually reads undermined its own audit instruction. |
 | **Replaced by** | The report now states the chain as at emission, that emitting appends one further entry, and **the exact count `verify` will report**. Asserted by `test_the_report_says_what_verify_will_count`, which checks the prediction is *correct* and not merely present, and by a second test that it tracks across repeat emissions. |
-| **Status** | **OPEN** - closes at phase close |
+| **Status** | **CLOSED** -- discharged by `875a244`: the report states the count `verify` will report, asserted by test|
 
 **Why this one is worth its entry.** It is the clearest instance in the phase of the thing rule 4
 exists for: *green tests prove self-consistency, not meaning.* Every test passed, the checker
@@ -390,7 +408,7 @@ reading the output.
 | **Caught by** | The director, performing it, noticing both readings, and choosing the correct one |
 | **Severity** | Low in effect, notable in kind. R1 is the property pre-registration rests on, and its exit check was the one written loosely. |
 | **Replaced by** | E2 restated as an action on the filesystem: *leave the plan untouched, rename or move the population file*. |
-| **Status** | **OPEN** - closes at phase close |
+| **Status** | **CLOSED** -- discharged by `875a244`: E2 restated as an action on the filesystem|
 
 **The part worth keeping.** *The reviewer's harness had encoded the wrong reading.* It edited the
 plan, printed `same as the real plan? False`, and added a note explaining why that was fine - so the
@@ -431,7 +449,7 @@ resolved it the same way. That is what a shared upstream defect looks like, and 
 | **Caught by** | The builder, reconciling the director's hand-run transcript against the contract's wording, after the director asked for exactly that reconciliation |
 | **Severity** | **High.** A stated protection not running, reported as green. |
 | **Replaced by** | D-24: the path is recorded in the plan entry body and `verify` defaults to it, so there is no longer a case where the tool knows where the plan was and declines to look. Plus the three conditions - no `[ok]` for an unperformed check, no "nothing out of place" when one was skipped, and any further skip brought back before shipping. |
-| **Status** | **OPEN** - closes at the Phase 1 to 2 boundary |
+| **Status** | **CLOSED** -- discharged by `25f9996`: D-24: the path recorded in the plan entry, `verify` defaults to it|
 
 **The pattern, now specific enough to name.** This is the **third** instance of the
 reviewer-instrument class, after the harness's clean frame that never exercised V-7 and the harness
@@ -459,7 +477,7 @@ against the wording.
 | **Caught by** | The director, running E6 rather than reasoning about it - and the evidence was already in the transcript he had sent me, which I had read and reconciled without noticing |
 | **Severity** | Low in effect: the conclusion survives. Notable in kind - this is the believed-mechanism class again (C-10, V-5, C-7), and it appeared **in the same message where I corrected someone else's reading of a transcript.** |
 | **Replaced by** | Recorded in D-24's "alternative not taken": the argument holds on one check, not two. |
-| **Status** | **OPEN** - closes at the Phase 1 to 2 boundary |
+| **Status** | **CLOSED** -- discharged by `25f9996`: D-24 records that the argument holds on one check, not two|
 
 ---
 
@@ -476,7 +494,7 @@ against the wording.
 | **Caught by** | The director, reading the section against the ledger |
 | **Severity** | Low in exposure, medium in kind: it is a false statement in the one document read for accuracy. |
 | **Replaced by** | 3.8 now states the as-invoked behaviour with both examples, **and gives the operator the control it was hiding**: run `plan` from the plan's own directory with a bare filename and nothing sensitive is recorded. The old text said only "there is no supported way to redact it", leaving the reader with no action. |
-| **Status** | **OPEN** - closes at the Phase 1 to 2 boundary |
+| **Status** | **CLOSED** -- discharged by `d66d225`: SECURITY 3.8 restated as-invoked, with the control it was hiding|
 
 **The part worth keeping.** Overstating a limit felt like the safe direction and was not. It cost the
 reader a control they actually had, and it put a checkable falsehood in the security document.
@@ -495,7 +513,7 @@ reader a control they actually had, and it put a checkable falsehood in the secu
 | **Severity** | Low in effect - **no harm done**, the message is well worded and the behaviour is right. Medium in kind: **the reasoning decides the treatment.** A branch believed unreachable gets a pin and a shrug; a branch every user hits deserves a release note and a check that the message reads right to someone who never had the field. It does. That was luck. |
 | **Replaced by** | **D-25** treats it as a supported case, records that the ledger cannot distinguish an old run from an API caller, and carries **O-15** for a schema version if the two ever need different advice. |
 | **Class** | Believed-mechanism (C-10, V-5, C-7, C-20). Fourth instance in that family, and the second inside a sentence where I was careful enough to bring the case to the director rather than absorb it. **Bringing it was right; the characterisation attached to it was not.** |
-| **Status** | **OPEN** - closes at the Phase 1 to 2 boundary |
+| **Status** | **CLOSED** -- discharged by `d66d225`: D-25 treats it as a supported case; O-15 carries the schema version|
 
 ---
 
@@ -545,7 +563,7 @@ director's characterisation, recorded verbatim at C-19, holds on all five:
 | **Source** | **Builder (Claude Code)** |
 | **Caught by** | The director |
 | **Severity** | Low as a typo. **The real finding is that `check_claims` passed.** |
-| **Status** | **OPEN** - closes at the Phase 1 to 2 boundary |
+| **Status** | **CLOSED** -- discharged by `d66d225`: `check_paths` discovers files instead of naming them|
 
 **Why the checker missed it.** `check_paths` read a fixed list of globs -- `src/**/*.py` and
 `tests/*.py`. `CLAUDE.md` was not in it, so adding a new document silently reduced coverage: no
@@ -581,7 +599,7 @@ bad path in **`CLAUDE.md` specifically** - a file the old list would never have 
 | **Caught by** | The builder, by **executing** the recorded procedure instead of quoting it, while gathering the O-18 evidence the director asked for. It surfaced only because the director supplied the EUR-Lex text his browser could read and no fetcher here could. |
 | **Severity** | Medium. Nothing shipped wrong. But every future pin in this register depends on being able to fetch a primary source, and the one instruction for doing that had expired with nothing saying so. |
 | **Replaced by** | The corrected note, with both headers, the four measured request forms and their results, and the date. Plus four rows in the re-check log. |
-| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)**, naming the commit that discharged it |
+| **Status** | **CLOSED** -- discharged by `7f19bd9`: the corrected retrieval note, and S-8 under D-27|
 
 **This is not the believed-mechanism class.** The note was **true when written**. Phase 0 used that
 endpoint on 2026-08-28 and it worked -- that is how the "prevalence appears zero times" count was
@@ -625,7 +643,7 @@ rule 7 -- claims at the width of the evidence -- applied to fetching rather than
 | **Caught by** | CI, one push later. Not by the local gate, which was green. |
 | **Severity** | Low in effect -- one red run, fixed in minutes, nothing shipped. Medium in kind, and the kind is the point. |
 | **Replaced by** | `check_gate` now parses the workflow with `yaml.safe_load` instead of a regex, and reports `is not valid YAML` when it cannot. Two controls: `test_the_gate_check_reads_the_workflow_the_way_github_does` and `test_the_real_workflow_is_valid_yaml`. |
-| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+| **Status** | **CLOSED** -- discharged by `b018d2a`: `check_gate` parses the workflow with `yaml.safe_load`|
 
 **Why this is worth an entry.** My check read the workflow with a regular expression. A regular
 expression will happily read a file that YAML rejects. So **the checker accepted an artifact the
@@ -664,7 +682,7 @@ regex. It now uses `xml.etree.ElementTree`. Everything else already used the rig
 | **Caught by** | The director, re-deriving the ratio from the exact values rather than accepting the correction |
 | **Severity** | Low in effect -- the finding it decorated is correct, and the shipped code returns the right numbers to twelve decimals. Notable in kind, and in where it happened. |
 | **Replaced by** | The two figures stated as what they are: **0.9608 at n = 4000**, and **0.9603 as the asymptotic limit**, with the convergence shown. |
-| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+| **Status** | **CLOSED** -- discharged by `087f499`: both figures stated as what they are, with the convergence shown|
 
 **This is C-7's family: a figure taken from a working step rather than re-derived from the artifact.**
 The working step was the algebra that explains *why* the interval is narrower. That algebra is right,
@@ -695,7 +713,7 @@ tests, which is its own small lesson about where to look.
 | **Caught by** | The builder, by building the image and running it. Nothing about reading CRAN would have shown it. |
 | **Severity** | **Medium, and higher than its wording suggests.** It did not reach a commit. It reached a **ruling**: the director changed a disclosure requirement on the premise that our witness returns an answer where we refuse. |
 | **Replaced by** | The disclosure restated to cite **the paper, not the package** -- S-1.11, Kopacka & Fuchs (2026) -- so it holds whatever any package version ships. And S-1.10 records that our witness is 2.0.92, with what that version does and does not have. |
-| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+| **Status** | **CLOSED** -- discharged by `eec1084`: the disclosure cites the paper, S-1.11, not the package|
 
 **The builder proposed no C-number and was overruled**, and the reasoning is what changed the
 table's scope. The director's words: *"A claim that never reached a commit but did reach a
@@ -727,7 +745,7 @@ were re-verified directly in 2.0.92 before any of them entered the register.
 | **Caught by** | The builder, by asking the Crossref API for the raw record and printing codepoints instead of glyphs. The director then re-checked the same way and withdrew the finding. |
 | **Severity** | Low in effect -- nothing was changed on the strength of it. Notable in kind: it is the first instance of its class that is about a **fact in a source** rather than about a contract's action. |
 | **Replaced by** | Nothing to replace. The register was right. Recorded because the *finding* was the defect. |
-| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+| **Status** | **CLOSED** -- discharged by `eec1084`: nothing to replace -- the register was right; the finding was the defect|
 
 **This breaks C-19's characterisation, and the break is the point.**
 
@@ -760,7 +778,7 @@ and read codepoints. That is what settled this, twice, independently.
 | **Caught by** | **D2.7's opening inventory**, then confirmed by a **31-code mutation sweep** -- every reason code swapped at every raise site, the suite run against each. Two codes survived. |
 | **Severity** | **Medium.** Doctrine rule 5 exists because *refusals that cannot be counted by cause make the refusal metric meaningless*, and this is a count that included one nobody could count. It is worse than a missing test in one specific way: **`PLAN_MISSING` at the `verify` site is what protects D-15 check (a)**, the check that makes R5 -- an outsider can verify from the sealed record alone -- provable rather than aspirational. |
 | **Replaced by** | Four tests in `tests/test_verify.py`: a negative control per site, a positive control, and one pinning that the two sites send the operator to different artifacts. Re-verified by mutation: both sites now fail the suite when their code is swapped. And **`check_controls`**, the ninth check, so the class cannot recur silently. |
-| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+| **Status** | **CLOSED** -- discharged by `09dfdce`: four tests in test_verify.py, and `check_controls`|
 
 **This is a defect against Phase 1's own stated exit criterion, not a limit of Phase 1, and doctrine
 rule 9 requires saying which.** Phase 1 did not promise "most codes have controls" and then get held
@@ -800,7 +818,7 @@ is not in this table.
 | **Caught by** | Searching for the class C-27 named, on the director's instruction to go looking. |
 | **Severity** | **Medium.** The count was wrong, and the sentence made the wrongness hard to see. |
 | **Replaced by** | The four missing rows, added under D-34. The register is now reconciled in both directions by `check_register`. |
-| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+| **Status** | **CLOSED** -- discharged by `b018d2a`: the four missing rows, added under D-34|
 
 **This is the second instance of the class C-27 named, and it is why that class has its own rule.**
 The sentence ends with *"reconciled against the code by `tools/check_claims.py`"*. That is true. The
@@ -825,7 +843,7 @@ correction lives here.
 | **Caught by** | The director, running `pytest` on the committed state |
 | **Severity** | **High.** Not for the breakage, which was one line, but for the claim. The gate is the one figure every other figure leans on. |
 | **Replaced by** | The line fixed in `plan.py` and `verify.py`, and the whole gate re-run on the committed tree before reporting. |
-| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+| **Status** | **CLOSED** -- discharged by `a418473`: the tree fixed and the whole gate re-run on the committed state|
 
 **The mechanism, because it is worse than carelessness.** My mutation re-verification loop ended each
 pass with `git checkout -- src/prevalence_kit/plan.py`. The Q8 edit to that file was **unstaged** at
@@ -864,7 +882,7 @@ restated without being re-derived from the artifact it describes.
 | **Caught by** | Adding a second axis to the fixtures, on the director's instruction. **Nothing else could have caught it** -- no witness comparison varies a parameter no fixture varies. |
 | **Severity** | **Medium.** No shipped number is wrong. Three reported figures were narrower in scope than they read, and one characterisation was false outside its measured point. |
 | **Replaced by** | All three restated with their axes. The test renamed `test_clopper_pearson_is_narrower_than_wilson_only_near_the_boundary` and asserting the boundary property instead of the k = 0 one. |
-| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+| **Status** | **CLOSED** -- discharged by `fca213b`: all three restated with their axes; the width test replaced by coverage|
 
 **Why (b) moved so much, since a factor of 38 deserves an explanation rather than
 a shrug.** `DIGITS = 12` is a fixed number of decimal places, so it costs a fixed
@@ -919,7 +937,7 @@ width question ever did.
 | **Caught by** | The director, who declined to accept the reading and asked for it to be measured rather than reconciled in prose, and who checked every charter mention. |
 | **Severity** | **Medium.** It reached a commit and a push. Nothing in the code depended on it, but it was on its way to becoming a correction entry asserting a conflict between two papers that agree. |
 | **Replaced by** | `r/coverage_fixtures.R`, which measures all three intervals at the rare-event operating points, and a rewritten S-1.1 section stating what each source measured. |
-| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+| **Status** | **CLOSED** -- discharged by `95a521a`: `r/coverage_fixtures.R` measures it; S-1.1 rewritten|
 
 **What the measurement found, and it is the reverse of what I implied.** Worst coverage over
 `p = gamma/n`, gamma in [0.5, 15], at n = 1000:
@@ -954,7 +972,7 @@ quantity both sources were talking about.
 | **Caught by** | The builder, verifying the refusal text against the fixture before shipping it -- `int(0.9098 * 100)` returned 90, not 91. |
 | **Severity** | **Medium.** It reached the **ratified charter**. Nothing computed from it, but it is the number an operator is meant to make a decision on. |
 | **Replaced by** | **90.98%** in the charter and in the refusal, with the reason stated: round a bound in the direction that keeps it true. |
-| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+| **Status** | **CLOSED** -- discharged by `9d66392`: 90.98% in the charter and in the refusal|
 
 **This is the first correction sourced to the director**, and the counts table has read `Director | 0`
 through thirty-one entries. Recorded because a table that counts the builder's errors and never the
@@ -990,7 +1008,7 @@ both breaks came when the director was correcting someone else.
 | **Caught by** | The sweep the director ordered after **C-32** -- *"start with any figure in the record described as 'worst', 'at most' or 'no more than'."* Both were found in the first pass. |
 | **Severity** | **Low each, notable together.** Neither changes a decision. What they show is that the class was already present twice before anyone named it. |
 | **Replaced by** | **2.7e-07** and **0.74%**, rounded away from the middle. |
-| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+| **Status** | **CLOSED** -- discharged by `9d66392`: 2.7e-07 and 0.74%, rounded away from the middle|
 
 **The sweep also confirmed three figures that were already right**, which is what makes it a
 measurement rather than a hunt: `8.4e-11` from 8.383e-11, `7.3e-13` from 7.281e-13, and S-1.7's own
@@ -1015,7 +1033,7 @@ them, and that is the harder case.
 | **Caught by** | A D2.8 test citing **O-20** for the first time. The citations check called a real obligation undefined, which is the checker reporting a true fact about itself in the form of a false one about the record. |
 | **Severity** | **Medium.** Nothing was wrong in the record; the instrument could not see a third of the obligations and said it could. |
 | **Replaced by** | `OBLIGATION_SOURCES`, a tuple the function walks, with `scope_of()` rendering it for humans. **The documented scope is now derived from the behaviour**, pinned by `test_the_documented_scope_is_the_scope_walked`. Contracts matched by glob so a Phase 3 contract is covered the day it is written. |
-| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+| **Status** | **CLOSED** -- discharged by `9d66392`: `OBLIGATION_SOURCES` walked, `scope_of()` rendering it|
 
 **This is a different kind from the seven instrument-coverage instances before it, and the director
 named the difference:**
@@ -1045,7 +1063,7 @@ description of itself.
 | **Caught by** | Reading S-1.2 and S-1.3, on the director's instruction, before building the strata layer. **Nothing else could have caught it**: Barnett Table 2B states its design in **weights, not stratum sizes**, so the only external anchor this allocation has cannot express the factor |
 | **Severity** | **Medium.** No shipped number is wrong and none changes. What was wrong is a citation, in the register that exists so a reader can check a method against its source |
 | **Replaced by** | S-1.2's register role narrowed to **origin of the method**; the divergence recorded with both measurements and their design spaces; D2.3's row and docstring reciting **charter §6.2 and S-2.3** as governing. Ruled 2026-08-29: **keep the formula, fix the citation** -- adopting the paper's form would trade a witnessed formula for one no instrument here can check |
-| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+| **Status** | **CLOSED** -- discharged by `8dbfcad`: S-1.2 narrowed to origin of the method; D2.3 recites charter 6.2|
 
 **This is the wrong claim that F-9 exposed, and the two are not double-counting.** F-9 is the
 finding -- the record cited a source it had not read against the code it governs. C-35 is the
@@ -1071,7 +1089,7 @@ evidence about S-1.2's text.
 | **Caught by** | **Deriving the table from the entries instead of guessing them**, on the director's instruction to prioritise D2.14(b). The derivation was written before the numbers were read |
 | **Severity** | **Low in magnitude, and it is the location that earns the entry.** This is the count treadmill inside the table that records the count treadmill |
 | **Replaced by** | The recomputed table, plus **the semantics written down** below it so the next reader does not have to re-derive them, and so D2.14(b) has a specification to check against rather than a number to copy |
-| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+| **Status** | **CLOSED** -- discharged by `d096da0`: the table derived; D2.14(b) now checks it by machine|
 
 **Why the number was wrong is worth more than the number.** C-21's own text says *"Second recorded
 instance; **fifth overall in the class**."* The **class** tracks instances that never got a
@@ -1095,7 +1113,7 @@ warranted a C-number at all. A question asked twice is a specification missing o
 | **Caught by** | The director, reading the register as a stranger would |
 | **Severity** | **Medium**, and it is about **where it landed**, not what it said. No estimate, pin or read state depended on it |
 | **Replaced by** | The register's **fourth rule** and `CLAUDE.md`'s **rule 20**, both stating the boundary so the field cannot be reinvented. The entry now carries only the citation, that the artifact is the publisher's copy, the read state with its sections, and the OCR caveat |
-| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+| **Status** | **CLOSED** -- discharged by `14305f1`: the register's fourth rule and CLAUDE.md rule 20|
 
 **The line the rule draws, and it is not "no routes."** Cochran's rendering route **stays**, because
 rendering a scan to images **changes what was read** -- a rendered page is not a text layer, and a
@@ -1129,7 +1147,7 @@ vindicated.
 | **Caught by** | The builder, reading `_estimate_from` before wiring the stratified draw into it -- and **confirmed by the director independently**, who reproduced it end to end: CLI prints `method wilson`, `verify` reports the estimate reproduced |
 | **Severity** | **High.** It reached a commit and a push, it was live on the only design that runs end to end, and **`verify` could not see it** |
 | **Replaced by** | Two fixes. `_estimate_from` dispatches on `plan.interval` through `INTERVAL_METHOD`. And `verify` **cross-checks `estimate.json`'s method against the plan** -- `ESTIMATE_METHOD_MISMATCH`, both controls. **F-10** |
-| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+| **Status** | **CLOSED** -- discharged by `f67e5b4`: `_estimate_from` dispatches; `verify` cross-checks the method|
 
 **Why `verify` agreed with the defect, which is the part that outlives the fix.** `verify` recomputes
 the estimate by calling **the same `_estimate_from`**. So it reproduced the same Wilson interval,
@@ -1169,7 +1187,7 @@ asserted the field was **used**, and the passing test is why nothing looked.
 | **Caught by** | **The director's probe**, named at the review stop: *for every field in the hashed plan record, what reads it, and what happens if it changes?* Run by the builder, reproduced end to end by the director |
 | **Severity** | **Critical.** **V-1 defeated pre-registration of the plan. This defeated pre-registration of the evidence, which is the thing the plan is about** |
 | **Replaced by** | `EVIDENCE_NOT_PREREGISTERED`, refused at `sample` and `ingest-labels` -- before the label budget, Q2's reason. **Resolved paths, never strings**, with the plan's value resolved against the **plan file's directory**, stated in the schema docs. Both resolved paths in the message. The path used is recorded in the ledger beside the declared one, D-24's shape. **The report takes the population from the record, not from the commitment** |
-| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+| **Status** | **CLOSED** -- discharged by `c5f71c1`: `EVIDENCE_NOT_PREREGISTERED`, and the report reads the ledger|
 
 **A defect against a stated protection, not a limit -- and doctrine rule 9 requires saying
 which.** SECURITY 1.3 was written before Phase 1 code and claims the population and the label
@@ -1207,7 +1225,7 @@ ledger, because **the record is what happened and the plan is only what was prom
 | **Caught by** | The director, checking the sentence against the table above it |
 | **Severity** | **Medium.** Nothing was built on it and the ruling it supported was correct for a different reason. What is medium is where it sat: a false claim inside a request for a ruling, which is the one place a claim is doing work rather than describing it |
 | **Replaced by** | The true argument, which does not depend on a coincidence of three designs: **containment is not validity.** The pooled `k/n` estimates a **different quantity** from the design-weighted estimate, so a binomial interval around it is not an interval for the design estimate whether or not the two happen to overlap. **Coverage is the test, not containment**, and coverage is precisely what an interval built on the wrong estimand cannot deliver |
-| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+| **Status** | **CLOSED** -- discharged by `feab599`: the true argument recorded: containment is not validity|
 
 **The class, counted from the artifact rather than from memory: this is the fifth**, after
 C-27, C-28, C-29 and C-31. A figure that is right, carrying a sentence about it that nobody
@@ -1234,7 +1252,7 @@ duller one was true and sufficient.
 | **Caught by** | The director |
 | **Severity** | **Low in effect, and it has a root cause worth more than the fix.** A duplicate number in a record whose questions are cited by number would send a later reader to the wrong ruling |
 | **Replaced by** | Renumbered to **Q15**, and **Q13 and Q14 written into the contract**, which is where the collision came from |
-| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+| **Status** | **CLOSED** -- discharged by `feab599`: renumbered to Q15; Q13 and Q14 written into the contract|
 
 **The root cause, and it is D-28's shape.** Question numbers are **allocated in
 `docs/DECISIONS.md`** -- D-39 says *"the director's Q13 ruling"*, D-40 says *"Q14"* -- while

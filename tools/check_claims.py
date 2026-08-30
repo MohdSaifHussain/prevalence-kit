@@ -694,6 +694,7 @@ def check_counts(root: Path) -> list[Problem]:
     total = len(blocks)
     noted = sum(1 for _, body in blocks if _status(body) == "noted")
     still_open = sum(1 for _, body in blocks if _status(body) == "open")
+    shut = sum(1 for _, body in blocks if _status(body) == "closed")
 
     problems: list[Problem] = []
     row = re.search(
@@ -704,7 +705,19 @@ def check_counts(root: Path) -> list[Problem]:
     )
     if row is None:
         return [Problem("counts", "docs/CORRECTIONS.md", "has no Total row to check")]
-    stated_open, stated_total = int(row.group(1)), int(row.group(3))
+    stated_open, stated_closed, stated_total = (
+        int(row.group(1)),
+        int(row.group(2)),
+        int(row.group(3)),
+    )
+    if stated_closed != shut:
+        problems.append(
+            Problem(
+                "counts",
+                "docs/CORRECTIONS.md",
+                f"Total row says {stated_closed} closed, entries say {shut}",
+            )
+        )
     if stated_open != still_open:
         problems.append(
             Problem(
@@ -735,15 +748,19 @@ def check_counts(root: Path) -> list[Problem]:
 
 
 def _status(body: str) -> str:
-    """`open`, `noted`, or `?` when the entry has no readable Status row."""
+    """`open`, `closed`, `noted`, or `?` when the entry has no readable Status row.
+
+    **Three states, not two.** The first version knew only `open` and `noted`,
+    which was true of the file until T-1 closed forty-one entries at once and the
+    check reported every one of them as unreadable. It was right that it could not
+    read them; the vocabulary was short.
+    """
     found = re.search(r"\*\*Status\*\*\s*\|\s*(?:\*\*)?([A-Za-z]+)", body)
     if found is None:
         return "?"
     word = found.group(1).lower()
-    if word == "open":
-        return "open"
-    if word == "noted":
-        return "noted"
+    if word in {"open", "closed", "noted"}:
+        return word
     return "?"
 
 
@@ -1208,8 +1225,8 @@ def selftest() -> int:
             # The defect exactly as it was: the Total row over by one. C-36 sat
             # in the file with its own columns summing to 38 against a stated 37.
             "docs/CORRECTIONS.md",
-            "| **Total** | **42** | **0** | **44** |",
-            "| **Total** | **41** | **0** | **44** |",
+            "| **Total** | **1** | **41** | **44** |",
+            "| **Total** | **1** | **40** | **44** |",
         ),
         "schema": (
             # F-10's shape, planted: declare a field behavioural that nothing

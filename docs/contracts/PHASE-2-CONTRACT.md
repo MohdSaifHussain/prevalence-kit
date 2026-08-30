@@ -104,8 +104,8 @@ Each names the top standard it must follow.
 | D2.9 ▸ **DONE 2026-08-30** | `svy` cross-check **where its estimator is the same estimator** — which turned out to be **allocation only**. Every interval `svy` 0.25.0 offers is design-based, and **it maps the alias `clopper-pearson` to `korn-graubard`**, so D-18's finding about Wilson holds for all of them. Its `_neyman_allocation` **is** ours, largest-remainder rounding included: **2000/2000 designs identical**, all three shipped fixtures identical, exact ties identical. **The first genuine external witness the allocation has ever had** — F-9 established R `survey` has no allocator. Fixture committed, `svy` never installed here | **O-4 as narrowed by D-18** · **S-2.2** |
 | D2.10 ▸ **DONE 2026-08-30** | Measure how far `svy`'s design-based Wilson diverges from the textbook interval at small *n*. **Measured over `n` {10…1000}, `k` {0…n}, confidence {0.90, 0.95, 0.99}**, `svy` 0.25.0 / numpy 2.5.2 / polars 1.44.1. Interior worst **0.117330** at n=10, falling to **9.7e-05** at n=1000. **Two boundaries differ in kind**: at `k = n` `svy` returns a **zero-width** interval, and at `k = 0` it returns **no interval at all** (two invocations tried) | **O-13** · **S-2.2** |
 | D2.11 | CI wiring: fixtures in the gate, R image pinned by digest | S-6 toolchain |
-| **D2.12** | **T-1.** Close every discharged correction, each naming the commit that discharged it | Tier trim, ruled 2026-08-29 |
-| **D2.13** | **T-2.** Apply the decision-entry rule to the log, and state it in `docs/DECISIONS.md`. **The rule governs choices the builder makes alone. A question put to the director and ruled is recorded because it was ruled, whatever its operator visibility.** Without that line, Q3 — same CLI, same codes, invisible to an operator — would be suppressed by the first rule written to shrink the log, which is the one thing it must never do. | Tier trim, ruled 2026-08-29 |
+| **D2.12** ▸ **DONE 2026-08-30** | **T-1.** Close every discharged correction, each naming the commit that discharged it. **41 of 44 closed**, every hash verified to exist before it was written. **C-1 stays open** — its condition (the README credits `svy`) is Phase 3 and unmet, not overlooked; C-18 and C-21 stay `noted`. **C-9 could not simply be marked**: its condition was *closes when O-4 is discharged and the sentence can be rewritten as a fact*, and the shipped docstring still said the cross-validation *is not yet done* — false in the other direction. T-1's bookkeeping surfaced it | Tier trim, ruled 2026-08-29 |
+| **D2.13** ▸ **DONE 2026-08-30** | **T-2.** Applied and stated at the head of `docs/DECISIONS.md`, in two halves with the second overriding the first, plus the default-with-no-reason case and the amendments-are-the-director's case. **The rule governs choices the builder makes alone. A question put to the director and ruled is recorded because it was ruled, whatever its operator visibility.** Without that line, Q3 — same CLI, same codes, invisible to an operator — would be suppressed by the first rule written to shrink the log, which is the one thing it must never do. | Tier trim, ruled 2026-08-29 |
 | D2.14 ▸ **DONE 2026-08-30** — all four conditions, and **three new checks with both controls**: `counts`, `schema`, `open-items`. `check_claims` now runs **twelve**. (a) `PATH_LIKE` widened on the two axes that were wrong — directory prefixes and extensions — rather than by naming the files it missed, so `r/`, `svy/`, `examples/` and both PDFs are covered. (b) the counts table is **derived and checked**; it fired on its first run. (c) an open-items row naming a discharged item fails, and **it fired on its first run too**, on a genuinely stale O-23. (d) `FIELD_KIND` is asserted against the code: every hashed field declared both ways, and every behavioural field read outside `plan.py` — F-10's shape, made a gate | Extend `check_claims` to the new artifacts (fixtures directory, R script). **Two more gaps found 2026-08-29, ruled into this deliverable:** (a) `check_paths` does not cover either PDF — wrong directory prefix *and* wrong extension; (b) **the counts table in `docs/CORRECTIONS.md` is not covered by `check_figures`, and was updated by hand.** That is the count treadmill, in the table that counts our own counting errors. ▸ **The semantics are now written down — `docs/CORRECTIONS.md`, "What these columns mean" — so the check has a specification rather than a number to copy, ruled 2026-08-30. The table was derived and found over by one: C-36. What remains owed is the machine check.** The definition it must encode: an **entry** is a `## C-n` or `## V-n` heading, `Open` counts `Status: OPEN`, `noted` is excluded from Open and included in Total, and **a class tally is a different population from this table** — which is how the reviewer-instrument row reached 3. **(c) Ruled in 2026-08-29, by the director, from four stale rows found by reading: an open-items row naming an item the record says is discharged must fail the gate.** `CLAUDE.md`'s "Open, by name" table is a **live figure written in prose**, and nothing checks it. Its three machine-checked figures were current while four hand-maintained rows in the same file had drifted, **inside about six hours** — §6.1 (discharged by A-3), O-20 and O-22 (both moved at `d25e6fe`), and the corrections range. **The minimum condition: an obligation or correction identifier in an open-items row, whose owning record marks it discharged, is a failure.** ▸ **(d) Ruled 2026-08-30 at the review stop: the plan schema declares each field *behavioural* or *declarative*, and a checker asserts both halves** — every behavioural field is read somewhere in `src/`, and no declarative field selects behaviour. **Two fields have now been inert** — `interval` (F-10) and `population` / `labels` (F-11) — **and neither was found by an instrument**: one by reading code and asking what reads a field, one by a probe the director named. `estimand.description` is inert and correct, and nothing today distinguishes that from an accident. **The third will be found the same way unless the schema declares its own intent** The three figures are checked because they went stale once and nobody noticed; this table went stale the same way and was caught only by a session that read carefully. **That assumption is the one `check_figures` exists to remove** | D-23's stated limit |
 | **D2.16** *(new, 2026-08-29)* | **`stratallo` fixtures. FIXTURE-ONLY — no new estimator.** A second independent witness for D2.3's stratified variance (`var_st` / `var_stsi`) and the **first** for D-30's rounding (`round_oric` / `round_ran`). Strengthens work already built at the cost of a fixture. **The `epiR` narrowing travels with it**: these are the algorithm authors' own implementation, so it confirms we compute what they compute and does **not** independently confirm the method | **S-1.12** |
 | D2.15 | Discharge or restate O-3, O-14, O-15 | rule 11 |
@@ -303,6 +303,43 @@ boundary **will not fire either**, for the same structural reason — Phase 2 sh
 irreversible. **The re-ask at the Phase 3 boundary must be taken seriously**, and this paragraph
 exists so that is a scheduled decision rather than a remembered intention.
 
+### The Phase 2 → 3 re-ask, discharged 2026-08-30
+
+**Builder's recommendation: remain at STANDARD. The forecast held, and it is worth saying why
+rather than only that it did.**
+
+The standard was fixed before any evidence existed: moving to FULL requires naming **a concrete
+finding attributable to a FULL-only practice**. Phase 2 produced the most serious findings in
+this project's life — **F-10**, **F-11**, C-27, C-34, C-36 — and **not one of them came from
+ceremony**. Where they came from, attributed rather than assumed:
+
+| Finding | Found by | Practice |
+|---|---|---|
+| **F-11** (critical) | The director's probe at the review stop, run by the builder | **STANDARD** — the review stop |
+| **F-10** (high) | The builder, reading `_estimate_from` before wiring the draw into it | STANDARD |
+| **F-9** | Reading S-1.2 and S-1.3, on the director's instruction to go to the sources | STANDARD |
+| C-27, C-34, C-36 | Mutation sweep, a test citing O-20, deriving a table instead of guessing | STANDARD |
+| C-32, C-40 | The **director**, checking a sentence against the table above it | STANDARD |
+| Q15's witness gate | Re-measuring rather than inheriting D2.9's answer | STANDARD |
+
+**No FULL-only finding can be named.** The verdict rests on an absence, which needs no
+counterfactual, and **the gloss that FULL "would have found more" is a claim about a run nobody
+performed** — rejected here rather than left to be implied.
+
+**One thing this phase does add to the tier question, and it argues for STANDARD rather than
+against it.** Every defect above was found by an *instrument or an act*, not by a *document*:
+a mutation sweep, a probe, a source read, a table derived. FULL's distinguishing practices are
+rehearsal of the irreversible and a heavier written record, and Phase 2 shipped nothing
+irreversible to rehearse.
+
+**Phase 3 is different and the difference is scheduled, not remembered.** It releases: a tag, a
+publish, and a pull request to someone else's repository. **That is the first time rehearsal of
+the irreversible has anything to bite on**, and the re-ask there must be taken seriously rather
+than defaulted. **The forecast for it is deliberately not recorded**, because a forecast that
+the re-ask will fail is how a scheduled decision becomes a formality.
+
+**The director rules.**
+
 ## 10. Carried obligations owned by Phase 2
 
 | # | Obligation | From |
@@ -332,7 +369,99 @@ Each reported at close as **discharged**, or **unmet with a named blocker**.
 
 ## 11. Deviations and outcome
 
-*Completed at phase close. Empty until then.*
+**Phase 2 build complete — 30 August 2026.** Written at the close rather than after it:
+Phase 1's §10 was nearly lost by leaving it late, and that is the only reason this section
+is here before the director's hand-run rather than after.
+
+**Not closed yet.** The director runs §8's exit checklist and rules on the outcome. What
+follows is the builder's evidence, offered for that.
+
+### Evidence per deliverable
+
+| # | Evidence |
+|---|---|
+| **D2.1** | R witness reproduces **Barnett Table 2B**: `2098 / 828 / 584 / 256 / 234`, VVR `0.2000%`, SD `0.0539 pp`. `svydesign` SE against the closed form: **4e-16**. No estimator code in the deliverable |
+| **D2.2** | 4 allocation + 5 estimation fixtures from `survey` 4.5, through the call D2.1 validated. Committed at `41f8a33`, **before** `stratified.py` at `9c7f21f` |
+| **D2.3** | `stratified.py` — Neyman, largest-remainder rounding, stratified estimator. Worst disagreement with `survey`: **9.5e-15** |
+| **D2.4** | Clopper-Pearson from its definition, binomial tail in log space. Witness base R `binom.test`: **8.4e-11** across n = 1…1,999,514 and confidence {0.90, 0.95, 0.99} |
+| **D2.5** | Rogan-Gladen point estimate, 11 `epiR` cases. Two refusals, both controls |
+| **D2.6** | Rogan-Gladen interval against `epiR`: **7.3e-13**. Clamped both ends (Q6/D-32), Clopper-Pearson only (Q7/D-33) |
+| **D2.7** | Refusals proved to fire. Mutation sweep over all codes found **C-27**; a boundary probe found **F-8** |
+| **D2.8** | `interval`, `allocation_rounding`, `strata` and Se/Sp in the hashed plan; the stratified draw; **F-10** and **F-11** found and fixed |
+| **D2.9** | `svy` witnesses the **allocation only** — 2000/2000 identical over a stated space, all three shipped fixtures, exact ties on numpy 2.5.2. **None of its intervals witnesses ours** |
+| **D2.10** | O-13 measured: interior worst **0.117330** at n = 10, **9.7e-05** at n = 1000. Two boundaries differ in kind — zero-width at `k = n`, no interval at all at `k = 0` |
+| **D2.11** | `.github/workflows/witness.yml` rebuilds the digest-pinned image and requires every fixture to regenerate **byte-identically**, both directions. All six verified locally |
+| **D2.12** | **T-1.** 41 of 44 corrections closed, each naming its discharging commit, every hash verified to exist |
+| **D2.13** | **T-2.** The decision-entry rule stated at the head of `docs/DECISIONS.md`, in the two halves that keep Q3 |
+| **D2.14** | All four conditions. `check_claims` runs **twelve** checks; `counts`, `schema` and `open-items` are new and each has both controls. Two of them **fired on their first run** |
+| **D2.15** | O-3 discharged (every fixture records version and exact call, asserted by `test_fixtures.py`). **O-14 and O-15 restated as carried** — see below |
+| **D2.16** | `stratallo` witnesses the **rounding** — 3/3 fixtures, 2000/2000 sweep — and **not** the variance, which is the without-replacement form. Fixture only |
+
+### Requirements
+
+**R2.1, R2.2, R2.3, R2.4, R2.5, R2.6, R2.7, R2.8 met.**
+
+**R2.2 is the one worth evidencing rather than asserting.** Fixture commits precede their
+estimators in every case: `41f8a33` before `9c7f21f`, `9c652fc` before `104abe3`, `ad73030`
+before `6ac1c1d`. Positions 26/27, 28/29 and 33/34 in the log.
+
+**R2.7 — limits carried forward, and one WIDENED.** `SECURITY.md` §3.8 now discloses two more
+paths and reaches a second artifact, because F-11 required the report to name the population
+actually sampled. Stated in §3.8 rather than absorbed, and the control that answers it —
+paths recorded **as invoked** — was verified end to end rather than assumed.
+
+### Deviations
+
+1. **The review stop found a critical defect and the phase did not proceed past it.** **F-11**:
+   the plan pre-registered `population` and `labels` and **nothing enforced either**. `verify`
+   reported nine checks and exit 0 on a run drawn from a file the plan did not name, and the
+   report printed the pre-registered filename beside it. Fixed alone, before anything else.
+2. **Two plan fields were inert and neither was found by an instrument.** `interval` (**F-10**)
+   and `population` / `labels` (**F-11**). One was found by reading code and asking what reads
+   a field; the other by a probe the director named at the stop. `FIELD_KIND` and D2.14(d) are
+   the structural answer, built at O-29 rather than waiting for item six.
+3. **D2.16 was added mid-phase**, after `stratallo` was found inside the pinned snapshot — the
+   third *no witness exists* claim this project made and got wrong.
+4. **Q15 needed a charter amendment.** `A-5` is **drafted and not applied**; the stratified
+   interval vocabulary is not built, so **O-26 remains open by ruling rather than by omission**.
+5. **A question number was issued twice.** C-41, with a root cause in D-28's shape: numbers are
+   allocated in `DECISIONS.md` and listed in the contract, and Q13/Q14 had no sections.
+
+### Obligations
+
+| # | Status |
+|---|---|
+| O-3 | **Discharged** — every fixture records its environment and exact call, asserted in the gate |
+| O-4 | **Discharged by D2.9**, as narrowed by D-18: the overlap is allocation alone |
+| O-8 | **Discharged by D2.6** — 7.3e-13, with the narrowing intact |
+| O-13 | **Discharged by D2.10** — measured, with every axis stated |
+| O-14 | **Unmet, carried.** Keyless structural audit mode. No blocker; it was not reached |
+| O-15 | **Unmet by design.** A ledger schema version, to be added only if an old run and an API-created run ever need different advice. Not added speculatively — D-25 |
+| O-20 | **Discharged** — `allocation_rounding` in the hashed plan, refused at load |
+| O-22 | **Discharged** — `interval` in the hashed plan **and read**; F8d performable |
+| O-23 | **Discharged** — ledger half with O-29, report half with the disclosure |
+| O-25 | **Unmet, named blocker: Q15.** The report must state the coverage of the interval actually used, and which intervals exist under a stratified design has just changed |
+| O-26 | **Unmet, named blocker: A-5 unruled.** The witness gate passed — `svy` reproduces our stratified estimate exactly — so this is blocked on vocabulary, not on evidence |
+| O-27 | **Unmet, carried.** D-38's one-stratum disclosure, post-stop surface |
+| O-29 | **Discharged** — Se/Sp in the plan, the correction reachable, F8d performable |
+| O-16, O-17, O-18, O-21, O-19, O-28 | O-16/O-17/O-18 discharged earlier; **O-19, O-21, O-28 carried to Phase 3 by design** |
+
+### Tripwires at close
+
+**Checked live 2026-08-30 by `tools/check_tripwires.py --check`:**
+
+- **TW-4 FIRED**, and stays fired. `actions/checkout` pinned v5.0.0 against latest **v7.0.1**;
+  `actions/setup-python` pinned v5.6.0 against **v7.0.0**. **O-19**, Phase 3. The pins are kept
+  as ruled; the tripwire is doing its job.
+- **TW-2 not fired, and it moved.** `svy` **0.26.0** is current against our pinned 0.25.0. The
+  witness is the pinned build (C-25); recorded in S-2.2 rather than acted on.
+- TW-1, TW-3, TW-5 not fired. TW-5 still reports 339 of 341 files byte-identical.
+
+### Gate at the close
+
+**Twelve checks green, 694 tests, selftest 12/12, register 30 rows, 37 reason codes.**
+Corrections: 44 entries, **1 open**, 41 closed, 2 noted.
+
 
 ---
 
