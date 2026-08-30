@@ -335,8 +335,15 @@ irreversible to rehearse.
 **Phase 3 is different and the difference is scheduled, not remembered.** It releases: a tag, a
 publish, and a pull request to someone else's repository. **That is the first time rehearsal of
 the irreversible has anything to bite on**, and the re-ask there must be taken seriously rather
-than defaulted. **The forecast for it is deliberately not recorded**, because a forecast that
-the re-ask will fail is how a scheduled decision becomes a formality.
+than defaulted.
+
+**No forecast is recorded for it, and the distinction matters more than the omission.** The
+method asks for a forecast **so the re-ask can be wrong** -- recording one is what makes the
+prediction falsifiable rather than decorative. Phases 1 and 2 had **nothing irreversible**, so
+forecasting that the re-ask would not fire was an honest prediction about a structural fact.
+**Phase 3's re-ask is genuinely open**, and a pre-recorded forecast of failure would bias a
+decision that finally has something to decide -- turning the same instrument into a formality
+from the other direction. **Ruled by the director, 2026-08-30.**
 
 **The director rules.**
 
@@ -908,8 +915,11 @@ depend on the design. Under it, §4 describes a vocabulary the tool no longer ha
 > Wilson is tighter and can fall below it. You cannot have both, and the tool will not pick for
 > you. **A binomial name under a stratified design is refused, and so is the reverse**, because
 > one word meaning two arithmetics is a trap the reader of a published plan cannot see.
-> Optional Rogan-Gladen correction when sensitivity and specificity are supplied. **Refuse with
-> a named reason** rather than print a silently wrong number.
+> Optional Rogan-Gladen correction when `sensitivity` and `specificity` are supplied --
+> **as hashed plan fields, both or neither, validated at load.** They are a pre-registered
+> commitment like any other: a plan that supplies one is refused, and correcting for a
+> different figure than the one registered would be a different measurement. **Refuse with a
+> named reason** rather than print a silently wrong number.
 
 ### What the director should weigh before ruling
 
@@ -923,6 +933,19 @@ is bureaucracy.
 
 **It does not name a recommended method**, deliberately -- A-4's reasoning, unchanged: naming
 one would recreate the default in prose.
+
+**The two clauses A-4 ends on are kept, and the director's read that they were dropped was
+checked before anything was changed.** Both survive verbatim in the draft above -- the
+Rogan-Gladen promise and the refusal principle -- and a new sentence was inserted *before*
+them, which is what makes the paragraph read as though it ends at the vocabulary. **Recorded
+because the check is the point:** a reviewer finding against a document that had nothing wrong
+with it is C-26's shape, and this project's rule is to check rather than defend, then say what
+the artifact shows.
+
+**What the ruling did change is real and is now in the text.** A-4 said *"when sensitivity and
+specificity are supplied"* and was vague about **how**. They are hashed plan fields, both or
+neither, validated at load -- **O-29** -- and the charter's verb row is where an operator
+learns what the plan carries.
 
 **One thing it deliberately does not say.** It does not claim the design-based intervals hold
 their nominal level. **Their coverage at rare-event rates has not been measured** -- S-1.1's

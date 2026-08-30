@@ -1268,6 +1268,32 @@ in the contract that opened it.
 
 ---
 
+## The direction of our errors, and the first counterexample
+
+**Every correction before C-9's discharge overstated in our favour.** That is what the record
+kept finding: a bound rounded toward the middle (C-32, C-33), an agreement figure without its
+axes (C-30), a claim about the world drawn from two packages (the *no witness exists* class), a
+containment claim its own table disproved (C-40). The pattern is real and it is why the sweeps
+were ordered.
+
+**C-9 went the other way, and it is the first one that did.** Its sentence said the
+cross-validation against R `survey` *"is not yet done"* -- **when it was done**, to 9.5e-15,
+and had been since D2.3. The shipped package docstring **understated our own work**, in the
+file read by people who never open the repository.
+
+**Worth recording as such**, because the record has been quietly building a claim about the
+direction of our errors, and a claim with no counterexample is a claim nobody has tested.
+**This is the counterexample.** It also says something about the mechanism: the sentence was
+true when written and expired when O-4 discharged, so the error was not optimism -- it was a
+**live figure in prose** with nothing watching it, which is the same root as the count
+treadmill.
+
+**And it was found by bookkeeping rather than by review.** T-1 required each closed correction
+to name its discharging commit; C-9's condition made that impossible to fake, and the
+impossibility is what surfaced it.
+
+---
+
 ## Classes, tracked separately from the count
 
 A correction gets a C-number when it reached a commit. A **class** keeps its own tally, because a

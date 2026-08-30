@@ -72,9 +72,22 @@ Run **all seven** after any scripted edit, not the half that looks affected. Use
 ritual, not a CI job — a tripwire firing is a decision for the director, not a red X. **Five
 tripwires now; TW-4 is FIRED and stays fired until O-19 is acted on.**
 
-**The suite takes ~55s locally and ~10s in CI. That is not a defect** — profiled 2026-08-29: the time
+**The suite takes ~53s locally and ~10s in CI. That is not a defect** — profiled 2026-08-29: the time
 is Fernet sealing plus real filesystem writes in the Phase 1 tests, and Windows pays for both. The
 Phase 2 arithmetic tests are nearly free.
+
+**Re-profiled 2026-08-30, because it had reached 150s and a number nobody has re-derived is a
+number to distrust.** It was **not** quadratic: `verify` is **linear in n**, at about **13.7 ms
+per sealed item** — 0.57s at n=40, 5.50s at 400, 54.94s at 4000, measured. One test I had
+written verified a **4000-item** run to prove that emitting a report does not break the chain, a
+property that has nothing to do with n, and cost **55s on its own** — a quarter of the suite.
+Seven more rebuilt the same 4000-item chain to read one string each.
+
+**Fixed at the cause rather than by marking anything slow.** The clamp arithmetic genuinely
+needs `8 / 4000`, so that chain is built **once** in a module fixture and shared; every test
+whose property is independent of n uses a small run. **150s to 53s**, no assertion weakened and
+no coverage dropped. *If it climbs again, profile before assuming — last time the cause was a
+fixture choice of mine, not the code.*
 
 ## The witness — read this before touching a fixture
 
