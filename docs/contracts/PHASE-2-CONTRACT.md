@@ -510,8 +510,32 @@ Each reported at close as **discharged**, or **unmet with a named blocker**.
 Phase 1's §10 was nearly lost by leaving it late, and that is the only reason this section
 is here before the director's hand-run rather than after.
 
-**Not closed yet.** The director runs §8's exit checklist and rules on the outcome. What
-follows is the builder's evidence, offered for that.
+**CLOSED — 31 August 2026, ruled by the director.**
+
+**The exit evidence is not this section.** It is `docs/contracts/PHASE-2-HAND-RUN.md`, a dated
+reading of the director's own run of §8a's 34 rows, plus the reviewer's independent verification
+of `d5741dd` — the F-12 fix and the §8b amendments. What follows below is the **builder's**
+evidence, which is a different thing and is kept as what was offered rather than as what closed
+the phase.
+
+**Two of the 34 rows were wrong and both were the builder's**: F4 expected report output that had
+never existed, and F9 named a refusal no command can reach. **F4's wrong expectation is what
+surfaced F-12**, a false count in the flagship artifact that no instrument here could have caught,
+because `verify` recomputes through the estimator that produced it.
+
+**Carried out of Phase 2, by name.**
+
+| | |
+|---|---|
+| **Corrections open** | **C-1** (closes when the README credits `svy`, Phase 3), **C-42**, **C-43**, **C-44**, **C-45**, **C-46**. Six of 49 entries; they close under **T-1 (D2.12)**, each naming its discharging commit |
+| **To Phase 3** | **O-19** (re-pin the CI actions — **and re-read it first**, TW-4's premise has partly moved), **O-21** (the rare-event specificity fact reaches the README), **O-28** (git-history review before publication, and it must reach the Phase 3 contract *before* the release) |
+| **Carried, low** | **O-14** unmet, not reached. **O-15** unmet **by design** — a ledger schema version, added only if it is ever needed (D-25) |
+| **Tripwires** | **TW-4 FIRED and stays fired** by ruling, until O-19. `--check` exits 1 while it is; that is the tripwire working, not a failure |
+| **Q-2** | Permanently **`noted`**. No test the builder writes can close *the suite is the builder's*, and Phase 2 produced two more live instances of it — F-10 and F-12 |
+
+**Tier: STANDARD carries into Phase 3**, per the ruling of 2026-08-30. **Phase 3's re-ask is
+genuinely open and deliberately unforecast** — it is the first phase with something irreversible
+to rehearse.
 
 ### Evidence per deliverable
 

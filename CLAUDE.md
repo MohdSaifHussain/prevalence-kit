@@ -6,6 +6,8 @@ report. **No AI ever touches the evidence or the estimate.**
 
 This project runs the **governed-orchestration** skill at **STANDARD** tier, manual-approve.
 
+**Phase 2 is CLOSED. Phase 3 has no contract yet, and writing one is the first build act.**
+
 > **First action of every session: invoke the `governed-orchestration` skill.** Do not wait to be
 > asked. The director had to remember it last session, and a handoff that depends on him remembering
 > is not a handoff.
@@ -25,9 +27,10 @@ This project runs the **governed-orchestration** skill at **STANDARD** tier, man
 
 | File | What it is |
 |---|---|
-| `PROJECT_CHARTER.md` | **Binding.** Scope, six verbs, hard rules, honest limits. **Amendments A-0 … A-5 applied; A-6 drafted and awaiting the director** |
-| `docs/contracts/PHASE-2-CONTRACT.md` | **Binding, current.** **Q1–Q15 ruled. D2.1–D2.16 done**, D2.17 built. §11 carries the outcome |
-| `docs/DECISIONS.md` | **D-1 … D-40.** Why each choice, and what was rejected. **T-2's admission rule is at the head** |
+| `PROJECT_CHARTER.md` | **Binding.** Scope, six verbs, hard rules, honest limits. **A-0 … A-6 all applied.** §8's honest limits are a deliverable, not a footer |
+| `docs/contracts/PHASE-2-CONTRACT.md` | **CLOSED 2026-08-31.** Q1–Q15 ruled, D2.1–D2.17 done. **§11 is the outcome; §8a is the checklist the director ran and §8b amends it.** Read §11's carried table before planning Phase 3 |
+| `docs/contracts/PHASE-2-HAND-RUN.md` | **The exit evidence, and a dated reading — never edited.** 34 rows run by the director. Two were wrong and both were the builder's |
+| `docs/DECISIONS.md` | **D-1 … D-41.** Why each choice, and what was rejected. **T-2's admission rule is at the head** |
 | `docs/CORRECTIONS.md` | Every claim that was wrong. **Counts claims that reached a commit *or changed a ruling*** |
 | `docs/FINDINGS.md` | Findings register. `check_claims` reconciles it against the code |
 | `docs/STANDARDS.md` | Every source pinned by version, date, digest or DOI. **S-8 pins the retrieval *procedures* too** |
@@ -35,7 +38,7 @@ This project runs the **governed-orchestration** skill at **STANDARD** tier, man
 | `SECURITY.md` | Threat model. §3 is the limits, carried forward unchanged |
 | `TIME-LOG.txt` | Append-only wall clock. Stamp on request |
 
-`docs/contracts/PHASE-1-REVIEW-STOP.md` and `docs/RULINGS-QUEUE.md` are **dated readings — never edited.**
+`docs/contracts/PHASE-1-REVIEW-STOP.md`, `docs/contracts/PHASE-2-HAND-RUN.md` and `docs/RULINGS-QUEUE.md` are **dated readings — never edited.**
 Corrections to them go in `docs/CORRECTIONS.md` with the date and the direction the number moved.
 
 ## The gate is seven checks, not four
@@ -219,9 +222,20 @@ confirms we implement the method as its author does. It does not independently c
 
 ## Where things stand
 
-**Phase 0** ratified. **Phase 1** closed at `d66d225`. **Phase 2 is built and NOT closed**,
-**Q1–Q15 ruled**, **A-0 … A-6 all applied to the charter**. **D2.1 … D2.17 done.**
-**The review stop is CLOSED.** It found **F-11**, the most serious defect in this project.
+**Phase 0** ratified. **Phase 1** closed at `d66d225`. **Phase 2 CLOSED 31 August 2026**,
+ruled by the director. **Q1–Q15 ruled**, **A-0 … A-6 all applied to the charter**,
+**D2.1 … D2.17 done.**
+
+**The exit evidence is not the builder's.** It is `docs/contracts/PHASE-2-HAND-RUN.md` — the
+director's own run of §8a's **34 rows**, every command by his hand — plus the reviewer's
+independent verification of `d5741dd`. **32 rows behaved as stated. Two did not, and both were
+the builder's**: F4 expected report output that had never existed, F9 named a refusal no command
+can reach. **F4's wrong expectation is what surfaced F-12.**
+
+**Phase 2's two worst defects were found by people, not instruments.** **F-11** at the review
+stop, by a probe the director named; **F-12** at the phase close, by the director reading a
+report by hand. In both, `verify` returned exit 0 — it recomputes through the estimator that
+produced the number, which is Q-2 as a live failure rather than a caveat.
 
 **The exit checklist was replaced before the hand-run, and that is the last thing that
 happened.** Contract §8 covered the phase as it was, not as it is: it named nine reason codes
@@ -240,7 +254,7 @@ names the draw.
 
 **Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **726 tests**, seven gate
 checks green — **`check_claims` now runs twelve**, not seven; the gate block below is still
-seven commands. **CI last ran green at 721** on the 3.12 / 3.13 / 3.14 matrix, run `33338927291`, head `e30aeb5`; local is **726** after F-12. They are still stated apart because they are two measurements, not one.
+seven commands. **CI last ran green at 726** on the 3.12 / 3.13 / 3.14 matrix, run `33339709317`, head `d5741dd` — matching local. They are still stated apart because they are two measurements, not one.
 A second workflow, `witness.yml`, rebuilds the R image and requires every fixture to regenerate
 **byte-identically** — it runs on `r/**` changes and on demand, not on every push.
 Local and CI figures are stated apart on purpose.
@@ -251,12 +265,24 @@ line, so re-deriving them from the artifact was not possible. **Quoting the old 
 been C-7's class** — a number carried rather than re-derived. The matrix keys are what the run
 proves.*
 
-**Three of these figures are now machine-checked** — the test count, the highest ruled question,
+**Three of these figures are machine-checked** — the test count, the highest ruled question,
 and the phase — because this file went stale within hours of being written and nothing noticed.
 A stale README misleads a reader; **a stale CLAUDE.md misleads the next session before it has
 read anything else.** `check_figures` derives all three.
 
-### Done
+> **One of the three is currently asserting nothing, and you are told rather than left to find
+> out.** The phase check matches the literal `**Phase N is in build**` and compares `N` to the
+> highest-numbered contract. Phase 2 is closed and Phase 3 has no contract, so **no true sentence
+> matches that pattern** — and `check_figures` iterates its matches, so a pattern that finds
+> nothing reports nothing. **The check passes vacuously until the Phase 3 contract exists.**
+> Left as-is deliberately: the alternative was writing a false sentence to keep a checker busy.
+> **Restoring it is a Phase 3 question, not a silent edit.**
+
+### Done in Phase 2 — kept as history, and the closed contract is the authority
+
+**This table is not the record.** `docs/contracts/PHASE-2-CONTRACT.md` §11 is, and it is closed.
+These rows are here so a reader knows what exists without opening it.
+
 
 | | |
 |---|---|
@@ -340,15 +366,74 @@ a **negative lower bound in the accept region** (`rare_event`, lower `-0.000151`
 fine). **O-21 carries them to the README as one grouped fact**, not three scattered caveats: *at the
 prevalence rates this tool is for, several ordinary intuitions fail, and here they are.*
 
+### Phase 3 — what makes it different from every phase before it
+
+**Phase 3 releases.** A tag, a publish, and a pull request to **someone else's repository**
+(ROOST `awesome-safety-tools`). Nothing in Phases 0, 1 or 2 was irreversible, and that single
+fact changes three things at once.
+
+**1. The tier re-ask is a live decision for the first time.** It has been discharged twice by
+naming an absence — *no finding attributable to a FULL-only practice* — and both times the
+verdict was honest because the phases shipped nothing to rehearse. **FULL's distinguishing
+practice is rehearsal of the irreversible, and Phase 3 finally has something for it to bite on.**
+**No forecast is recorded, deliberately** (ruled 2026-08-30): forecasting that a re-ask will fail
+is how a scheduled decision becomes a formality.
+
+**2. Rehearsal comes before the act, not after.** A release candidate, verified by hand, with a
+**negative control that must fail**, before any real tag. Failed candidates stay in the record.
+
+**3. The record goes public.** It was written for an audience of three and Phase 3 is the first
+time a stranger reads it — **that is O-28**, and it is a one-time look *backwards* over git
+history, not only the working tree. The history is **not rewritten**: this record cites commit
+hashes as evidence throughout, so the answer is a review before release rather than a repair
+after it.
+
+> **One thing O-28 will find, recorded now rather than discovered then.** The committed record
+> contains local Windows paths including the director's username — `PROJECT_CHARTER.md`,
+> `CLAUDE.md`, `docs/RATIFICATION.md`, `docs/PHASE-0-VERIFICATION.md` and
+> `docs/contracts/PHASE-2-HAND-RUN.md`. The username is already public via the repository owner,
+> so this is directory structure rather than identity. **`SECURITY.md` §3.8 tells operators to
+> avoid exactly this leak in a run directory while our own documents do it**, which is the part
+> a stranger will notice. Two of those files are **dated readings or ratified text and are not
+> edited** — so this is a disclosure question, not a find-and-replace.
+
+### Traps this file did not used to carry
+
+Each of these cost time or produced a defect. None is obvious from the code.
+
+- **`ruff format` reads Markdown; `ruff check` does not.** Confirmed on ruff 0.16.5 from its own
+  resolver output: the format half formats Python fences inside `.md`, so it walks every document
+  here, **including the dated readings that are never edited**. Nothing fails today. The day
+  someone writes a mis-formatted Python fence into one, two rules collide.
+- **The findings register cannot hold an accepted-but-unfixed finding.** `check_findings` fails
+  the gate for any row whose status is `open`, while the register's own vocabulary defines `open`
+  as *accepted, not yet fixed*. So an F-number attaches when its **fix** lands, not when the
+  finding is accepted — which is why F-12's number is absent from the hand-run reading that found
+  it. Do not add an `open` row and expect a green gate.
+- **`check_open_items` reads every open-items table in both directions**, and it skips any row
+  that names a *different* obligation in its prose — the state word cannot be attributed. It took
+  three drafts and every defect in it was found by running it, not reading it.
+- **`probability_no_interval` is a lower bound**, not the probability. It is the chance every
+  sampled unit is negative; a design SE of zero also arises from uniformly-labelled strata. The
+  operator notice and the report both say *at least*.
+- **The coverage figures in `src/prevalence_kit/coverage.py` are data, and a test re-derives
+  them** — the binomial rows against `r/fixtures/coverage.json`, the design rows by exhaustive
+  enumeration through the shipped estimators. That enumeration is the slowest thing in the suite
+  at about 10s. **It proves each figure at its stated conditions and does NOT prove the figure is
+  the grid minimum**, which is stated in the test rather than implied.
+- **`svy` is never installed in this environment.** Its fixtures were generated in a throwaway
+  environment and committed; `svy/` holds the generators and the JSON, and that is all.
+
 ### Open, by name
 
-**The review stop is closed and the whole table was closed out with it.** What remains is two
-rulings the director holds, two post-stop surface obligations, and the Phase 3 carry.
+**Phase 2 is closed and its table closed with it.** Everything below is the Phase 3 carry.
+**Nothing here is optional and nothing here is done** — each row is either a numbered obligation
+or a correction whose closing condition is written down.
 
 | # | What | Owner |
 |---|---|---|
-| **The hand-run** | **DONE 2026-08-31** — `docs/contracts/PHASE-2-HAND-RUN.md`, a dated reading. **34 rows**, 32 as stated. **H-1 is fixed as F-12**; **H-2 is amended into contract §8b**, which leaves §8a unedited because it is what he actually ran. **The phase outcome is still the director's ruling** | **Director** |
-| **O-19** | Re-pin `checkout` and `setup-python` before GitHub drops Node 20. **TW-4 fired and stays fired** | Phase 3 |
+| **The Phase 3 contract** | **No Phase 3 code before it exists**, with numbered questions the director rules on. §5 of the Phase 2 contract shows the shape. **The tier re-ask is a named deliverable of it** | **First act** |
+| **O-19** | Re-pin `actions/checkout` and `actions/setup-python`. **Re-read it before acting — TW-4's premise has partly moved**: the tripwire watches for GitHub *dropping* Node 20, and the run log already reports `setup-python` *"being forced to run on Node.js 24"*. Jobs pass; the obligation was written against a future event that has partly happened | Phase 3, **first** |
 | **O-21** | The rare-event specificity fact must reach the README | Phase 3 |
 | **O-28** | Pre-publication review of **git history**, not only the working tree. **Must reach the Phase 3 contract before the release** | Phase 3 |
 | **O-14, O-15** | Carried, low, no action. O-15 is deliberately unmet — a ledger schema version, added only if it is ever needed | Phase 3 |
