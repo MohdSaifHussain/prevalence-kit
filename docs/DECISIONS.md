@@ -1523,6 +1523,189 @@ risk, and a bound is read in the direction that keeps it true.**
 
 ---
 
+## D-42 - Phase 3 tier: STANDARD, and the forward-looking question ruled with it
+
+**Date:** 2026-08-31 · **Made in:** Phase 3 contract Q16 · **Ruled by:** director
+
+The first tier re-ask with something irreversible to decide, and it was decided rather than
+defaulted. **STANDARD**, on two grounds the ruling states explicitly.
+
+**The backward-looking discharge standard does not govern this boundary alone.** D-1's standard
+-- name a concrete finding attributable to a FULL-only practice -- cannot be met before a first
+irreversible act by construction, so the director ruled the forward-looking question too rather
+than letting the old standard decide by default.
+
+**The practice matters and the label does not.** What FULL would be bought for -- rehearsal of
+the irreversible, the mandatory negative control, the director's hand-verification of published
+artifacts, the gated go -- is bound by the Phase 3 contract at either tier (D3.7, D3.8, R3.1,
+R3.2). Moving the label would have changed the record's weight in the one phase where the
+record is published regardless.
+
+**Alternatives not taken.** FULL for the phase -- the practices it distinguishes are already
+contractual. STANDARD-to-the-stop-then-FULL -- a mid-phase tier boundary bought nothing the
+contract had not already bound.
+
+---
+
+## D-43 - Publish means GitHub release and PyPI, rehearsed on TestPyPI
+
+**Date:** 2026-08-31 · **Made in:** Phase 3 contract Q17 · **Ruled by:** director
+
+The release is a GitHub release **and** a PyPI publish, with the full publish path rehearsed on
+TestPyPI first. The charter's audience -- an analyst, a researcher, a small platform -- adopts
+by `pip install`, and TestPyPI gives the rehearsal a real target for the whole path rather than
+a subset, which is what Template 6 demands. The Phase 0 name-collision check found the name
+clear on PyPI; this ruling is what that insurance was for.
+
+**Alternatives not taken.** GitHub-only with PyPI to NEXT -- leaves the audience's actual route
+unserved and the rehearsal without a full-path target. PyPI as a fast follow -- two release
+ceremonies for one version.
+
+---
+
+## D-44 - The coverage demonstration: SRS, both binomial intervals, pre-registered and bounded
+
+**Date:** 2026-08-31 · **Made in:** Phase 3 contract Q18 · **Ruled by:** director
+
+SRS with `wilson` and `clopper_pearson`, about four pre-registered thresholds spanning the
+prevalence range including the rare end, on the order of 10,000 replications per point at the
+estimator level, plus **one** pre-registered full-chain run as the governance demonstration --
+the sealed chain pays Fernet sealing and real filesystem writes on every run -- the profiled
+cost that dominates the local suite (2026-08-29) -- so mass replication through it would cost
+orders of magnitude more than the estimator-level loop, for no additional statistical claim.
+
+**Five binding conditions.** (1) Seeds and thresholds in a hashed pre-registration file
+committed before the corpus is fetched. (2) The corpus pinned by digest and never committed.
+(3) The artifact committed with its generating procedure recorded to S-8's bar. (4) The plot
+states the replication count and that its error bars come from it. (5) **The reviewer's, made
+binding at the ruling:** the demonstration's reading states that the corpus was already
+characterised in this record -- the charter carries its row count -- before pre-registration,
+and says why that does not weaken the pre-registration of thresholds and seeds.
+
+**Alternatives not taken.** Adding stratified designs at the same scale -- their coverage is
+already measured exhaustively by enumeration (charter section 8's 96-point table), and a
+sampled estimate of a quantity held exactly is weaker evidence than what ships; the enumeration
+figures are cross-referenced on the plot instead. Fewer replications with more thresholds -- a
+denser curve with wider error on every point.
+
+---
+
+## D-45 - The committed local paths are disclosed, and nothing is edited
+
+**Date:** 2026-08-31 · **Made in:** Phase 3 contract Q19 · **Ruled by:** director
+
+O-28's recorded finding -- local Windows paths in five committed documents, two of them dated
+readings -- is answered by **one disclosure note in the O-28 review reading**: the paths are
+directory structure rather than identity, the documents carrying them are dated evidence, and
+the tension with `SECURITY.md` section 3.8 is named rather than hidden.
+
+**Alternatives not taken.** Editing the three editable documents forward -- history still
+carries the paths, so the leak is not closed, only made inconsistent between tree and history.
+Rewriting history -- ruled out structurally: the record cites commit hashes as evidence
+throughout.
+
+---
+
+## D-46 - Release ordering: public before the tag, the ROOST PR last
+
+**Date:** 2026-08-31 · **Made in:** Phase 3 contract Q20 · **Ruled by:** director
+
+O-28 closes, then the repository goes public, then the rehearsal candidate, then tag and
+publish, then the ROOST pull request. The release happens in public so its run links and
+artifacts resolve for an outsider from the first moment; the rehearsal stays visible, which is
+the honest history the method wants kept; and the PR -- the act that points strangers at the
+repository -- comes only after the release it points at exists.
+
+**Alternative not taken.** Rehearse and tag private, then go public -- the repository appears
+fully formed, every CI link in the release notes was run private, and the rehearsal's honesty
+becomes retroactive.
+
+---
+
+## D-47 - The superseded phase claim in check_figures is deleted
+
+**Date:** 2026-08-31 · **Made in:** Phase 3 contract Q21 · **Ruled by:** director
+
+C-47's rebuild left the old `readme phase` entry -- number-only, compared against
+`current_phase`, vacuous since the close -- beside its replacement. Deleted. The canonical
+two-file sentence check is the one phase claim, and its selftest proves both directions.
+
+**Alternative not taken.** Keeping both -- the legacy pattern re-armed on the very commit that
+opened Phase 3 (the sentence returned to *in progress*), leaving two checks asserting subtly
+different things about one sentence: D-28's two-lists defect inside a single function.
+
+---
+
+## D-48 - The open-corrections row is read by machine, in both directions
+
+**Date:** 2026-08-31 · **Made in:** Phase 3 contract Q22 · **Ruled by:** director
+
+`CLAUDE.md`'s open-corrections row said *49 entries, 6 open* while the register held 50 and 7,
+and credited `check_counts` with reading a row it had never read -- **C-48**. Ruled: a
+correction entry, the row fixed, and the claim made true by machinery. `check_counts` now
+compares the row's open count, its identifier list -- both directions -- and its three figures
+against the register's entries, and the row's **absence is a failure**, C-47's lesson.
+
+**Alternative not taken.** Fixing the row and striking the attribution sentence -- honest and
+cheap, and it rebuilds the trap: a live figure in prose with nothing watching it is C-9's
+mechanism, which is what produced the stale row in the first place.
+
+---
+
+## D-49 - O-14 goes to the NEXT queue; O-15 closes as unmet by design
+
+**Date:** 2026-08-31 · **Made in:** Phase 3 contract Q23 · **Ruled by:** director
+
+The last phase ends "carried" as an available state. **O-14** (keyless structural audit mode)
+moves to the charter's NEXT queue by name at the close. **O-15** (a ledger schema version) is
+recorded in the Phase 3 outcome as unmet **by design**, with D-25's condition restated as the
+trigger that would create it.
+
+**Alternatives not taken.** Building O-14 in Phase 3 -- real scope in the phase already
+carrying the release, and charter section 4 sends exactly this growth to NEXT. Closing both as
+won't-do -- erases reasons that are still true.
+
+---
+
+## D-50 - Closed contracts are read one-directionally: discharges only
+
+**Date:** 2026-08-31 · **Made in:** Phase 3 contract Q24 · **Ruled by:** director
+
+`check_open_items` excluded closed phases' contracts entirely, and the Phase 2 contract's
+section 10 is where ten obligations are marked discharged -- so the moment the Phase 3 contract
+existed, every one of those discharges left the walked set, and the selftest's planted
+violation went undetected. Ruled: closed contracts contribute their **discharge claims only**.
+A discharge is permanent and cannot go stale; an open-state row in a dated document was true at
+the close and expires without the document changing, and flagging it would demand edits to a
+dated reading.
+
+**Caught by the selftest on the boundary commit** -- the check's coverage shrank at exactly the
+boundary it exists to police, and the instrument that has only ever passed would never have
+said so.
+
+**Alternatives not taken.** Restating every discharge in a live file -- a second copy of the
+record, maintained by hand. Narrowing the selftest -- green by testing less.
+
+---
+
+## D-51 - Test anchors are derived from the artifact, and a plant is asserted
+
+**Date:** 2026-08-31 · **Made in:** Phase 3 contract Q25 · **Ruled by:** director
+
+Four tests shipped inside C-47's fix anchored on the state of the moment: two asserted the live
+tree's phase state as constants, two planted violations by replacing a literal sentence with
+nothing asserting the replacement took -- so the boundary commit made the constants stale and
+the plants **vacuous**. Ruled: all four rewritten phase-agnostic -- anchors derived from
+`phase_state`, every plant asserted before the checker is consulted, the state test asserting
+the close-line property on whichever contract is newest -- and **one** correction entry for the
+pair, **C-49**, because the four failures have one cause. The entry notes that this happened
+inside the fix for C-47, which is the part worth remembering.
+
+**Alternative not taken.** Updating the constants to Phase 3's state -- green until the next
+boundary event, then the same failure again: the count treadmill, in the suite.
+
+---
+
 ## Carried obligations opened by these decisions
 
 | # | Obligation | Owner | Opened by |

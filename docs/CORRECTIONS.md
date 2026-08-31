@@ -21,11 +21,11 @@ who writes the entries. The director raised that one himself and asked for it to
 | Chat reviewer (draft author) | 0 | 3 | **3** |
 | Research report (passed through unverified) | 0 | 2 | **2** |
 | Stale-at-draft-time, queued but built on anyway | **1** | 0 | **1** |
-| **Builder (Claude Code)** | **5** | **33** | **38** |
+| **Builder (Claude Code)** | **7** | **33** | **40** |
 | Reviewer instrument | **1** | **2** | **4** (1 noted) |
 | **Director** | 0 | **1** | **1** |
 | Tool artifact (noted, not a defect) | - | - | **1** (noted) |
-| **Total** | **7** | **41** | **50** |
+| **Total** | **9** | **41** | **52** |
 
 **Derived, and now checked — 2026-08-30.** Every figure above is computed from the entry blocks in
 this file rather than incremented as rows arrived. An earlier version said 36 open and 3
@@ -1457,6 +1457,46 @@ turned `\b` into a literal backspace byte and the close marker could never match
 that message would have written "in progress" into the handoff file and turned the gate green on
 it.** The byte was found by printing the compiled source rather than trusting the message, and the
 repair went through a file rather than a heredoc -- which is the rule that was broken to create it.
+
+---
+
+## C-48 - A row said a machine checked it, and no machine read it
+
+| | |
+|---|---|
+| **Claimed** | `CLAUDE.md`'s open-corrections row: *"**6 corrections open** -- C-1, C-42 ... C-46. 49 entries, 41 closed, 2 noted ... Derived and machine-checked by `check_counts`"* -- standing while the register held 50 entries and 7 open |
+| **Actually** | **50 entries, 7 open** -- C-47 was open and absent from the row. And `check_counts` read only the counts table inside `docs/CORRECTIONS.md`; **it had never read this row.** Both halves wrong: the figures stale, the attribution never true at any point |
+| **Direction** | Under by one on both counts. **The attribution is the worse half**: a reader is reassured by a scope no check had -- C-34's class, and the false scope sat beside the very correction it failed to count |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | The builder, reading the record in at the Phase 3 kickoff and **re-deriving the figures rather than carrying them** -- rule 13. Reproduced independently by the reviewer |
+| **Severity** | **Low in effect, high in kind.** The file the next session reads first, carrying a false claim of machine coverage |
+| **Replaced by** | The corrected row, and **the claim made true by machinery** (Q22): `check_counts` now reads the row against the register -- the open count, the identifier list in **both directions**, and the three figures -- and the row's **absence is a failure**, so deleting it cannot silence the claim |
+| **Status** | **OPEN** - closes under **T-1** at the Phase 3 close (**D3.10**), naming its discharging commit |
+
+**The mechanism is C-9's, not optimism.** The row was true when written and expired when C-47
+landed -- a live figure in prose with nothing watching it. What makes it an entry of its own is
+the sentence beside the figure: *machine-checked by a check that did not read it* is worse than
+an unchecked figure, because it stops the reader from adding it up themselves.
+
+---
+
+## C-49 - Tests anchored on the state of the moment, inside the fix for C-47
+
+| | |
+|---|---|
+| **Claimed** | Four tests shipped in C-47's fix: two asserted the live tree's phase state as constants -- `(2, "complete")` and a Phase 2 file path -- and two planted their violation by replacing the literal sentence *"Phase 2 of 4 complete"*, with **nothing asserting the replacement took** |
+| **Actually** | All four were green at their commit and **could not survive the next boundary event**. Creating the Phase 3 contract made the two constants stale, and made the two plants **vacuous** -- they replaced nothing, planted nothing, and failed only because their assertions happened to expect problems. Written the other way round they would have gone **green while proving nothing**: C-27's control shape |
+| **Direction** | Not a wrong number -- a control whose lifetime was shorter than the claim it guards. **One cause across all four**: anchoring on the state of the moment rather than deriving it from the artifact |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | The gate, on the Phase 3 boundary commit -- the first event the anchors could not survive. Partly luck, and recorded as such: the vacuous pair surfaced only because their assertion direction happened to fail |
+| **Severity** | **Low in effect, notable in kind -- and the kind is the entry's point: this happened inside the fix for C-47**, a correction about checks anchored on the wrong thing. The fix for a stale-anchor defect shipped four stale anchors |
+| **Replaced by** | All four rewritten phase-agnostic (**Q25**): anchors derived from `phase_state`, every plant asserted before the checker is consulted, and the state test asserting the close-line property on whichever contract is newest |
+| **Status** | **OPEN** - closes under **T-1** at the Phase 3 close (**D3.10**), naming its discharging commit |
+
+**The heredoc rule already said it, one layer down.** *Assert the anchor before writing through
+it* was written for scripted edits; a test that plants by string replacement is a scripted edit
+of a fixture, and the same rule applies. The plant that cannot fail loudly is the plant that one
+day silently plants nothing.
 
 ---
 

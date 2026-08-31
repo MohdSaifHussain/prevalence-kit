@@ -6,7 +6,9 @@ report. **No AI ever touches the evidence or the estimate.**
 
 This project runs the **governed-orchestration** skill at **STANDARD** tier, manual-approve.
 
-**Phase 2 of 4 complete. Phase 3 has no contract yet, and writing one is the first build act.**
+**Phase 3 of 4 in progress.** The contract is APPROVED, **Q1–Q25 ruled** (Q16–Q25 on
+2026-08-31). Tier: STANDARD by the re-ask's first live ruling, D-42. Next: D3.1 (O-19), then the
+coverage demonstration; nothing public before O-28 closes.
 
 > **First action of every session: invoke the `governed-orchestration` skill.** Do not wait to be
 > asked. The director had to remember it last session, and a handoff that depends on him remembering
@@ -30,7 +32,7 @@ This project runs the **governed-orchestration** skill at **STANDARD** tier, man
 | `PROJECT_CHARTER.md` | **Binding.** Scope, six verbs, hard rules, honest limits. **A-0 … A-6 all applied.** §8's honest limits are a deliverable, not a footer |
 | `docs/contracts/PHASE-2-CONTRACT.md` | **CLOSED 2026-08-31.** Q1–Q15 ruled, D2.1–D2.17 done. **§11 is the outcome; §8a is the checklist the director ran and §8b amends it.** Read §11's carried table before planning Phase 3 |
 | `docs/contracts/PHASE-2-HAND-RUN.md` | **The exit evidence, and a dated reading — never edited.** 34 rows run by the director. Two were wrong and both were the builder's |
-| `docs/DECISIONS.md` | **D-1 … D-41.** Why each choice, and what was rejected. **T-2's admission rule is at the head** |
+| `docs/DECISIONS.md` | **D-1 … D-51.** Why each choice, and what was rejected. **T-2's admission rule is at the head** |
 | `docs/CORRECTIONS.md` | Every claim that was wrong. **Counts claims that reached a commit *or changed a ruling*** |
 | `docs/FINDINGS.md` | Findings register. `check_claims` reconciles it against the code |
 | `docs/STANDARDS.md` | Every source pinned by version, date, digest or DOI. **S-8 pins the retrieval *procedures* too** |
@@ -223,8 +225,8 @@ confirms we implement the method as its author does. It does not independently c
 ## Where things stand
 
 **Phase 0** ratified. **Phase 1** closed at `d66d225`. **Phase 2 CLOSED 31 August 2026**,
-ruled by the director. **Q1–Q15 ruled**, **A-0 … A-6 all applied to the charter**,
-**D2.1 … D2.17 done.**
+ruled by the director. **Questions 1–15 ruled in that phase**, **A-0 … A-6 all applied to the
+charter**, **D2.1 … D2.17 done.** Phase 3's Q16–Q25 were ruled 2026-08-31, at the boundary.
 
 **The exit evidence is not the builder's.** It is `docs/contracts/PHASE-2-HAND-RUN.md` — the
 director's own run of §8a's **34 rows**, every command by his hand — plus the reviewer's
@@ -252,9 +254,9 @@ reader could not tell a stratified redraw from a simple random one. `verify.py` 
 design (F-10's third site) and **its output was silent about what it had checked.** It now
 names the draw.
 
-**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **730 tests**, seven gate
+**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **734 tests**, seven gate
 checks green — **`check_claims` now runs twelve**, not seven; the gate block below is still
-seven commands. **CI last ran green at 726** on the 3.12 / 3.13 / 3.14 matrix, run `33339709317`, head `d5741dd` — matching local. They are still stated apart because they are two measurements, not one.
+seven commands. **CI last ran green at 730** on the 3.12 / 3.13 / 3.14 matrix, run `33342177302`, head `cad419c` — verified by the director and the reviewer at the Phase 3 kickoff. Local is 734 at the boundary commit, which is not yet pushed. They are stated apart because they are two measurements, not one.
 A second workflow, `witness.yml`, rebuilds the R image and requires every fixture to regenerate
 **byte-identically** — it runs on `r/**` changes and on demand, not on every push.
 Local and CI figures are stated apart on purpose.
@@ -432,9 +434,9 @@ or a correction whose closing condition is written down.
 
 | # | What | Owner |
 |---|---|---|
-| **The Phase 3 contract** | **No Phase 3 code before it exists**, with numbered questions the director rules on. §5 of the Phase 2 contract shows the shape. **The tier re-ask is a named deliverable of it** | **First act** |
+| **The Phase 3 contract** | **Written and APPROVED 2026-08-31**, Q16–Q25 ruled. `docs/contracts/PHASE-3-CONTRACT.md` is binding; D3.1 (O-19) is the next build act, the review stop falls before anything public, and the boundary commit's own defects are C-48 and C-49 | **Done — the contract now owns the rows below** |
 | **O-19** | Re-pin `actions/checkout` and `actions/setup-python`. **Re-read it before acting — TW-4's premise has partly moved**: the tripwire watches for GitHub *dropping* Node 20, and the run log already reports `setup-python` *"being forced to run on Node.js 24"*. Jobs pass; the obligation was written against a future event that has partly happened | Phase 3, **first** |
 | **O-21** | The rare-event specificity fact must reach the README | Phase 3 |
 | **O-28** | Pre-publication review of **git history**, not only the working tree. **Must reach the Phase 3 contract before the release** | Phase 3 |
 | **O-14, O-15** | Carried, low, no action. O-15 is deliberately unmet — a ledger schema version, added only if it is ever needed | Phase 3 |
-| **6 corrections open** | **C-1** (Phase 3), **C-42** … **C-46**. 49 entries, 41 closed, 2 `noted`. **T-1 closed the other 41**, each naming its discharging commit. Derived and machine-checked by `check_counts` | — |
+| **9 corrections open** | **C-1**, **C-42**, **C-43**, **C-44**, **C-45**, **C-46**, **C-47**, **C-48**, **C-49**. 52 entries, 41 closed, 2 `noted`; every open entry closes under **T-1** at D3.10, naming its discharging commit. This row is read by `check_counts` against the register — count, identifier list in both directions, figures, and absence is a failure (C-48 is what happens otherwise) | — |

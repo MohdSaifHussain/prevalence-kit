@@ -743,8 +743,85 @@ def check_counts(root: Path) -> list[Problem]:
                 f"no readable Status row: {', '.join(unclassified)}",
             )
         )
-    _ = noted
+
+    # **Q22, ruled 2026-08-31 -- C-48.** CLAUDE.md's open-corrections row said
+    # "49 entries, 6 open" while this file held 50 and 7, and credited this
+    # check with reading a row it had never read. The scope is now the object
+    # the code walks: the row's open count, its identifier list (both
+    # directions) and its three figures are compared against the entries, and
+    # ABSENCE of the row is a failure, so deleting it cannot silence the claim
+    # -- C-47's lesson, applied here.
+    open_ids = {ident for ident, body in blocks if _status(body) == "open"}
+    claude = root / "CLAUDE.md"
+    if not claude.exists():
+        problems.append(Problem("counts", "CLAUDE.md", "is missing"))
+        return problems
+    row = re.search(
+        r"^\|[^|\n]*\*\*(\d+) corrections open\*\*[^|\n]*\|([^\n]*)",
+        claude.read_text(encoding="utf-8"),
+        flags=re.M,
+    )
+    if row is None:
+        problems.append(Problem("counts", "CLAUDE.md", "carries no '<N> corrections open' row"))
+        return problems
+    by_number = _entry_order
+    if int(row.group(1)) != still_open:
+        problems.append(
+            Problem(
+                "counts",
+                "CLAUDE.md",
+                f"row says {row.group(1)} corrections open, entries say {still_open}",
+            )
+        )
+    stated_ids = set(re.findall(r"\b([CV]-\d+)\b", row.group(2)))
+    missing = sorted(open_ids - stated_ids, key=by_number)
+    extra = sorted(stated_ids - open_ids, key=by_number)
+    if missing:
+        problems.append(
+            Problem(
+                "counts",
+                "CLAUDE.md",
+                f"open in the register, absent from the row: {', '.join(missing)}",
+            )
+        )
+    if extra:
+        problems.append(
+            Problem(
+                "counts",
+                "CLAUDE.md",
+                f"named in the row, not open in the register: {', '.join(extra)}",
+            )
+        )
+    figures = re.search(r"(\d+) entries, (\d+) closed, (\d+) `?noted`?", row.group(2))
+    if figures is None:
+        problems.append(
+            Problem(
+                "counts",
+                "CLAUDE.md",
+                "row carries no 'N entries, N closed, N noted' figures",
+            )
+        )
+    else:
+        for stated_n, actual, what in (
+            (int(figures.group(1)), total, "entries"),
+            (int(figures.group(2)), shut, "closed"),
+            (int(figures.group(3)), noted, "noted"),
+        ):
+            if stated_n != actual:
+                problems.append(
+                    Problem(
+                        "counts",
+                        "CLAUDE.md",
+                        f"row says {stated_n} {what}, entries say {actual}",
+                    )
+                )
     return problems
+
+
+def _entry_order(ident: str) -> tuple[str, int]:
+    """Sort `C-10` after `C-9`, not after `C-1`."""
+    kind, _, number = ident.partition("-")
+    return kind, int(number)
 
 
 def _status(body: str) -> str:
@@ -904,10 +981,16 @@ def check_open_items(root: Path) -> list[Problem]:
        passing inside a long prose cell is a citation, not a status claim.
        Scanning whole rows flagged D2.12's deliverable row, where *"O-4"* and
        *"unmet"* appear in unrelated sentences about C-9 and C-1.
-    2. **Contracts for closed phases are not read.** Phase 1's section 10 records
-       O-16 and O-17 as *unmet, named blocker: no remote*, which was true at its
-       close and was discharged in Phase 2. **A dated reading is never rewritten
-       to satisfy a checker** -- flagging it would demand exactly that.
+    2. **Contracts for closed phases are read for their discharges only** --
+       Q24, ruled 2026-08-31, replacing a full exclusion. A dated contract's
+       open-state rows were true at its close and expire without the document
+       changing: Phase 1's section 10 records O-16 and O-17 as *unmet, named
+       blocker: no remote*, both discharged in Phase 2, and **a dated reading
+       is never rewritten to satisfy a checker**. Its discharge rows never
+       expire -- a discharge is permanent, open-ness is what ages. The full
+       exclusion silently cost this check every discharge the Phase 2 outcome
+       records the day the Phase 3 contract was created, and the selftest's
+       planted O-4 row going undetected is what surfaced it.
     3. **It still cannot tell that a row's prose has gone stale while its
        identifier is genuinely open.** That is unchanged, and claiming otherwise
        would be C-34.
@@ -961,6 +1044,28 @@ def _live_documents(root: Path) -> list[Path]:
     return [p for p in paths if p.exists()]
 
 
+def _closed_contracts(root: Path) -> list[Path]:
+    """The contracts `_live_documents` excludes -- read one-directionally.
+
+    **Q24, ruled 2026-08-31.** A closed phase's contract is where its outcome
+    records obligations as discharged, and a discharge is permanent: that row
+    cannot go stale. Its open-state rows are the opposite -- true at the close,
+    expiring without the document changing -- and flagging them would demand
+    edits to a dated document. So these contribute their **discharge claims
+    only**. Before this, the full exclusion meant every discharge in the Phase 2
+    outcome left the walked set the moment the Phase 3 contract existed, and
+    the selftest's planted violation went undetected -- the check's coverage
+    shrank at exactly the boundary it exists to police.
+    """
+    live = current_phase(root)
+    paths = []
+    for path in sorted((root / "docs" / "contracts").glob("*-CONTRACT.md")):
+        phase = re.search(r"PHASE-(\d+)-CONTRACT\.md$", path.name)
+        if phase is not None and int(phase.group(1)) < live:
+            paths.append(path)
+    return paths
+
+
 def _obligation_claims(root: Path) -> dict[str, list[tuple[str, int, str]]]:
     """`{O-n: [(file, line, "open" | "discharged"), ...]}` from every live table.
 
@@ -976,7 +1081,10 @@ def _obligation_claims(root: Path) -> dict[str, list[tuple[str, int, str]]]:
     claim, found nothing to contradict, and passed. **The heading is the claim.**
     """
     claims: dict[str, list[tuple[str, int, str]]] = {}
-    for path in _live_documents(root):
+    sources = [(path, False) for path in _live_documents(root)]
+    # Closed contracts: discharge claims only. Q24 -- see _closed_contracts.
+    sources += [(path, True) for path in _closed_contracts(root)]
+    for path, discharge_only in sources:
         rel = path.relative_to(root).as_posix()
         section = ""
         for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
@@ -1018,6 +1126,8 @@ def _obligation_claims(root: Path) -> dict[str, list[tuple[str, int, str]]]:
             elif _OPEN_WORDS.search(scope):
                 state = "open"
             else:
+                continue
+            if discharge_only and state != "discharged":
                 continue
             for ident in idents:
                 claims.setdefault(ident, []).append((rel, number, state))
@@ -1183,15 +1293,11 @@ def check_figures(root: Path) -> list[Problem]:
             re.compile(r"(\d+) findings in the register"),
             root / "docs" / "FINDINGS.md",
         ),
-        # The README's status line names the phase in progress. It said
-        # "Phase 1 of 4" for the whole of Phase 2, with eight checkers running
-        # over the repository every commit and none of them reading it. A phase
-        # number in prose is a live figure, which is what this check is for.
-        "readme phase": (
-            current_phase(root),
-            re.compile(r"Phase (\d) of 4 in progress"),
-            root / "README.md",
-        ),
+        # The README's phase claim used to live here as a number-only pattern
+        # compared against current_phase -- the semantics C-47 condemned, kept
+        # vacuous beside their replacement until Q21 ruled the entry deleted.
+        # The phase sentence is checked by _phase_problems alone: both files,
+        # word and number, absence a failure.
         # CLAUDE.md went stale within hours of being written -- "Q1-Q7 ruled"
         # and "406 tests locally / CI green at 401" were both wrong by the same
         # afternoon. It is the more consequential file: a stale README misleads
@@ -1378,8 +1484,8 @@ def selftest() -> int:
             # The defect exactly as it was: the Total row over by one. C-36 sat
             # in the file with its own columns summing to 38 against a stated 37.
             "docs/CORRECTIONS.md",
-            "| **Total** | **7** | **41** | **50** |",
-            "| **Total** | **7** | **40** | **50** |",
+            "| **Total** | **9** | **41** | **52** |",
+            "| **Total** | **9** | **40** | **52** |",
         ),
         "schema": (
             # F-10's shape, planted: declare a field behavioural that nothing

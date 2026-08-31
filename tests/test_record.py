@@ -612,16 +612,19 @@ def test_the_phase_sentence_is_checked_for_its_word_not_only_its_number(
     """
     module = _check_claims_module()
     root = _repo_copy(tmp_path)
+    number, state = module.phase_state(root)
+    wrong = "complete" if state == "in progress" else "in progress"
     readme = root / "README.md"
-    readme.write_text(
-        readme.read_text(encoding="utf-8").replace(
-            "Phase 2 of 4 complete", "Phase 2 of 4 in progress"
-        ),
-        encoding="utf-8",
-    )
+    text = readme.read_text(encoding="utf-8")
+    anchor = f"Phase {number} of 4 {state}"
+    # C-49: the first version of this test replaced a hard-coded sentence and
+    # never checked the replace took, so it planted nothing the day the phase
+    # moved. The anchor is derived from the artifact, and the plant is asserted.
+    assert anchor in text, f"nothing to perturb: README carries no {anchor!r}"
+    readme.write_text(text.replace(anchor, f"Phase {number} of 4 {wrong}"), encoding="utf-8")
 
     details = [p.detail for p in module.check_figures(root)]
-    assert any("in progress" in d and "complete" in d for d in details), details
+    assert any(wrong in d and state in d for d in details), details
 
 
 def test_deleting_the_phase_sentence_does_not_silence_the_check(
@@ -637,43 +640,144 @@ def test_deleting_the_phase_sentence_does_not_silence_the_check(
     """
     module = _check_claims_module()
     root = _repo_copy(tmp_path)
+    number, state = module.phase_state(root)
+    anchor = f"Phase {number} of 4 {state}"
     for name in ("README.md", "CLAUDE.md"):
         path = root / name
-        path.write_text(
-            path.read_text(encoding="utf-8").replace("Phase 2 of 4 complete", "Phase two"),
-            encoding="utf-8",
-        )
+        text = path.read_text(encoding="utf-8")
+        # C-49: anchor derived, plant asserted -- see the test above.
+        assert anchor in text, f"nothing to remove: {name} carries no {anchor!r}"
+        path.write_text(text.replace(anchor, "Phase gone"), encoding="utf-8")
 
     details = [p.detail for p in module.check_figures(root)]
     assert sum("carries no" in d for d in details) == 2, details
 
 
 def test_the_phase_state_is_read_from_the_contract(tmp_path: Path) -> None:
-    """`complete` is derived from the contract recording its own close.
+    """The close line in the newest contract is what makes the state `complete`.
 
-    Not from a flag someone maintains beside it -- that is the arrangement this
-    project has been correcting all phase. The positive control is the live tree:
-    Phase 2's contract records the close, so the state is `complete`.
+    Not a flag someone maintains beside it -- that is the arrangement this
+    project has been correcting all phase. **C-49**: the first version asserted
+    `(2, "complete")` against the live tree -- a live figure hard-coded in a
+    test -- and broke the day the Phase 3 contract existed. This one asserts the
+    property on whichever contract is newest: planting a close line flips the
+    state to `complete`.
     """
     module = _check_claims_module()
-    root = Path(__file__).resolve().parents[1]
-    assert module.phase_state(root) == (2, "complete")
+    root = _repo_copy(tmp_path)
+    number, state = module.phase_state(root)
+    contract = root / "docs" / "contracts" / f"PHASE-{number}-CONTRACT.md"
+    text = contract.read_text(encoding="utf-8")
+    if state == "complete":
+        # The newest contract is closed; strip its close line first so the
+        # plant below starts from `in progress` whichever way the tree stands.
+        text = re.sub(rf"^\*\*(?:Phase {number} )?CLOSED\b", "**Was closed", text, flags=re.M)
+        contract.write_text(text, encoding="utf-8")
+        assert module.phase_state(root) == (number, "in progress")
+    contract.write_text(text + f"\n**Phase {number} CLOSED for this test.**\n", encoding="utf-8")
+    assert module.phase_state(root) == (number, "complete")
 
 
 def test_a_contract_without_its_close_reads_as_in_progress(tmp_path: Path) -> None:
     """The negative control for the state itself.
 
-    Remove the close line from the newest contract and the state must revert.
-    Without this the `complete` above could be a constant and nothing would tell.
+    Remove the close line and the state must revert. Without this, `complete`
+    could be a constant and nothing would tell. Phase-agnostic for C-49's
+    reason: the close is planted and then removed on whichever contract is
+    newest, so the test survives every boundary including this phase's own.
     """
     module = _check_claims_module()
     root = _repo_copy(tmp_path)
-    contract = root / "docs" / "contracts" / "PHASE-2-CONTRACT.md"
-    contract.write_text(
-        contract.read_text(encoding="utf-8").replace(
-            "**CLOSED \u2014 31 August 2026, ruled by the director.**",
-            "**Not closed yet.**",
-        ),
+    number, _state = module.phase_state(root)
+    contract = root / "docs" / "contracts" / f"PHASE-{number}-CONTRACT.md"
+    original = contract.read_text(encoding="utf-8")
+    close_line = f"\n**Phase {number} CLOSED for this test.**\n"
+    contract.write_text(original + close_line, encoding="utf-8")
+    assert module.phase_state(root) == (number, "complete")
+    contract.write_text(original, encoding="utf-8")
+    stripped = re.sub(rf"^\*\*(?:Phase {number} )?CLOSED\b", "**Was closed", original, flags=re.M)
+    contract.write_text(stripped, encoding="utf-8")
+    assert module.phase_state(root) == (number, "in progress")
+
+
+# --------------------------------------------------------------------- C-48
+
+
+_OPEN_ROW = re.compile(r"^\|[^|\n]*\*\*(\d+) corrections open\*\*[^|\n]*\|[^\n]*", re.M)
+
+
+def test_the_open_corrections_row_count_is_checked(tmp_path: Path) -> None:
+    """**C-48.** The row said 49 entries and 6 open; the register held 50 and 7.
+
+    And it credited `check_counts` with reading it, when that check read only
+    the counts table in `docs/CORRECTIONS.md`. The claim is now true by
+    machinery, and this is the count half: a wrong open count is a failure.
+    """
+    module = _check_claims_module()
+    root = _repo_copy(tmp_path)
+    claude = root / "CLAUDE.md"
+    text = claude.read_text(encoding="utf-8")
+    row = _OPEN_ROW.search(text)
+    assert row is not None, "nothing to perturb: CLAUDE.md carries no open-corrections row"
+    stated = int(row.group(1))
+    claude.write_text(
+        text.replace(f"**{stated} corrections open**", f"**{stated + 1} corrections open**"),
         encoding="utf-8",
     )
-    assert module.phase_state(root) == (2, "in progress")
+    details = [p.detail for p in module.check_counts(root)]
+    assert any("corrections open, entries say" in d for d in details), details
+
+
+def test_a_closed_correction_named_in_the_open_row_is_a_failure(tmp_path: Path) -> None:
+    """One direction of the identifier check: the row may not keep a closed id."""
+    module = _check_claims_module()
+    root = _repo_copy(tmp_path)
+    claude = root / "CLAUDE.md"
+    text = claude.read_text(encoding="utf-8")
+    row = _OPEN_ROW.search(text)
+    assert row is not None
+    # C-2 closed under T-1; naming it as open is the planted drift.
+    claude.write_text(text.replace(row.group(0), row.group(0) + " **C-2**,", 1), encoding="utf-8")
+    details = [p.detail for p in module.check_counts(root)]
+    assert any("named in the row, not open in the register" in d and "C-2" in d for d in details), (
+        details
+    )
+
+
+def test_an_open_correction_missing_from_the_row_is_a_failure(tmp_path: Path) -> None:
+    """The other direction: every open entry must appear in the row.
+
+    C-48's own shape -- C-47 was open and absent from the row -- so the planted
+    violation removes one open identifier rather than inventing a state.
+    """
+    module = _check_claims_module()
+    root = _repo_copy(tmp_path)
+    claude = root / "CLAUDE.md"
+    text = claude.read_text(encoding="utf-8")
+    row = _OPEN_ROW.search(text)
+    assert row is not None
+    ids = re.findall(r"\*\*([CV]-\d+)\*\*", row.group(0))
+    assert ids, "the row names no identifiers to remove"
+    planted = row.group(0).replace(f"**{ids[-1]}**", "**(one removed)**", 1)
+    claude.write_text(text.replace(row.group(0), planted, 1), encoding="utf-8")
+    details = [p.detail for p in module.check_counts(root)]
+    assert any(
+        "open in the register, absent from the row" in d and ids[-1] in d for d in details
+    ), details
+
+
+def test_deleting_the_open_corrections_row_is_a_failure(tmp_path: Path) -> None:
+    """Absence is a failure -- C-47's lesson, applied to this row.
+
+    Every other figure claim iterates its matches, so a deleted sentence
+    reports nothing. Deleting this row must not be a way to silence it.
+    """
+    module = _check_claims_module()
+    root = _repo_copy(tmp_path)
+    claude = root / "CLAUDE.md"
+    text = claude.read_text(encoding="utf-8")
+    row = _OPEN_ROW.search(text)
+    assert row is not None, "nothing to delete"
+    claude.write_text(text.replace(row.group(0), "", 1), encoding="utf-8")
+    details = [p.detail for p in module.check_counts(root)]
+    assert any("carries no" in d and "corrections open" in d for d in details), details
