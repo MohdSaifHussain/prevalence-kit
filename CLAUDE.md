@@ -6,7 +6,7 @@ report. **No AI ever touches the evidence or the estimate.**
 
 This project runs the **governed-orchestration** skill at **STANDARD** tier, manual-approve.
 
-**Phase 3 of 4 in progress.** The contract is APPROVED and amended, **Q1–Q34 ruled** — Q16–Q25 at the
+**Phase 3 of 4 complete.** The contract is APPROVED and amended, **Q1–Q34 ruled** — Q16–Q25 at the
 boundary, Q26–Q32 for the launch programme, and Q33–Q34 at the release authorisation. Tier: STANDARD by the
 re-ask's first live ruling, D-42. D3.1 through D3.5 are done
 — re-pin, tier, demonstration, README draft, history review — the review stop is passed and
@@ -464,4 +464,4 @@ or a correction whose closing condition is written down.
 | **O-21** | The rare-event specificity fact must reach the README — **done at D3.4**, grouped as one fact | Phase 3 |
 | **O-28** | **Discharged 2026-08-31 by D3.5.** `docs/contracts/PHASE-3-HISTORY-REVIEW.md` — every finding ruled, closed by the director's read the same day. **The repository going public is a separate explicit word and it has not been given**: no visibility change, no tag, no candidate, no PyPI or TestPyPI until it is | **Done** |
 | **O-14, O-15** | Carried, low, no action. O-15 is deliberately unmet — a ledger schema version, added only if it is ever needed | Phase 3 |
-| **12 corrections open** | **C-1**, **C-42**, **C-43**, **C-44**, **C-45**, **C-46**, **C-47**, **C-48**, **C-49**, **C-50**, **C-51**, **C-52**. 55 entries, 41 closed, 2 `noted`; every open entry closes under **T-1** at D3.10, naming its discharging commit. This row is read by `check_counts` against the register — count, identifier list in both directions, figures, and absence is a failure (C-48 is what happens otherwise) | — |
+| **0 corrections open** | **55 entries, 53 closed, 2 `noted`.** T-1 closed every open entry at the Phase 3 close, each naming a discharging commit **verified by content** rather than by a message that merely mentions its number. This row is read by `check_counts` against the register — the count, the identifier list in both directions, and the figures; **absence is a failure**, because a row that can be deleted is a claim that can be silenced | — |

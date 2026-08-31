@@ -10,15 +10,6 @@
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue)](pyproject.toml)
 [![PyPI](https://img.shields.io/badge/PyPI-prevalence--kit-blue)](https://pypi.org/project/prevalence-kit/)
 
-**Every number in those badges is asserted by a test.** Change the test count,
-the gate, or the reason codes without changing the badge and the build fails —
-`tests/test_record.py`. A badge nobody checks is a decoration.
-
-**v1.0.0 — released 1 September 2026.** Phase 3 of 4 in progress; the phase
-closes once the release is recorded. Read the honest limits below before
-relying on any number this produces — they are part of the product, not a
-disclaimer.
-
 Audit-grade prevalence measurement for Trust & Safety.
 
 You give it a sampling plan and human labels. It gives back a prevalence estimate, an honest
@@ -84,6 +75,9 @@ number it cannot defend. That is the gap.
 
 The shipped example under [`examples/synthetic/`](examples/synthetic) runs the whole chain in
 seconds.
+
+**749 tests.** 35 of them (4.7%) check the documentation and the record itself — that the badges, counts and claims in this repository match what the code
+actually does. The other 714 test the tool.
 
 ## Getting started
 
@@ -202,13 +196,33 @@ writes files. No importance sampling or ML-assisted weights. No DSA-shaped repor
 - **[`PROJECT_CHARTER.md`](PROJECT_CHARTER.md)** — what is in scope, what is not,
   and every measured figure with the conditions it was measured under.
 
+## Project status
+
+**v1.0.0, released 1 September 2026** — the first release.
+[`CHANGELOG.md`](CHANGELOG.md) records what changed;
+[`docs/RELEASE-NOTES-1.0.0.md`](docs/RELEASE-NOTES-1.0.0.md) covers how to
+install it, how to verify it, and what it does not claim.
+
+Built in four phases under a governed process. **Phase 3 of 4 complete.** Each
+phase has a binding contract under [`docs/contracts/`](docs/contracts) stating
+what "done" meant before the work began, and an outcome recording what actually
+happened — including what failed.
+
+**Every number in the badges above is asserted by a test.** Change the test
+count, the gate, or the reason codes without changing the badge and the build
+fails (`tests/test_record.py`). A badge nobody checks is a decoration, and this
+project has a register full of figures that drifted because nothing watched
+them.
+
 ## Who maintains it
 
 Built and maintained by [Mohd Saif Hussain](https://github.com/MohdSaifHussain).
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) to contribute.
 
-[`CONTRIBUTING.md`](CONTRIBUTING.md) explains what is most useful to contribute
-and the rules that shaped this codebase, and
-[`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) applies to everyone taking part.
+**The code was written by an AI under human direction; every decision was the
+maintainer's.** [`docs/DECISIONS.md`](docs/DECISIONS.md) and
+[`docs/CORRECTIONS.md`](docs/CORRECTIONS.md) record those decisions and every
+error found along the way.
 
 ## The record
 

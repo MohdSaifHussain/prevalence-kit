@@ -20,12 +20,12 @@ who writes the entries. The director raised that one himself and asked for it to
 |---|---|---|---|
 | Chat reviewer (draft author) | 0 | 3 | **3** |
 | Research report (passed through unverified) | 0 | 2 | **2** |
-| Stale-at-draft-time, queued but built on anyway | **1** | 0 | **1** |
-| **Builder (Claude Code)** | **10** | **33** | **43** |
-| Reviewer instrument | **1** | **2** | **4** (1 noted) |
+| Stale-at-draft-time, queued but built on anyway | 0 | **1** | **1** |
+| **Builder (Claude Code)** | 0 | **43** | **43** |
+| Reviewer instrument | 0 | **3** | **4** (1 noted) |
 | **Director** | 0 | **1** | **1** |
 | Tool artifact (noted, not a defect) | - | - | **1** (noted) |
-| **Total** | **12** | **41** | **55** |
+| **Total** | **0** | **53** | **55** |
 
 **Derived, and now checked — 2026-08-30.** Every figure above is computed from the entry blocks in
 this file rather than incremented as rows arrived. An earlier version said 36 open and 3
@@ -121,7 +121,7 @@ sentence is now the fact, at the width of the evidence and no wider.
 | **Severity** | **High.** It was the load-bearing premise under a tripwire and under the whole `lean`-estimator plan. |
 | **Replaced by** | D-2 — `lean` retained, with the `httpx` zero-network dependency as the recorded rationale. Availability argument retired. TW-2 rewritten with a corrected baseline. |
 | **Second finding, same check** | svy already implements Neyman allocation, Wilson, Clopper-Pearson, Korn-Graubard, logit intervals, Taylor variance, post-stratification and raking — most of the planned Phase 2. Positioning corrected in D-4. |
-| **Status** | **OPEN** -- closes when the README credits `svy` as the estimator layer -- **Phase 3**, and there is no README yet. Its condition is unmet rather than overlooked|
+| **Status** | **CLOSED** at the Phase 3 close under **T-1** — discharged by `52c2e00`, the README credits `svy` as the estimator layer |
 
 **The process lesson, and it is the one worth keeping.** A finding was queued for a ruling *and*
 relied upon before the ruling came. That is the failure mode, not the stale fact. A claim awaiting a
@@ -1279,7 +1279,7 @@ in the contract that opened it.
 | **Caught by** | The builder, checking the artifact before acting on the finding. The director then re-read and withdrew it |
 | **Severity** | **Low in effect** -- nothing was changed on the strength of it, because the check came first. Notable in kind |
 | **Replaced by** | Nothing to replace in the draft. **The half of the instruction that was right was applied**: A-4 said *"when sensitivity and specificity are supplied"* and left the mechanism to inference, and the row now states the commitment -- hashed plan fields, both or neither, validated at load |
-| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+| **Status** | **CLOSED** at the Phase 3 close under **T-1** — discharged by `eb17c9a`, the half of the instruction that was right was applied to the A-5 row |
 
 **Second instance of one shape, and the director named it as such: concluding about an artifact
 from an incomplete reading of it.** The first was **C-26**, where a summarising fetch dropped a
@@ -1309,7 +1309,7 @@ treating the whole finding as void because part of it failed would be its own er
 | **Caught by** | The builder, adding the register row the entry never had. **The row is what forced it** -- rule 4 of the register asks for a pin, a URL and a re-check date, and none of the three can be written without going to the artifact |
 | **Severity** | **Low in effect, and worth the entry anyway.** The sentence it supplies is correct and the two rulings that rest on it are unaffected: strata are mutually exclusive and covering, whichever Statistics Canada document says so |
 | **Replaced by** | A full S-1.13 row naming the publication, the URL, the fetch, the date modified and the re-check date, and stating that the methodology manual is a different document that has not been read |
-| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+| **Status** | **CLOSED** at the Phase 3 close under **T-1** — discharged by `d95a014`, S-1.13 rewritten as an educational page with its pin, URL and re-check date |
 
 **A second, smaller thing came with it, and it is the same shape one level down.** The register
 quoted the source as **two** fragments -- *"homogeneous, mutually exclusive groups"* and
@@ -1341,7 +1341,7 @@ shape, in the standards register**: the reconciliation ran in one direction only
 | **Caught by** | The builder, reading the record on a fresh window before doing anything else. **Not by an instrument** -- `check_citations` resolves `D-nn` decisions and `O-nn` obligations, and deliverable numbers are a different vocabulary that nothing walks |
 | **Severity** | **Low in effect and high in kind.** No number is wrong. But O-26's work was real, shipped, and had no row in the document that defines the phase, which is how a phase closes with a deliverable nobody signed off |
 | **Replaced by** | A **D2.17 row in section 3** naming its governing standard and obligation, and an evidence row in section 11. The direction was chosen deliberately: two committed artifacts already carried the name, so adding the row keeps the record consistent, where renaming would have edited artifacts to match a document |
-| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+| **Status** | **CLOSED** at the Phase 3 close under **T-1** — discharged by `d95a014`, the D2.17 row added to the Phase 2 contract's section 3 |
 
 **Why the contract was corrected rather than `CLAUDE.md`.** The director's instruction was
 *"one of the two is wrong; decide which and make them agree."* The tie-break is that the name
@@ -1367,7 +1367,7 @@ three instances here -- V-16's gate, C-41's questions, and this one.
 | **Caught by** | **The reviewer, counting**, after the hand-run was complete. Not by any instrument: `check_figures` covers three numbers in this file and a deliberately narrow set elsewhere, and a row count in a contract is not among them |
 | **Severity** | **Low in effect, high in kind.** No command was wrong and no result changed. But the figure sat in the file **the next session reads first**, beside a claim about verification coverage that was also untrue, and the director ran a 34-row checklist believing it had 26 |
 | **Replaced by** | The corrected row in `CLAUDE.md` naming the hand-run's dated reading, and `docs/contracts/PHASE-2-HAND-RUN.md`, whose header says **34 because it was counted** |
-| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+| **Status** | **CLOSED** at the Phase 3 close under **T-1** — discharged by `e30aeb5`, the hand-run's header states 34 rows, counted |
 
 **Two claims in one sentence, and only one of them was even checkable.** *"Twenty-six rows"* is a
 number a reader could have verified in ten seconds and nobody did. *"Every command executed before
@@ -1398,7 +1398,7 @@ next session **before it has read anything else**.
 | **Caught by** | **The director, reading a report by hand at the phase-close ritual** -- and reached through **F4, a checklist row that was wrong about something else entirely**. The reviewer then found the second instance, on the console line, in the transcript |
 | **Severity** | **High.** A false statement of fact in the artifact an outsider reads, with `verify` returning nine checks and exit 0 |
 | **Replaced by** | The true count, supplied by the caller that counted the labels, plus a per-stratum table -- **F-12** |
-| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+| **Status** | **CLOSED** at the Phase 3 close under **T-1** — discharged by `d5741dd`, the report carries the true positive count and a per-stratum table |
 
 **C-16's class, and the third live instance of the seventh instrument-limit kind.** `verify`
 recomputes through `_estimate_from`, the same function that produced the number, so it reproduced
@@ -1431,7 +1431,7 @@ such rather than as luck.
 | **Caught by** | **The director, reading the README.** Not by any instrument: `check_figures` had a claim for exactly this line and **it passed** |
 | **Severity** | **Medium in effect, high in kind.** Nothing computed is wrong. But a checker that **affirms** a false statement is worse than no checker, and this one had been reported as covering the sentence |
 | **Replaced by** | *"Phase 2 of 4 complete; Phase 3 not started"*, and a rebuilt check that reads the **word** as well as the number, derives the state from the contract's own close line, and **fails when the sentence is absent** |
-| **Status** | **OPEN** - closes with the rest under **T-1 (D2.12)** |
+| **Status** | **CLOSED** at the Phase 3 close under **T-1** — discharged by `cad419c`, one canonical phase sentence, derived from the contract, absence a failure |
 
 **One root, two opposite failures, and the pair is the lesson.** `current_phase` means *the
 highest-numbered contract that exists*. That is **not** *the phase in progress*, and two checks
@@ -1471,7 +1471,7 @@ repair went through a file rather than a heredoc -- which is the rule that was b
 | **Caught by** | The builder, reading the record in at the Phase 3 kickoff and **re-deriving the figures rather than carrying them** -- rule 13. Reproduced independently by the reviewer |
 | **Severity** | **Low in effect, high in kind.** The file the next session reads first, carrying a false claim of machine coverage |
 | **Replaced by** | The corrected row, and **the claim made true by machinery** (Q22): `check_counts` now reads the row against the register -- the open count, the identifier list in **both directions**, and the three figures -- and the row's **absence is a failure**, so deleting it cannot silence the claim |
-| **Status** | **OPEN** - closes under **T-1** at the Phase 3 close (**D3.10**), naming its discharging commit |
+| **Status** | **CLOSED** at the Phase 3 close under **T-1** — discharged by `03a0c7b`, the row corrected and `check_counts` taught to read it, both directions |
 
 **The mechanism is C-9's, not optimism.** The row was true when written and expired when C-47
 landed -- a live figure in prose with nothing watching it. What makes it an entry of its own is
@@ -1491,7 +1491,7 @@ an unchecked figure, because it stops the reader from adding it up themselves.
 | **Caught by** | The gate, on the Phase 3 boundary commit -- the first event the anchors could not survive. Partly luck, and recorded as such: the vacuous pair surfaced only because their assertion direction happened to fail |
 | **Severity** | **Low in effect, notable in kind -- and the kind is the entry's point: this happened inside the fix for C-47**, a correction about checks anchored on the wrong thing. The fix for a stale-anchor defect shipped four stale anchors |
 | **Replaced by** | All four rewritten phase-agnostic (**Q25**): anchors derived from `phase_state`, every plant asserted before the checker is consulted, and the state test asserting the close-line property on whichever contract is newest |
-| **Status** | **OPEN** - closes under **T-1** at the Phase 3 close (**D3.10**), naming its discharging commit |
+| **Status** | **CLOSED** at the Phase 3 close under **T-1** — discharged by `03a0c7b`, all four tests re-anchored on the artifact, every plant asserted |
 
 **The heredoc rule already said it, one layer down.** *Assert the anchor before writing through
 it* was written for scripted edits; a test that plants by string replacement is a scripted edit
@@ -1511,7 +1511,7 @@ day silently plants nothing.
 | **Caught by** | The falsehood: the **D3.1 re-read the director ordered** -- re-derive the premise from a live run log and the actions' own files before acting on it. The builder fetched `action.yml` at each pinned SHA; the reviewer verified the same from the raw API. The site list: **a search run at HEAD, after three hand-carried lists had each been wrong** -- `git grep -n -e "target Node 20" -e "targeting Node 20" 03a0c7b` plus the cell-form sweep for `docs/TRIPWIRES.md`, whose claim is a table cell under a *Runtime it targets* header that **no phrase search can hit** |
 | **Severity** | **Low in effect** -- the remedy (re-pin both) was right anyway, for different reasons: setup-python for the runtime, checkout for TW-4's own currency rule. **Notable in kind, twice over.** First: the false cell sat in **TW-4's own baseline** -- the tripwire's recorded state said the false thing about the action it watches. Second: **rule 7 fired on the sweep three times in a row, once per author.** The **builder's** list (3) was from recall: it named `CLAUDE.md`, which never carried the claim, and missed `docs/TRIPWIRES.md` and both `docs/STANDARDS.md` sites. The **reviewer's** list (5) verified the two sites it added and **carried the builder's three unchecked**, publishing a count with a wrong member -- the same defect it was correcting, one message later; its total of five was right only by coincidence. **And it is worse than carrying**: `docs/STANDARDS.md:1040` was in the reviewer's own grep output when it went looking for the sites, and the published list still omitted it -- C-24's class, the answer on screen and not read, on top of the phrase-form binding. The **director's** correcting list (4) removed `CLAUDE.md` rightly -- by `git log -S`, a search -- and still missed `docs/STANDARDS.md:1040`, because a phrase-exact search binds to one surface form of a claim that exists in three (*target*, *targeting*, and a bare table cell). **Nobody's list survived contact with the artifact; only the search did** |
 | **Replaced by** | Per site, as the documents allow. **Corrected forward (3):** `docs/DECISIONS.md`'s row, struck-through with the correction beside it; `docs/STANDARDS.md` S-5.4, rewritten with the new pins and the runtime **derived from `action.yml` at the pinned SHA rather than written by hand** -- hand-writing it is what produced the false cell; `docs/STANDARDS.md`'s O-19 row, restated at discharge. **Disclosed, not edited (2):** `docs/TRIPWIRES.md`'s 2026-08-29 table is a dated recorded-state block inside a ratified document -- kept as written, a block-quoted correction beneath it, and a new dated 2026-08-31 baseline added below; the Phase 2 contract section 10 is a closed contract and is not touched, this entry is its disclosure |
-| **Status** | **OPEN** - closes under **T-1** at the Phase 3 close (**D3.10**), naming its discharging commit |
+| **Status** | **CLOSED** at the Phase 3 close under **T-1** — discharged by `b2c3391`, five sites corrected or disclosed, and the actions re-pinned |
 
 **What the entry is for, beyond the cell.** A recorded-state table whose values are typed in by
 hand is a claim nobody re-derived, sitting inside the instrument that exists to catch exactly
@@ -1531,7 +1531,7 @@ reader knows what would have to be re-fetched to check it.
 | **Caught by** | **The reviewer (H-3), performing the ten-second arithmetic** on the flagship artifact. **And the correction itself then needed re-deriving**: the reviewer's corrective sentence -- *"no Wilson point among the four is outside the band"* -- is false on the **upper** side, where 0.9564 and 0.9576 sit above the band by 0.0064 and 0.0076. The corrected text was written from the eight comparisons performed against the artifact, not from either party's sentence. **A third half arrived at the re-review**: the reviewer's first negative control for the new svy-credit check did not fire and the instrument was fine -- the plant never took, because the phrase spans a line break -- exposed only by asserting the plant took. That is C-49's own rule, broken one exchange after it was ruled |
 | **Severity** | **Medium in effect, high in kind.** Arithmetic a stranger checks in ten seconds, wrong in the demonstration built to be checked by strangers. What the four points support, now stated: neither interval falls below nominal by more than the error anywhere; both are resolvably **above** nominal at the rare end; Wilson's below-then-above shape is consistent with the charter's tables and is not established by four points |
 | **Replaced by** | Corrected paragraphs in `demo/READING.md` and `README.md`, **edited before any push, at the review stop, on the director's explicit ruling** -- the dated reading's no-edit rule protects records that have closed review, and this one was the thing under review; the correction is marked in place and this entry is its disclosure. The commit message and the stop report cannot be edited and this entry is their record |
-| **Status** | **OPEN** - closes under **T-1** at the Phase 3 close (**D3.10**), naming its discharging commit |
+| **Status** | **CLOSED** at the Phase 3 close under **T-1** — discharged by `18df4a4`, both artifacts restated to what the eight comparisons support |
 
 **The lesson already had a number and held anyway, and the entry's real subject is who broke
 it.** Rule 10 -- a checked number carries an unchecked claim -- was written from C-27 and C-28,
@@ -1555,7 +1555,7 @@ the only control that proved anything was the one that asserted its plant took.
 | **Caught by** | **CI, on the first run of `container.yml`** -- the workflow that exists to run the tool inside the image rather than merely build it. **The identical commands had passed locally minutes earlier**: Windows Docker Desktop does not enforce Linux ownership on bind mounts, so the local run could not see it |
 | **Severity** | **Medium.** Nothing computed is wrong and no published number is affected. But it is the first instruction in the SOP, and an operator meeting it would conclude the container is broken |
 | **Replaced by** | `--user "$(id -u):$(id -g)"` in all four places, with the reason stated where an operator meets it and the platform difference named, so nobody removes it as noise |
-| **Status** | **OPEN** - closes under **T-1** at the Phase 3 close (**D3.10**), naming its discharging commit |
+| **Status** | **CLOSED** at the Phase 3 close under **T-1** — discharged by `d40818a`, `--user` documented in all four places that carried the command |
 
 **This is the R3.12 requirement earning its place on the day it was written.** That requirement
 says a container is verified by *running the shipped example inside it*, not by building it --

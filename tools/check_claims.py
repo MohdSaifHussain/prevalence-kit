@@ -1687,11 +1687,12 @@ def selftest() -> int:
             "",
         ),
         "counts": (
-            # The defect exactly as it was: the Total row over by one. C-36 sat
-            # in the file with its own columns summing to 38 against a stated 37.
+            # The file is named here; the anchor itself is DERIVED in the
+            # loop below, because the Total row changes whenever the register
+            # does and a literal anchor broke twice.
             "docs/CORRECTIONS.md",
-            "| **Total** | **12** | **41** | **55** |",
-            "| **Total** | **12** | **40** | **55** |",
+            "",
+            "",
         ),
         "schema": (
             # F-10's shape, planted: declare a field behavioural that nothing
@@ -1755,6 +1756,25 @@ def selftest() -> int:
                 # Shrink every content field, recreating the C-15 regression.
                 lines = text.splitlines()
                 text = "\n".join([lines[0], *(ln[:60] for ln in lines[1:4])]) + "\n"
+            elif name == "counts":
+                # **Derived, not hard-coded.** This plant used to name the Total
+                # row literally, and it broke twice -- once when a correction was
+                # added and once at the phase close -- because the row it anchors
+                # on is exactly the row that changes whenever the register does.
+                # C-49's rule, applied to the selftest itself: find the anchor in
+                # the artifact, then perturb what you found.
+                row = re.search(
+                    r"^\|\s*\*\*Total\*\*\s*\|\s*\*\*(\d+)\*\*\s*\|\s*\*\*(\d+)\*\*\s*\|"
+                    r"\s*\*\*(\d+)\*\*\s*\|",
+                    text,
+                    flags=re.M,
+                )
+                assert row is not None, "selftest: no Total row in the counts table"
+                text = text.replace(
+                    row.group(0),
+                    row.group(0).replace(f"**{row.group(2)}**", f"**{int(row.group(2)) - 1}**", 1),
+                    1,
+                )
             else:
                 assert old in text, f"selftest plant anchor missing for {name}"
                 text = text.replace(old, new, 1)
