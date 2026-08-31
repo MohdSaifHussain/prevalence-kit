@@ -43,11 +43,18 @@ shipped estimators at a nominal 0.95. The truth is the census over all 1,999,514
 
 The Monte Carlo error on a coverage figure at 10,000 draws is about ±0.0043 (1.96·√(.95·.05/10⁴)).
 
-**Read the two columns the way the record has already taught.** Clopper-Pearson sits at or above
-nominal at all four points, widening as the rate rarefies — that is its guarantee doing what
-S-1.1 §4.2.1 says it must, and the price is width. Wilson oscillates around nominal and is
-**below it at the 7.99% point by more than the Monte Carlo error** (0.9460 against 0.95). Both
-behaviours are what the charter's measured tables predict.
+**Read the two columns the way the record has already taught — and no further than the error
+allows.** *(This paragraph was corrected at the review stop, before any push, on the director's
+ruling — C-51; its first form claimed a comparison that had never been performed.)* Judged
+against the ±0.0043 band around nominal, **neither interval falls below 0.95 by more than the
+Monte Carlo error at any point**: Wilson's two below-nominal readings, 0.9460 and 0.9493, are
+inside the band, and every other reading sits above nominal. What the demonstration *can*
+resolve is conservatism at the rare end — Wilson at 0.9564 and 0.9576, Clopper-Pearson at
+0.9585, 0.9762 and 0.9868, each above nominal by more than the error. For Clopper-Pearson that
+is the direction S-1.1 §4.2.1's guarantee permits and its width pays for; for Wilson it is the
+upper half of the oscillation its literature describes. Below at the two commoner rates, above
+at the two rarer, is the oscillation's shape — **four points cannot establish it, only fail to
+contradict it.**
 
 **What these four points are not.** They are a demonstration at four pre-registered operating
 points, **not a sweep, and not a worst case**. The worst case for Wilson at these sizes is the

@@ -781,3 +781,44 @@ def test_deleting_the_open_corrections_row_is_a_failure(tmp_path: Path) -> None:
     claude.write_text(text.replace(row.group(0), "", 1), encoding="utf-8")
     details = [p.detail for p in module.check_counts(root)]
     assert any("carries no" in d and "corrections open" in d for d in details), details
+
+
+# ------------------------------------------- the stop rulings of 2026-08-31
+
+
+def test_a_named_demo_path_is_walked(tmp_path: Path) -> None:
+    """PATH_LIKE's second widening: `demo/` prefix and `.svg` extension.
+
+    The README's front page links four files under demo/, one an .svg, and a
+    vanished link passed check_paths before the widening -- the reviewer's
+    negative control at the Phase 3 stop proved it. Same two axes as D2.14(a).
+    """
+    module = _check_claims_module()
+    root = _repo_copy(tmp_path)
+    readme = root / "README.md"
+    # Assembled from pieces so this test file does not itself name a path that
+    # does not exist -- check_paths walks tests/*.py too.
+    bogus = "demo/" + "does-not-" + "exist.svg"
+    readme.write_text(
+        readme.read_text(encoding="utf-8") + f"\nSee {bogus} for nothing.\n", encoding="utf-8"
+    )
+    details = [p.detail for p in module.check_paths(root)]
+    assert any(bogus in d for d in details), details
+
+
+def test_the_svy_credit_cannot_be_silently_dropped(tmp_path: Path) -> None:
+    """O-10 / C-1: the estimator-layer credit is held by machinery, not memory.
+
+    Both directions: the live README passes (the credit is there), and a README
+    whose credit is reworded away fails -- absence is a failure, so deleting
+    the sentence cannot silence the claim.
+    """
+    module = _check_claims_module()
+    root = _repo_copy(tmp_path)
+    assert not module._svy_credit_problems(root), "the live README should carry the credit"
+    readme = root / "README.md"
+    text = readme.read_text(encoding="utf-8")
+    assert "the estimator layer" in text, "nothing to remove"
+    readme.write_text(text.replace("the estimator layer", "a fine library"), encoding="utf-8")
+    details = [p.detail for p in module._svy_credit_problems(root)]
+    assert any("estimator-layer credit" in d for d in details), details

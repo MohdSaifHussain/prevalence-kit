@@ -254,7 +254,7 @@ reader could not tell a stratified redraw from a simple random one. `verify.py` 
 design (F-10's third site) and **its output was silent about what it had checked.** It now
 names the draw.
 
-**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **734 tests**, seven gate
+**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **736 tests**, seven gate
 checks green — **`check_claims` now runs twelve**, not seven; the gate block below is still
 seven commands. **CI last ran green at 734** on the 3.12 / 3.13 / 3.14 matrix, run `33345614816`, head `03a0c7b` — the Phase 3 boundary commit, all three legs at 734, matching local. They are stated apart because they are two measurements, not one.
 A second workflow, `witness.yml`, rebuilds the R image and requires every fixture to regenerate
@@ -446,4 +446,4 @@ or a correction whose closing condition is written down.
 | **O-21** | The rare-event specificity fact must reach the README | Phase 3 |
 | **O-28** | Pre-publication review of **git history**, not only the working tree. **Must reach the Phase 3 contract before the release** | Phase 3 |
 | **O-14, O-15** | Carried, low, no action. O-15 is deliberately unmet — a ledger schema version, added only if it is ever needed | Phase 3 |
-| **10 corrections open** | **C-1**, **C-42**, **C-43**, **C-44**, **C-45**, **C-46**, **C-47**, **C-48**, **C-49**, **C-50**. 53 entries, 41 closed, 2 `noted`; every open entry closes under **T-1** at D3.10, naming its discharging commit. This row is read by `check_counts` against the register — count, identifier list in both directions, figures, and absence is a failure (C-48 is what happens otherwise) | — |
+| **11 corrections open** | **C-1**, **C-42**, **C-43**, **C-44**, **C-45**, **C-46**, **C-47**, **C-48**, **C-49**, **C-50**, **C-51**. 54 entries, 41 closed, 2 `noted`; every open entry closes under **T-1** at D3.10, naming its discharging commit. This row is read by `check_counts` against the register — count, identifier list in both directions, figures, and absence is a failure (C-48 is what happens otherwise) | — |

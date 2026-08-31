@@ -21,11 +21,11 @@ who writes the entries. The director raised that one himself and asked for it to
 | Chat reviewer (draft author) | 0 | 3 | **3** |
 | Research report (passed through unverified) | 0 | 2 | **2** |
 | Stale-at-draft-time, queued but built on anyway | **1** | 0 | **1** |
-| **Builder (Claude Code)** | **8** | **33** | **41** |
+| **Builder (Claude Code)** | **9** | **33** | **42** |
 | Reviewer instrument | **1** | **2** | **4** (1 noted) |
 | **Director** | 0 | **1** | **1** |
 | Tool artifact (noted, not a defect) | - | - | **1** (noted) |
-| **Total** | **10** | **41** | **53** |
+| **Total** | **11** | **41** | **54** |
 
 **Derived, and now checked — 2026-08-30.** Every figure above is computed from the entry blocks in
 this file rather than incremented as rows arrived. An earlier version said 36 open and 3
@@ -1517,6 +1517,27 @@ day silently plants nothing.
 hand is a claim nobody re-derived, sitting inside the instrument that exists to catch exactly
 that. The new baseline's runtime column names its derivation in its own header, so the next
 reader knows what would have to be re-fetched to check it.
+
+---
+
+## C-51 - A comparison to a bound defined five lines above it, never performed
+
+| | |
+|---|---|
+| **Claimed** | `demo/READING.md`: Wilson is below nominal at the 7.99% point *"by more than the Monte Carlo error"* (0.9460 against 0.95) -- with the error defined as **±0.0043** five lines above. Propagated to `README.md` as *"dips measurably below it"*, to the D3.3 commit message (`93bbb52`) as *"below nominal beyond the Monte Carlo error"*, and to the builder's stop report |
+| **Actually** | 0.95 − 0.9460 = **0.0040 < 0.0043**. The 95% band around nominal is [0.9457, 0.9543] and 0.9460 lies inside it. The comparison the sentence asserts was never performed -- **rule 10's shape**: the checked number (the error, correctly computed) sat beside an unchecked claim (the comparison to it), and the checked half is what stopped everyone looking |
+| **Direction** | **Against our own estimator** -- C-50's unusual direction, and the reviewer named that as why nobody re-read it: an unflattering claim gets waved through where a flattering one gets audited |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | **The reviewer (H-3), performing the ten-second arithmetic** on the flagship artifact. **And the correction itself then needed re-deriving**: the reviewer's corrective sentence -- *"no Wilson point among the four is outside the band"* -- is false on the **upper** side, where 0.9564 and 0.9576 sit above the band by 0.0064 and 0.0076. The corrected text was written from the eight comparisons performed against the artifact, not from either party's sentence |
+| **Severity** | **Medium in effect, high in kind.** Arithmetic a stranger checks in ten seconds, wrong in the demonstration built to be checked by strangers. What the four points support, now stated: neither interval falls below nominal by more than the error anywhere; both are resolvably **above** nominal at the rare end; Wilson's below-then-above shape is consistent with the charter's tables and is not established by four points |
+| **Replaced by** | Corrected paragraphs in `demo/READING.md` and `README.md`, **edited before any push, at the review stop, on the director's explicit ruling** -- the dated reading's no-edit rule protects records that have closed review, and this one was the thing under review; the correction is marked in place and this entry is its disclosure. The commit message and the stop report cannot be edited and this entry is their record |
+| **Status** | **OPEN** - closes under **T-1** at the Phase 3 close (**D3.10**), naming its discharging commit |
+
+**The lesson already had a number and held anyway.** Rule 10 -- a checked number carries an
+unchecked claim -- was written from C-27 and C-28, and this register's own head priced the
+failure. It recurred in the newest artifact in the repository, in both directions inside one
+exchange: the builder asserted a comparison unperformed, and the reviewer's correction asserted
+another. **The only sentence that survived was the one derived from the eight comparisons.**
 
 ---
 

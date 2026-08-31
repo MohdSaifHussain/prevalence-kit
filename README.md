@@ -22,8 +22,10 @@ the download. Then 10,000 simple random samples of n = 1000 per threshold, each 
 shipped intervals against the census truth.
 
 Clopper-Pearson covered at or above its nominal 95% at all four points, paying in width as the
-rate rarefies. Wilson oscillates around nominal and dips measurably below it. The full account —
-census counts, coverage tallies, digests, and what these four points do *not* establish — is
+rate rarefies. Wilson sat below nominal at the two commoner rates and above it at the two rarer
+— nowhere below by more than the demonstration's own Monte Carlo error. The worst cases live in
+the swept grid, not in four blind points. The full account — census counts, coverage tallies,
+digests, and what these four points do *not* establish — is
 [`demo/READING.md`](demo/READING.md). One run also went through the full sealed chain,
 pre-registration to stamped report, on real comment text:
 [`demo/full_chain/report.md`](demo/full_chain/report.md), with `verify` returning nine checks

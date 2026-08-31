@@ -86,11 +86,17 @@ their numbered questions as `Q1`, without the hyphen, so they do not collide
 with the register's `Q-1` and `Q-2`.
 """
 PATH_LIKE = re.compile(
-    r"(?<![\w./-])((?:src|tests|docs|tools|r|svy|examples)/[\w./-]+"
-    r"\.(?:py|md|toml|txt|pdf|json|R|sh|yml))"
+    r"(?<![\w./-])((?:src|tests|docs|tools|r|svy|examples|demo)/[\w./-]+"
+    r"\.(?:py|md|toml|txt|pdf|json|R|sh|yml|svg))"
 )
 """A repository path. The lookbehind matters: without it `awesome-safety-tools/README.md`
 matched on its `tools/README.md` suffix and was reported as a missing file.
+
+**Widened a second time at the Phase 3 review stop, ruled 2026-08-31** -- the same two axes as
+D2.14(a), because the same two axes went narrow again: the README's front page links four files
+under `demo/`, one of them an `.svg`, and a vanished link passed this check (the reviewer's
+negative control proved it). A check that names its question generalises; this one's question is
+"does every named repository file exist", and its scope is this pattern, not a sentence.
 
 **D2.14(a), 2026-08-30.** Both directory prefixes and extensions were too narrow, and the
 register said so about itself: *"`check_paths` only looks at paths under `src/`, `tests/`,
@@ -1329,7 +1335,32 @@ def check_figures(root: Path) -> list[Problem]:
                     )
                 )
     problems.extend(_phase_problems(root))
+    problems.extend(_svy_credit_problems(root))
     return problems
+
+
+SVY_CREDIT = re.compile(r"`svy`.{0,200}?the estimator layer", re.S)
+"""O-10 / C-1: the README credits `svy` as the estimator layer.
+
+Ruled at the Phase 3 review stop, 2026-08-31: the credit is C-1's closing
+condition, and nothing should hold it in place by memory. Absence is a failure
+-- C-47's lesson, third application: a deleted sentence must not silence the
+claim it carried."""
+
+
+def _svy_credit_problems(root: Path) -> list[Problem]:
+    readme = root / "README.md"
+    if not readme.exists():
+        return [Problem("figures", "README.md", "is missing")]
+    if not SVY_CREDIT.search(readme.read_text(encoding="utf-8")):
+        return [
+            Problem(
+                "figures",
+                "README.md",
+                "carries no `svy` estimator-layer credit -- O-10, and C-1's closing condition",
+            )
+        ]
+    return []
 
 
 PHASE_SENTENCE = re.compile(r"Phase (\d) of 4 (in progress|complete)")
@@ -1484,8 +1515,8 @@ def selftest() -> int:
             # The defect exactly as it was: the Total row over by one. C-36 sat
             # in the file with its own columns summing to 38 against a stated 37.
             "docs/CORRECTIONS.md",
-            "| **Total** | **10** | **41** | **53** |",
-            "| **Total** | **10** | **40** | **53** |",
+            "| **Total** | **11** | **41** | **54** |",
+            "| **Total** | **11** | **40** | **54** |",
         ),
         "schema": (
             # F-10's shape, planted: declare a field behavioural that nothing
