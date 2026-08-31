@@ -1,7 +1,16 @@
 # Phase 3 contract — flagship demo and launch
 
 **Status: APPROVED — 31 August 2026. Q16–Q25 all ruled by the director the same day; the
-rulings are written into each question below, marked RULED.** Drafting this contract was the
+rulings are written into each question below, marked RULED. D3.1–D3.6 are DONE and the review
+stop is passed.**
+
+**AMENDED 31 August 2026, after the stop — see §3a and §3b.** The director directed a
+launch-readiness programme before the release: professional repository structure to the
+sibling-project bar, containerisation, an SOP, and a real-data worked example, with **v1.0
+releasing after all of it**. Six deliverables **D3.11–D3.16**, three requirements, and
+**Q26–Q32 awaiting rulings**; no work in that section begins before they are ruled. The
+comparison that produced it found three things wrong with this repository as it stands, and one
+is a licence claim with no licence behind it. Drafting this contract was the
 first build act of the phase, per the Phase 2 close. The commit that lands it also updates the
 phase sentence in `README.md` and `CLAUDE.md`, because creating this file moves the phase the
 sentence must state, and the gate reads both.
@@ -69,10 +78,10 @@ README before the stop, everything public after it.
 |---|---|---|
 | **D3.1** ▸ **DONE 2026-08-31 — and the re-read came first, as ruled.** The premise was half false when written (**C-50**): checkout v5.0.0 declared node24 at its own SHA. Re-pinned to checkout v7.0.1 (`3d3c42e...`) and setup-python v7.0.0 (`5fda3b9...`), both declaring node24 at the pinned SHA, both workflows, TW-4 clear | **O-19 — re-pin the CI actions, after re-reading the premise.** TW-4 watches for GitHub *dropping* Node 20; the last run's log already reports `setup-python` being *forced onto Node 24*, so the tripwire's premise has **partly happened** rather than merely approached. First: re-derive the current state from a live run log and the actions' release pages, not from the tripwire's text. Then re-pin `actions/checkout` and `actions/setup-python` **by SHA** to current majors in both workflows, verify the SHAs against the tags on GitHub, and re-run both workflows green — `witness.yml` must still regenerate every fixture byte-identically. TW-4 then clears or restates itself from the workflow file it reads | Charter §5.1 · TW-4 · **O-19** |
 | **D3.2** ▸ **DONE 2026-08-31 — STANDARD, D-42** | **The tier re-ask — a ruling, not a paragraph.** Ruled at **Q16** with the forward-looking question answered too: *the practice matters and the label does not*, and the practices FULL would buy are bound by D3.7/D3.8/R3.1/R3.2 at either tier. The first re-ask with something irreversible to decide, and it was decided rather than defaulted | D-1 · charter §7 · **D-42** |
-| **D3.3** | **The coverage demonstration — the flagship.** Civil Comments (CC0 1.0, 1,999,514 rows), truth knowable by census at each **pre-registered threshold, hashed before any data is touched**. Many samples, an interval each time, coverage against the census truth, at multiple thresholds across the prevalence range including the rare end — **the sensitivity curve, plotted**. Design details at **Q18**. The generating script, environment and exact calls recorded to S-8's bar; the artifact committed, like every fixture | Charter §6.3 · R-7 / D-11 · S-1.1 |
-| **D3.4** | **The README, finished, and the docs with it.** The coverage plot on the front page. `svy` credited as the estimator layer — **closes C-1** under T-1 at the phase close. **O-21**: the rare-event facts grouped and introduced as **one thing** — *at the prevalence rates this tool is for, several ordinary intuitions fail, and here they are* — per the Q6 cluster note, not three scattered caveats. Charter §8's limits carried unchanged; the not-in-v1.0 list from charter §4; the provenance sentence — the director wrote none of the code and all of the decisions | **O-21** · C-1 · charter §8 · R2.7's rule carried as R3.4 |
+| **D3.3** ▸ **DONE 2026-08-31** — pre-registration hashed at `ce25ce1` before any corpus byte, census over 1,999,514 rows at four blind thresholds, 40,000 replications, plot and reading committed at `93bbb52`; **C-51** corrected at the stop | **The coverage demonstration — the flagship.** Civil Comments (CC0 1.0, 1,999,514 rows), truth knowable by census at each **pre-registered threshold, hashed before any data is touched**. Many samples, an interval each time, coverage against the census truth, at multiple thresholds across the prevalence range including the rare end — **the sensitivity curve, plotted**. Design details at **Q18**. The generating script, environment and exact calls recorded to S-8's bar; the artifact committed, like every fixture | Charter §6.3 · R-7 / D-11 · S-1.1 |
+| **D3.4** ▸ **DRAFT DONE 2026-08-31, passed the stop** — plot on the front page, `svy` credited and machine-asserted, O-21 grouped as one fact. **Reopened by amendment 3a**: the SOP (D3.13) and the container (D3.12) are documents this deliverable must link before the release | **The README, finished, and the docs with it.** The coverage plot on the front page. `svy` credited as the estimator layer — **closes C-1** under T-1 at the phase close. **O-21**: the rare-event facts grouped and introduced as **one thing** — *at the prevalence rates this tool is for, several ordinary intuitions fail, and here they are* — per the Q6 cluster note, not three scattered caveats. Charter §8's limits carried unchanged; the not-in-v1.0 list from charter §4; the provenance sentence — the director wrote none of the code and all of the decisions | **O-21** · C-1 · charter §8 · R2.7's rule carried as R3.4 |
 | **D3.5** ▸ **DONE 2026-08-31 — the reading is `docs/contracts/PHASE-3-HISTORY-REVIEW.md`, every finding ruled, and O-28 closed by the director's read of it the same day** | **O-28 — the git-history review.** A one-time look backwards over the full history as a stranger would read it, before anything is public. Findings reported to the director with proposed dispositions; **the director rules each**, including the recorded local-paths finding (**Q19**). The review's reading is written down and dated. **Nothing goes public before the director closes this review** | **O-28** · CLAUDE.md rule 20 · SECURITY.md §3.8 |
-| **D3.6** | **Instrument work, both halves proved to fail.** (a) **Restore `check_figures`' phase claim**: C-47's rebuild added the canonical two-file sentence check and left the superseded `readme phase` entry beside it — number-only, vacuous since the close, the exact semantics C-47 condemned. Resolve at **Q21**, selftest proving the survivor fails in both directions. (b) The CLAUDE.md open-corrections row: stale at this drafting (says 49 entries, 6 open; the register holds 50, 7 open) while crediting a checker that does not read it — **Q22** rules the correction entry and the machinery | Rule 14 · rule 7 · C-47 · C-34's class |
+| **D3.6** ▸ **DONE 2026-08-31 — Q21 and Q22 ruled, both built with controls** (D-47, D-48; **C-48**). The figures check then caught its own commit's stale test count | **Instrument work, both halves proved to fail.** (a) **Restore `check_figures`' phase claim**: C-47's rebuild added the canonical two-file sentence check and left the superseded `readme phase` entry beside it — number-only, vacuous since the close, the exact semantics C-47 condemned. Resolve at **Q21**, selftest proving the survivor fails in both directions. (b) The CLAUDE.md open-corrections row: stale at this drafting (says 49 entries, 6 open; the register holds 50, 7 open) while crediting a checker that does not read it — **Q22** rules the correction entry and the machinery | Rule 14 · rule 7 · C-47 · C-34's class |
 | **D3.7** | **The release rehearsal.** A release candidate that executes the **full** publish path — build, SBOM, attestation, signing, upload to the rehearsal target — not a subset. The director hand-verifies its artifacts as an outsider: fresh download, run the published instructions exactly as written. **A negative control that must fail**, built to rule 21's bar: it reproduces the state a real compromise or mix-up would produce, and if the check it exercises were deleted, nothing else would catch it. Run at the final candidate **and again after the real act**. Every failed candidate stays in the record | Doctrine rule 6 · rule 21 · Template 6 |
 | **D3.8** | **The release.** Tag and publish to the ts-sentry supply-chain bar: hash-locked dependencies, SHA-pinned actions, SBOM, signed artifacts with provenance attestation. Channels ruled at **Q17**; ordering of repo-public against the tag at **Q20**. Performed only after a fully clean rehearsal **and** the director's explicit word, and re-verified the same way afterwards. Anything the constraints make unachievable is stated plainly, never implied done | Charter §5.1 · ts-sentry precedent |
 | **D3.9** | **The ROOST pull request.** One PR to `awesome-safety-tools`, adding prevalence-kit to the directory that has fourteen categories and no measurement. **The PR text is approved by the director verbatim before submission** — it is a message sent under his name to someone else's project. Submitted last, after the release it points at exists (Q20) | Charter §3 · doctrine: outward acts gated |
@@ -81,6 +90,93 @@ README before the stop, everything public after it.
 **Not a deliverable, deliberately:** any change to the estimators, the refusal codes, the plan
 schema, or `verify`. Phase 2 closed in both directions. A defect found in them during this phase
 is a finding for the director, not a reopening.
+
+## 3a. AMENDMENT — the launch-readiness deliverables
+
+**Proposed 31 August 2026, after the review stop and before anything public. Q26–Q32 await the
+director's rulings; no work in this section begins before they are ruled.**
+
+**Why this section exists.** The director directed, in his own words, *"a professional github
+structure that is 2026 aligned… we also need a real world data and run it on this and save the
+result in examples… we need a docker… we need an SOP on how to run this… a full blown final
+launch phase"*, naming `MohdSaifHussain/delivery-engine` and `MohdSaifHussain/finding-bridge`
+as the structural references, and confirmed that **v1.0 releases after all of it**. That is a
+scope change to a binding contract, so it enters as a numbered amendment rather than as work.
+
+**Section 3's D3.7 → D3.8 → D3.9 order is unchanged.** Everything below lands *before* the
+rehearsal, because a rehearsal that executes the full publish path cannot rehearse artifacts
+that do not exist yet.
+
+### What the comparison actually found
+
+Structure derived from four repositories, read from the GitHub API on 2026-08-31, not from
+memory: **`finding-bridge`** (the sibling, Apache-2.0, public), **`delivery-engine`** (the
+method's lineage, MIT, public), **`sigstore/sigstore-python`** and **`astral-sh/ruff`** (two
+current exemplars of Python packaging and supply-chain practice). GitHub's own community-profile
+documentation was fetched the same day and is thinner than the repositories: it names README,
+CODE_OF_CONDUCT, LICENSE, CONTRIBUTING, a security policy and issue templates as the profile's
+files, and fixes only one location rule — issue templates live in `.github/ISSUE_TEMPLATE` with
+valid front matter.
+
+**All four references carry `LICENSE`, `CHANGELOG.md`, `CONTRIBUTING.md` and `.gitattributes`.
+This repository carries none of them.** Three of those are conveniences. One is a defect and is
+recorded as such below.
+
+### Three findings this comparison produced, before any deliverable
+
+**F-A. There is no `LICENSE` file, and two committed artifacts claim one.** `README.md` §Licence
+says *"MIT."* and `pyproject.toml` declares `license = "MIT"`. No licence text exists anywhere in
+the repository or its history. A public repository in that state shows **no licence** in GitHub's
+own interface, gives a reader no grant of rights, and makes a claim in two places with nothing
+behind it. **This is an overclaim in the charter's own sense** — §5.6 exists for exactly this —
+and it is the single most consequential structural gap found. Severity: **high**. Proposed: a
+`LICENSE` file, ruled at **Q27**, plus a test asserting the claim and the file agree.
+
+**F-B. No dependency lock, while charter §5.1 requires one.** The charter's supply-chain bar is
+*"Hash-locked dependencies, SHA-pinned actions, SBOM, signed release artifacts with provenance
+attestation."* Actions are SHA-pinned (D3.1). **The other three do not exist.** They are named in
+D3.8, so they are scheduled rather than forgotten — but D3.8 is the release itself, and building
+a lock file, an SBOM and an attestation flow *for the first time during the irreversible act* is
+precisely what R3.1 forbids. Proposed: pull them forward into their own deliverable so the
+rehearsal has something real to rehearse. Ruled at **Q31**.
+
+**F-C. `.gitattributes` is absent, and this project's central claim is byte-identical
+determinism.** Every commit this session printed *"LF will be replaced by CRLF the next time Git
+touches it."* Nothing has broken: the tool's own determinism is proved across 3.12/3.13/3.14 in
+CI on Linux, and fixtures regenerate byte-identically in `witness.yml`. But a contributor on
+another platform, checking out with a different `core.autocrlf`, could see a fixture digest move
+for a reason that has nothing to do with the code — in the one repository whose product is
+digests. Severity: **low today, structural**. Proposed: normalise text and mark fixtures
+explicitly, in D3.11.
+
+### New deliverables
+
+| # | Deliverable | Governing standard |
+|---|---|---|
+| **D3.11** | **Repository structure to the sibling bar — additive only (Q26).** `LICENSE` (Q27); `CHANGELOG.md`; `CONTRIBUTING.md`; `CODE_OF_CONDUCT.md`; `CITATION.cff`; `.gitattributes` (F-C); `.github/PULL_REQUEST_TEMPLATE.md`; `.github/ISSUE_TEMPLATE/` with valid front matter; `.github/dependabot.yml`. **No existing file is moved, renamed or reworded** — the director's instruction was *no paraphrasing, no rephrasing, no content changes*, and the record independently forbids it: dozens of documents cite `PROJECT_CHARTER.md` and `docs/*` by path, `check_paths` validates every one, and three dated readings can never be edited to follow a move | GitHub community profile (fetched 2026-08-31) · the four reference repositories · **Q26**, **Q27** |
+| **D3.12** | **Containerisation.** A `Dockerfile` and `.dockerignore` that build a runnable `prevalence-kit` image from a **digest-pinned** base, so a stranger runs the tool without a Python install. Scope and base ruled at **Q30**. The image must run the shipped example end to end, and the SOP's commands must be the ones actually executed. **Distinct from `r/Dockerfile`**, which is the R witness and is not touched | Charter §5.1 · S-2.1a's digest-pinning precedent · **Q30** |
+| **D3.13** | **The SOP — `SOP.md`, to live under the docs directory.** *(Written without its full path deliberately: `check_paths` asserts that every repository path named anywhere exists, and it has no notion of a path a contract **proposes**. `check_codes` has exactly that mechanism for reason codes — PENDING, expiring by machinery — and the path checker has no equivalent. Recorded as an observation, not smuggled past.)* How to run this, end to end, for someone who has never seen it: install or pull, write a plan, draw, label, estimate, verify, emit, and read the report — plus what each refusal means and what to do about it. **Every command in it is executed before it is written** — §8a's preamble is the reason that sentence is here, and **C-45** is what happens when it is asserted rather than done. The SOP names its own scope: what it covers and what it does not | Charter's writing rule · **§8b's narrowing** · rule 14 |
+| **D3.14** | **The real-data example in `examples/`.** A complete, reproducible run on a real public dataset, committed as an example a stranger can execute — not a synthetic fixture. What it commits, and whether it carries content, is ruled at **Q28**; the dataset at **Q29**. `demo/` keeps the coverage study; this is the *worked example*, which is a different artifact for a different reader | Charter §6.3 · S-7.1 · **Q28**, **Q29** |
+| **D3.15** | **The supply chain, built and rehearsable — F-B.** Hash-locked dependencies (**Q31**), an SBOM, and a release workflow producing signed artifacts with provenance attestation, **all existing and exercised before D3.7 rehearses them**. Every tool and format pinned to a current official source, fetched and cited at build time | **Charter §5.1** · ts-sentry precedent · **Q31** |
+| **D3.16** | **The overclaim scanner and badge-truth tests — charter §5.6, never built.** §5.6 names both by name as what makes honesty *"enforced by machinery, not intention"*, and neither exists. **O-10** asks for the `svy` credit to be *"asserted by overclaim scanner"*; the stop built a single targeted claim check instead, which is that obligation's mechanism and not its scanner. Scope: the claims a public README makes that the record can falsify — the licence (F-A), the badges, the counts, the credit | **Charter §5.6** · O-10 · rule 14 |
+
+### Requirements added
+
+**R3.10 — Additive, never rearranging.** No existing tracked file is moved, renamed, or has its
+prose rewritten by this amendment. New files may be added anywhere; existing files may gain
+links and rows. The director's instruction and the record's own citation graph agree on this,
+and `check_paths` is the instrument that would catch a breach.
+
+**R3.11 — Every command in the SOP and every README instruction is executed before it is
+written**, and the artifact says so at the width of what was actually run.
+
+**R3.12 — The container is verified by running the shipped example inside it**, not by building
+it successfully. A build that succeeds and a tool that runs are different claims.
+
+**The amendment's questions, Q26–Q32, are in the contract's canonical Numbered questions
+section at the end, with the rest.**
+
+---
 
 ## 4. Requirements
 
@@ -431,6 +527,96 @@ builder proposes entries and does not close its own findings.
 state test a property. **One correction entry for the pair — C-49 — because they have one
 cause**: tests anchored on the state of the moment rather than on the artifact, and it notes
 that this happened inside the fix for C-47, which is the part worth remembering. **D-51.**
+
+---
+
+## The amendment's questions — Q26 to Q32
+
+Opened by **§3a**, 31 August 2026. **None is ruled.** Recommendations are the builder's.
+
+### Q26 — Additive only, or restructure to match the references?
+
+`finding-bridge` puts its charter in `docs/`; this repository has `PROJECT_CHARTER.md`,
+`CLAUDE.md`, `SECURITY.md` and `prevalence-kit-VISION.md` at root, and `docs/` holds the record.
+
+| | Option | Consequence |
+|---|---|---|
+| **A** | **Additive only.** Nothing moves; new files fill the gaps | The record's citation graph stays intact. Dozens of documents name `PROJECT_CHARTER.md` and the record's files by path; `check_paths` validates every one; **three dated readings cite paths and can never be edited**. Root stays slightly busier than `finding-bridge`'s |
+| B | Move the charter and vision into the docs folder to match the sibling | Cosmetically closer to the reference. Breaks every citation to those paths across the record, including in files the project forbids itself from editing, and the only way to complete the move is to rewrite evidence |
+
+**Recommendation: A**, and the director's own instruction already says it — *no content changes*.
+
+### Q27 — The licence: MIT as claimed, and what else the repository owes
+
+`README.md` and `pyproject.toml` both say MIT and no `LICENSE` exists (**F-A**). Separately, the
+tracked EU PDF is reusable under Decision 2011/833/EU **with the acknowledgement O-18 requires**,
+carried today in `docs/STANDARDS.md` S-4.3 and nowhere a stranger looks first.
+
+| | Option | Consequence |
+|---|---|---|
+| **A** | **MIT `LICENSE` as claimed, plus a `NOTICE`** carrying the EU acknowledgement and the fixtures' provenance | Matches both existing claims, so nothing has to be restated. `NOTICE` is `finding-bridge`'s pattern and puts O-18's condition where a reuser meets it. A test pins README, `pyproject` and `LICENSE` to one answer |
+| B | MIT `LICENSE` only | Simpler; leaves O-18's acknowledgement discoverable only through the register |
+| C | A different licence | Would require changing two committed claims, and the charter's positioning gives no reason to |
+
+**Recommendation: A.** The copyright line names the director as author, matching `pyproject`.
+
+### Q28 — What does the real-data example commit, given that sealing is the product?
+
+Committing real toxic comment text into a public repository is in tension with the tool's own
+premise. Measured, not assumed: **`content` is optional in a labels file** — `run.py` reads
+`r.get("content", "")` — so a complete run is possible with ids and label values alone.
+
+| | Option | Consequence |
+|---|---|---|
+| **A** | **Ids and label values only, no content.** Commit the plan, frame, labels, the report and the `verify` output; a script regenerates the labels from the pinned dataset | A stranger reproduces the whole chain and reads a real report. **Nothing this project seals ever enters the repository**, which is the tool's own argument applied to itself. Sealing is still exercised — the chain seals whatever content is present, and the synthetic example already covers the multi-chunk sealing path E9c depends on |
+| B | Ids, labels and content | Exercises sealing on real text — and publishes toxic content the tool exists to keep sealed, in a repository a T&S audience reads |
+| C | Content for a handful of benign rows | Half a demonstration, and *benign* is a judgment nobody asked us to make |
+
+**Recommendation: A**, with the example's reading stating plainly that content is absent **by
+choice**, and why, so a reader does not conclude the tool cannot handle it.
+
+### Q29 — Which dataset for the worked example?
+
+| | Option | Consequence |
+|---|---|---|
+| **A** | **Civil Comments again (S-7.1)** — already pinned, CC0, digests recorded, corpus fetched and verified at 1,999,514 rows | No new provenance work, no new licence review, and the example and the coverage study share a corpus a reader can check once. The example is a *different run*: a plain measurement, not a coverage study |
+| B | A second dataset from Hugging Face or Kaggle | Breadth. Costs a fresh licence review, a fresh register entry and a fresh retrieval procedure — and Kaggle's terms are per-dataset and frequently not open |
+
+**Recommendation: A.** Rule 3 and S-8's bar make a second corpus real work; the gain is variety,
+which is not what this example is for. If the director wants breadth, it belongs in NEXT.
+
+### Q30 — What does the container ship?
+
+| | Option | Consequence |
+|---|---|---|
+| **A** | **The tool alone**, from a digest-pinned `python` base, non-root, with the examples inside so the shipped example runs immediately | Small, fast, and it is what an operator wants: run the CLI without installing Python. The R witness stays a separate concern, as it is today |
+| B | Tool plus the R witness in one image | One image reproduces everything including fixtures — and couples a large R image to every operator who only wants to measure something. `witness.yml` already rebuilds the R image on demand |
+| C | Both, as two images | Complete, and doubles the release surface in the phase already carrying the release |
+
+**Recommendation: A**, pinned by digest for S-2.1a's stated reason: a tag moves, a digest does not.
+
+### Q31 — How are dependencies hash-locked?
+
+| | Option | Consequence |
+|---|---|---|
+| **A** | **`constraints.txt` with `--hash` pins**, generated by `pip-compile`, installed with `--require-hashes` in CI and in the image | `finding-bridge`'s pattern, so the sibling projects match. Works with the existing pip-based CI unchanged. Hashes sit in a reviewable text file |
+| B | A `uv` lock file | `sigstore-python` and `ruff`'s pattern and the faster tool; adds `uv` to the toolchain and rewrites how every CI job installs, in the phase carrying the release |
+| C | Leave §5.1's lock unmet and say so | Honest, and it fails a charter hard rule at the release that is supposed to demonstrate it |
+
+**Recommendation: A.** B is probably where this ecosystem is going; A is what can be built,
+verified and rehearsed without touching a green gate before v1.0.
+
+### Q32 — When does the version become 1.0.0?
+
+`pyproject.toml` says `0.1.0.dev0`. The release is v1.0.0.
+
+| | Option | Consequence |
+|---|---|---|
+| **A** | **Bump to `1.0.0` in the release commit**, after the rehearsal proves the path on a release-candidate version | The version in the tree is true at every commit: `dev0` while it is a dev tree, `1.0.0` when released. The rehearsal runs on an explicit `1.0.0rc1` |
+| B | Bump now | Every commit between now and the tag claims to be the released version |
+
+**Recommendation: A**, with a changelog opened at D3.11 carrying an `Unreleased` section that
+becomes `1.0.0` at the tag.
 
 ---
 
