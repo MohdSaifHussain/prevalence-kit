@@ -1,0 +1,67 @@
+{
+  "what": "Pre-registration of the coverage demonstration (D3.3, ruled at Q18 / D-44). Every choice below was fixed and committed before any byte of the corpus was fetched or read. The git commit is the timestamp; the file's SHA-256 is recorded in demo/READING.md beside the commit that carries it.",
+  "date": "2026-08-31",
+  "governing": ["D-44", "R-7", "D-11", "charter section 6.3"],
+
+  "corpus": {
+    "register_entry": "S-7.1",
+    "dataset": "google/civil_comments",
+    "license": "CC0 1.0",
+    "splits_in_canonical_order": ["train", "validation", "test"],
+    "expected_rows_total": 1999514,
+    "rule": "The run records the actual file names, their SHA-256 digests and per-file row counts, and REFUSES if the total is not exactly 1999514. File names are not guessed here: the dataset is the commitment, the digests are recorded at fetch, and the corpus is never committed to this repository.",
+    "canonical_frame_order": "Rows in file order: train files in lexicographic name order, then validation, then test. Zero-indexed. Row index is the unit identity for the replication study; the full-chain run maps index i to the id string 'cc-' + i formatted to seven digits."
+  },
+
+  "estimand": {
+    "label_column": "toxicity",
+    "decode_rule": "The stored value is decoded to a 64-bit float and rounded to 6 decimal places before comparison. The corpus stores annotator fractions as 32-bit floats, so 7/10 arrives as 0.699999988...; rounding to 6 places restores the intended fraction deterministically, and the rule is stated here so an outsider reimplements the same comparison.",
+    "violating_iff": "rounded_toxicity >= threshold, with the threshold read as the 64-bit float value of its literal below",
+    "truth": "The census proportion: violating rows divided by 1999514, computed over every row of all three splits."
+  },
+
+  "thresholds": ["0.5", "0.7", "0.9", "0.98"],
+  "thresholds_note": "Chosen blind, before any label value was seen, to span the prevalence range into the rare end. The census prevalence at each is unknown at this commit; whatever it turns out to be is reported, not selected.",
+
+  "design": {
+    "sampling": "simple random sampling without replacement",
+    "sample_size": 1000,
+    "confidence": 0.95,
+    "intervals": ["wilson", "clopper_pearson"],
+    "replications_per_threshold": 10000,
+    "paired": "One set of 10000 draws per threshold; each draw's positive count is evaluated by both intervals, so the two curves differ only by the interval construction."
+  },
+
+  "replication_sampler": {
+    "why_not_draw_srs": "The shipped sampler keys every frame id by SHA-256(seed || id) and sorts, which is O(N) hashes per draw -- right for one auditable draw, infeasible for 40000 draws over 1999514 rows. D-44 rules the replication runs through the estimators directly; this fixes the sampler it uses, in the same spirit as D-16: reimplementable in any language from this paragraph alone.",
+    "seed_root": "prevalence-kit coverage demo 2026-08-31",
+    "spec": "For threshold t (its literal string above) and replication r (0-indexed, 0..9999): for counter c = 0, 1, 2, ...: candidate = int(SHA-256(seed_root + '|t=' + t + '|rep=' + r + '|c=' + c), big-endian) mod 1999514, with r and c as base-10 strings and '|' as the literal separator, the whole string UTF-8 encoded. Skip a candidate already selected in this replication; stop when 1000 distinct indices are held.",
+    "modulo_bias": "At most N / 2^256 per candidate -- below 1e-70, stated rather than ignored.",
+    "finite_population_note": "Draws are without replacement from a finite population, so the positive count is hypergeometric while both intervals are binomial constructions. At n/N = 0.05% the distinction is negligible and it is disclosed in the reading rather than hidden."
+  },
+
+  "estimators": {
+    "source": "src/prevalence_kit/estimators.py as shipped at the commit this file lands in",
+    "calls": ["wilson(k, 1000, confidence=0.95)", "clopper_pearson(k, 1000, confidence=0.95)"],
+    "coverage_rule": "A replication covers iff low <= census_proportion <= high, closed on both ends, in 64-bit float arithmetic as the estimators return it."
+  },
+
+  "full_chain_run": {
+    "what": "Exactly one run of the sealed chain -- plan, sample, ingest-labels, estimate, verify, emit-report -- as the governance demonstration, per D-44. Mass replication does not go through the chain: it pays Fernet sealing and real filesystem writes per run, the profiled cost that dominates the local suite.",
+    "threshold": "0.9",
+    "design": "srs",
+    "sample_size": 1000,
+    "interval": "wilson",
+    "confidence": 0.95,
+    "seed": "coverage-demo-full-chain-2026-08-31",
+    "labels": "Each sampled item is labeled positive iff the estimand rule above says so at threshold 0.9. The labels are the corpus's own human annotator fractions, thresholded; no new judgment enters."
+  },
+
+  "artifact": {
+    "results": "demo/coverage_results.json -- per threshold: census count and proportion, per interval: covered count out of 10000, plus the fetch record (file names, digests, row counts) and the generating environment",
+    "plot": "demo/coverage_curve.svg -- coverage against census prevalence, one line per interval, the nominal 0.95 drawn, the replication count stated on the plot, error bars from it, and the charter section 8 stratified enumeration figures cross-referenced rather than re-measured (D-44).",
+    "generator": "demo/run_coverage.py, run in a throwaway environment with pyarrow available -- the svy precedent: the artifact is committed, the generator's environment is recorded in the artifact, and pyarrow never enters this project's dependency tree."
+  },
+
+  "prior_characterisation": "Condition 5 of D-44, the reviewer's: this corpus was already characterised in this record before this pre-registration -- S-7.1 carries the row count and license, and Phase 0's verification (D1, D2) established that the labels are continuous annotator fractions, which is what forced the thresholded estimand under R-7. That does not weaken the pre-registration, and here is why: what pre-registration protects is the choice of thresholds, seeds and design against being made after seeing results. Nothing in this record contains a label value, a census count, or a prevalence at any threshold; the row count and the column schema are facts about the frame, not outcomes. The choices above are blind to everything the commitment exists to be blind to."
+}
