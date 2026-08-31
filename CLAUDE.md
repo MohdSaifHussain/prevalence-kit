@@ -256,7 +256,7 @@ names the draw.
 
 **Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **734 tests**, seven gate
 checks green — **`check_claims` now runs twelve**, not seven; the gate block below is still
-seven commands. **CI last ran green at 730** on the 3.12 / 3.13 / 3.14 matrix, run `33342177302`, head `cad419c` — verified by the director and the reviewer at the Phase 3 kickoff. Local is 734 at the boundary commit, which is not yet pushed. They are stated apart because they are two measurements, not one.
+seven commands. **CI last ran green at 734** on the 3.12 / 3.13 / 3.14 matrix, run `33345614816`, head `03a0c7b` — the Phase 3 boundary commit, all three legs at 734, matching local. They are stated apart because they are two measurements, not one.
 A second workflow, `witness.yml`, rebuilds the R image and requires every fixture to regenerate
 **byte-identically** — it runs on `r/**` changes and on demand, not on every push.
 Local and CI figures are stated apart on purpose.
@@ -435,8 +435,8 @@ or a correction whose closing condition is written down.
 | # | What | Owner |
 |---|---|---|
 | **The Phase 3 contract** | **Written and APPROVED 2026-08-31**, Q16–Q25 ruled. `docs/contracts/PHASE-3-CONTRACT.md` is binding; D3.1 (O-19) is the next build act, the review stop falls before anything public, and the boundary commit's own defects are C-48 and C-49 | **Done — the contract now owns the rows below** |
-| **O-19** | Re-pin `actions/checkout` and `actions/setup-python`. **Re-read it before acting — TW-4's premise has partly moved**: the tripwire watches for GitHub *dropping* Node 20, and the run log already reports `setup-python` *"being forced to run on Node.js 24"*. Jobs pass; the obligation was written against a future event that has partly happened | Phase 3, **first** |
+| **O-19** | **Discharged 2026-08-31 by D3.1.** The re-read came first and found the premise half false — **C-50**: checkout v5.0.0 declared node24 at its own SHA, so only `setup-python` ever targeted Node 20, and the "drop" had partly happened (force-run on Node 24 since 2025-09-19). Re-pinned to checkout **v7.0.1** and setup-python **v7.0.0** in both workflows, runtimes derived from `action.yml` at the pinned SHAs, TW-4 clear | **Done** |
 | **O-21** | The rare-event specificity fact must reach the README | Phase 3 |
 | **O-28** | Pre-publication review of **git history**, not only the working tree. **Must reach the Phase 3 contract before the release** | Phase 3 |
 | **O-14, O-15** | Carried, low, no action. O-15 is deliberately unmet — a ledger schema version, added only if it is ever needed | Phase 3 |
-| **9 corrections open** | **C-1**, **C-42**, **C-43**, **C-44**, **C-45**, **C-46**, **C-47**, **C-48**, **C-49**. 52 entries, 41 closed, 2 `noted`; every open entry closes under **T-1** at D3.10, naming its discharging commit. This row is read by `check_counts` against the register — count, identifier list in both directions, figures, and absence is a failure (C-48 is what happens otherwise) | — |
+| **10 corrections open** | **C-1**, **C-42**, **C-43**, **C-44**, **C-45**, **C-46**, **C-47**, **C-48**, **C-49**, **C-50**. 53 entries, 41 closed, 2 `noted`; every open entry closes under **T-1** at D3.10, naming its discharging commit. This row is read by `check_counts` against the register — count, identifier list in both directions, figures, and absence is a failure (C-48 is what happens otherwise) | — |

@@ -21,11 +21,11 @@ who writes the entries. The director raised that one himself and asked for it to
 | Chat reviewer (draft author) | 0 | 3 | **3** |
 | Research report (passed through unverified) | 0 | 2 | **2** |
 | Stale-at-draft-time, queued but built on anyway | **1** | 0 | **1** |
-| **Builder (Claude Code)** | **7** | **33** | **40** |
+| **Builder (Claude Code)** | **8** | **33** | **41** |
 | Reviewer instrument | **1** | **2** | **4** (1 noted) |
 | **Director** | 0 | **1** | **1** |
 | Tool artifact (noted, not a defect) | - | - | **1** (noted) |
-| **Total** | **9** | **41** | **52** |
+| **Total** | **10** | **41** | **53** |
 
 **Derived, and now checked — 2026-08-30.** Every figure above is computed from the entry blocks in
 this file rather than incremented as rows arrived. An earlier version said 36 open and 3
@@ -1497,6 +1497,26 @@ an unchecked figure, because it stops the reader from adding it up themselves.
 it* was written for scripted edits; a test that plants by string replacement is a scripted edit
 of a fixture, and the same rule applies. The plant that cannot fail loudly is the plant that one
 day silently plants nothing.
+
+---
+
+## C-50 - Both target Node 20, when one of them never did
+
+| | |
+|---|---|
+| **Claimed** | *"Both target Node 20"* -- of `actions/checkout` v5.0.0 and `actions/setup-python` v5.6.0 -- in **five committed sites**: `docs/DECISIONS.md` (O-19 carried row), `docs/TRIPWIRES.md` (TW-4's recorded-state table, the *Runtime it targets* column), `docs/STANDARDS.md` **twice** (S-5.4 and its O-19 obligations row), and the Phase 2 contract section 10 |
+| **Actually** | `action.yml` at checkout's pinned SHA `08c6903` declares `using: node24` -- immutable at that commit, so **false on the day it was written**, 2026-08-29. Only setup-python (`using: 'node20'`) ever targeted Node 20, which is why every deprecation annotation in every run names setup-python alone. The setup-python half was true, and its event had partly happened: force-run on Node 24 since GitHub's changelog of 2025-09-19 |
+| **Direction** | **Overstated a risk** -- the unusual direction. The premise doubled the apparent scope of O-19 without changing its remedy |
+| **Source** | **Builder (Claude Code)**, 2026-08-29, generalising from 28 deprecation warnings without reading either action's `action.yml` at its pin -- the warnings named setup-python only, and the sentence said both |
+| **Caught by** | The falsehood: the **D3.1 re-read the director ordered** -- re-derive the premise from a live run log and the actions' own files before acting on it. The builder fetched `action.yml` at each pinned SHA; the reviewer verified the same from the raw API. The site list: **a search run at HEAD, after three hand-carried lists had each been wrong** -- `git grep -n -e "target Node 20" -e "targeting Node 20" 03a0c7b` plus the cell-form sweep for `docs/TRIPWIRES.md`, whose claim is a table cell under a *Runtime it targets* header that **no phrase search can hit** |
+| **Severity** | **Low in effect** -- the remedy (re-pin both) was right anyway, for different reasons: setup-python for the runtime, checkout for TW-4's own currency rule. **Notable in kind, twice over.** First: the false cell sat in **TW-4's own baseline** -- the tripwire's recorded state said the false thing about the action it watches. Second: **rule 7 fired on the sweep three times in a row, once per author.** The **builder's** list (3) was from recall: it named `CLAUDE.md`, which never carried the claim, and missed `docs/TRIPWIRES.md` and both `docs/STANDARDS.md` sites. The **reviewer's** list (5) verified the two sites it added and **carried the builder's three unchecked**, publishing a count with a wrong member -- the same defect it was correcting, one message later; its total of five was right only by coincidence. The **director's** correcting list (4) removed `CLAUDE.md` rightly -- by `git log -S`, a search -- and still missed `docs/STANDARDS.md:1040`, because a phrase-exact search binds to one surface form of a claim that exists in three (*target*, *targeting*, and a bare table cell). **Nobody's list survived contact with the artifact; only the search did** |
+| **Replaced by** | Per site, as the documents allow. **Corrected forward (3):** `docs/DECISIONS.md`'s row, struck-through with the correction beside it; `docs/STANDARDS.md` S-5.4, rewritten with the new pins and the runtime **derived from `action.yml` at the pinned SHA rather than written by hand** -- hand-writing it is what produced the false cell; `docs/STANDARDS.md`'s O-19 row, restated at discharge. **Disclosed, not edited (2):** `docs/TRIPWIRES.md`'s 2026-08-29 table is a dated recorded-state block inside a ratified document -- kept as written, a block-quoted correction beneath it, and a new dated 2026-08-31 baseline added below; the Phase 2 contract section 10 is a closed contract and is not touched, this entry is its disclosure |
+| **Status** | **OPEN** - closes under **T-1** at the Phase 3 close (**D3.10**), naming its discharging commit |
+
+**What the entry is for, beyond the cell.** A recorded-state table whose values are typed in by
+hand is a claim nobody re-derived, sitting inside the instrument that exists to catch exactly
+that. The new baseline's runtime column names its derivation in its own header, so the next
+reader knows what would have to be re-fetched to check it.
 
 ---
 

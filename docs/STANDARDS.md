@@ -910,7 +910,7 @@ fresh clone. Ruled into **D2.14**.
 | S-5.2b | Supply-chain posture | OpenSSF `ossf/scorecard` | **v5.5.0**, released **2026-04-23** | **2026-11-28** |
 | S-5.3 | Hash chain and all digests | **SHA-256**, NIST **FIPS 180-4** (Secure Hash Standard) | `https://csrc.nist.gov/pubs/fips/180-4/upd1/final`, fetched **2026-08-28**, HTTP 200 | never — fixed publication |
 
-| S-5.4 | CI actions, SHA-pinned per charter 5.1 | `actions/checkout` **v5.0.0** (`08c6903cd8c0fde910a37f88322edcfb5dd907a8`); `actions/setup-python` **v5.6.0** (`a26af69be951a213d495a4c3e4e4022e16d87065`) | Both **target Node 20**, which GitHub is deprecating and currently force-runs on Node 24. 28 warnings in run `33204075014`. **TW-4 / O-19.** | **every phase close** (TW-4) |
+| S-5.4 | CI actions, SHA-pinned per charter 5.1 | `actions/checkout` **v7.0.1** (`3d3c42e5aac5ba805825da76410c181273ba90b1`); `actions/setup-python` **v7.0.0** (`5fda3b95a4ea91299a34e894583c3862153e4b97`) | Re-pinned 2026-08-31 under **O-19 / D3.1**. Both declare `using: node24` in `action.yml` **at the pinned SHA**, fetched 2026-08-31 — derived, not hand-written, because this row's predecessor said *both target Node 20* when checkout v5.0.0 (`08c6903...`) declared node24 at its own SHA: **C-50**. The setup-python half was true — v5.6.0 declared node20 and was force-run on Node 24 from the 2025-09-19 changelog. **TW-4.** | **every phase close** (TW-4) |
 
 *(S-5.4 sits in this table because a pinned action is a supply-chain control. The pins are read out
 of `.github/workflows/gate.yml` by `tools/check_tripwires.py` rather than copied into it, so the
@@ -1037,7 +1037,7 @@ Tracked by name until discharged. Each is owned by a named phase.
 | O-8 **(restated 2026-08-29 by D-31)** | ~~Rogan–Gladen has no library witness — validate against the worked results in Lang & Reiczigel (2014)~~ **Both halves wrong in our favour.** Witness is `epiR::epi.prev()` 2.0.92, **S-1.10**; interval anchor is **S-1.6** Reiczigel et al. (2010), Se/Sp *known*, **not S-1.5** | Phase 2 | open — discharges at **D2.6** |
 | O-9 | Implement and test Fernet chunking above the in-memory limit; assert chunk-boundary behaviour | Phase 1 | **discharged 2026-08-28** — `test_chunking_is_exact_at_the_boundary` and the F-2 pair |
 | O-10 | README credits `svy` as the estimator layer; assert by overclaim scanner | Phase 3 | open |
-| O-19 | **Re-pin the CI actions before GitHub drops Node 20.** Both are SHA-pinned two major versions back (S-5.4) and both target Node 20. When it is dropped, the failure is a **red X on every job with nothing wrong in this repository**. Watched by **TW-4**, which **FIRED on its first run**, 2026-08-29 | Phase 3 | open |
+| O-19 | **Re-pin the CI actions** — written as *before GitHub drops Node 20*, and the premise was re-read before acting (D3.1): the *both target Node 20* half was **false for checkout from the day it was written** (C-50), and the drop had partly happened for setup-python, force-run on Node 24 since the 2025-09-19 changelog. Re-pinned to checkout v7.0.1 and setup-python v7.0.0, both declaring node24 at the pinned SHA (S-5.4) | Phase 3 | **discharged 2026-08-31 by D3.1** — both workflows on the new pins, TW-4 clear |
 
 ## Re-check log
 

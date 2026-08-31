@@ -223,6 +223,27 @@ Both are **two major versions behind**. Run `33204075014` carried **28 deprecati
 *"Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on
 Node.js 24."*
 
+> **Correction, 2026-08-31 — C-50.** The checkout row above was false when it was written.
+> `action.yml` at `08c6903` declares `using: node24` — immutable at that SHA — so checkout
+> **v5.0.0 never targeted Node 20**, and every deprecation warning in that run and since names
+> `setup-python` alone. The table is a dated recorded-state block and is kept as written; this
+> note is the disclosure, and the 2026-08-31 baseline below is the corrected record. The
+> runtime column there is **derived from each action's `action.yml` at the pinned SHA**, not
+> written by hand — hand-writing it is what produced the false cell.
+
+**Recorded state, 2026-08-31, after the O-19 re-pin at D3.1** (`docs/STANDARDS.md` S-5.4):
+
+| Action | Pinned | SHA | Runtime it declares (`action.yml` at that SHA) | Latest release |
+|---|---|---|---|---|
+| `actions/checkout` | **v7.0.1** | `3d3c42e5aac5ba805825da76410c181273ba90b1` | `using: node24` | **v7.0.1** |
+| `actions/setup-python` | **v7.0.0** | `5fda3b95a4ea91299a34e894583c3862153e4b97` | `using: node24` | **v7.0.0** |
+
+Both at their latest release, both declaring the runtime GitHub's hosted runners now force. The
+event this tripwire was written to beat — the Node 20 withdrawal — **partly happened before the
+re-pin**: the changelog of 2025-09-19 began forcing node20 actions onto Node 24, so the
+setup-python jobs were already running on a runtime the pinned action did not declare, passing
+anyway. The re-pin ends that state rather than pre-empting it.
+
 **What it will look like when GitHub drops Node 20.** Not a wrong answer. **A red X on every job,
 with nothing wrong in this repository** — no code change, no failing test, no commit that caused it.
 
