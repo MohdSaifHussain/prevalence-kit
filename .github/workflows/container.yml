@@ -56,7 +56,13 @@ jobs:
         run: |
           set -euo pipefail
           EX=/opt/prevalence-kit/examples/synthetic
-          run() { docker run --rm -v "$PWD/work:/work" prevalence-kit:ci "$@"; }
+          # --user is not optional on Linux: the image runs as uid 10001 and a
+          # bind mount keeps the HOST directory's owner, so the container user
+          # cannot write into it. CI caught this; a Windows Docker Desktop run
+          # did not, because it does not enforce Linux ownership on mounts.
+          # This is the invocation docs/SOP.md documents, run as documented.
+          run() { docker run --rm --user "$(id -u):$(id -g)" \
+                    -v "$PWD/work:/work" prevalence-kit:ci "$@"; }
           mkdir -p work
           run --version
           run plan          "$EX/plan.yaml"                 --run /work/run
@@ -76,8 +82,9 @@ jobs:
           set -euo pipefail
           EX=/opt/prevalence-kit/examples/synthetic
           set +e
-          out=$(docker run --rm -v "$PWD/work:/work" prevalence-kit:ci \
-                  sample "$EX/plan.yaml" "$EX/labels.csv" --run /work/run2 2>&1)
+          out=$(docker run --rm --user "$(id -u):$(id -g)" -v "$PWD/work:/work" \
+                  prevalence-kit:ci sample "$EX/plan.yaml" "$EX/labels.csv" \
+                  --run /work/run2 2>&1)
           code=$?
           set -e
           echo "$out"

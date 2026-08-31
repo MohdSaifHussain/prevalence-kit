@@ -49,8 +49,15 @@ prevalence-kit, version 0.1.0.dev0
 
 ```
 docker build -t prevalence-kit .
-docker run --rm -v "$PWD:/work" prevalence-kit --version
+docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/work" prevalence-kit --version
 ```
+
+> **On Linux and macOS, `--user "$(id -u):$(id -g)"` is not optional when you
+> mount a directory.** The image runs as an unprivileged user, and a bind mount
+> keeps the *host* directory's ownership — so without it the container cannot
+> write your run directory and you get a permission error. Windows Docker
+> Desktop does not enforce that, which is exactly how this was missed locally
+> and caught in CI. On Windows you can leave it off.
 
 **After the release — not yet executed, and stated as future:**
 

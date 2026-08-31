@@ -21,11 +21,11 @@ who writes the entries. The director raised that one himself and asked for it to
 | Chat reviewer (draft author) | 0 | 3 | **3** |
 | Research report (passed through unverified) | 0 | 2 | **2** |
 | Stale-at-draft-time, queued but built on anyway | **1** | 0 | **1** |
-| **Builder (Claude Code)** | **9** | **33** | **42** |
+| **Builder (Claude Code)** | **10** | **33** | **43** |
 | Reviewer instrument | **1** | **2** | **4** (1 noted) |
 | **Director** | 0 | **1** | **1** |
 | Tool artifact (noted, not a defect) | - | - | **1** (noted) |
-| **Total** | **11** | **41** | **54** |
+| **Total** | **12** | **41** | **55** |
 
 **Derived, and now checked — 2026-08-30.** Every figure above is computed from the entry blocks in
 this file rather than incremented as rows arrived. An earlier version said 36 open and 3
@@ -1541,6 +1541,34 @@ correction** asserted another; and the **reviewer's verification control** plant
 would have vouched anyway, one exchange after C-49's assert-the-plant rule was ruled against the
 builder. **The only sentence that survived was the one derived from the eight comparisons**, and
 the only control that proved anything was the one that asserted its plant took.
+
+---
+
+## C-52 - The documented container command does not work on Linux
+
+| | |
+|---|---|
+| **Claimed** | `docs/SOP.md`, `README.md`, `examples/real-data/README.md` and `.github/workflows/container.yml`, all at `b83d78a`: run the tool with `docker run --rm -v "$PWD:/work" prevalence-kit ...` |
+| **Actually** | On Linux that fails with `PermissionError: '/work/run'`. The image runs as uid 10001 (D-56, non-root, deliberately) and **a bind mount keeps the host directory's ownership**, so the container user cannot write the run directory. The documented first command an operator types does not work on the platform most operators use. `--user "$(id -u):$(id -g)"` is required |
+| **Direction** | **Toward the tool looking more usable than it is**, on the majority platform, in the file written to teach a stranger how to run it |
+| **Source** | **Builder (Claude Code)** |
+| **Caught by** | **CI, on the first run of `container.yml`** -- the workflow that exists to run the tool inside the image rather than merely build it. **The identical commands had passed locally minutes earlier**: Windows Docker Desktop does not enforce Linux ownership on bind mounts, so the local run could not see it |
+| **Severity** | **Medium.** Nothing computed is wrong and no published number is affected. But it is the first instruction in the SOP, and an operator meeting it would conclude the container is broken |
+| **Replaced by** | `--user "$(id -u):$(id -g)"` in all four places, with the reason stated where an operator meets it and the platform difference named, so nobody removes it as noise |
+| **Status** | **OPEN** - closes under **T-1** at the Phase 3 close (**D3.10**), naming its discharging commit |
+
+**This is the R3.12 requirement earning its place on the day it was written.** That requirement
+says a container is verified by *running the shipped example inside it*, not by building it --
+and had `container.yml` only built the image, it would have gone green and this defect would
+have shipped in v1.0's documentation. **The rule and the defect arrived in the same commit**,
+and the rule won.
+
+**And a second, smaller thing it exposed, recorded rather than fixed.** The failure printed
+*"INTERNAL ERROR [PermissionError] ... This is a defect in prevalence-kit, not a problem with
+your data."* A permission error on a mounted directory is neither: it is an environment problem,
+and that message sends the operator to the wrong place with confidence -- D-22's concern exactly.
+The fix is in `run.py`, which Phase 2 closed, so it is **a finding for the director rather than
+a change made in passing**.
 
 ---
 

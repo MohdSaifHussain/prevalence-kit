@@ -94,8 +94,12 @@ Or run it with no Python installation at all:
 
 ```
 docker build -t prevalence-kit .
-docker run --rm -v "$PWD:/work" prevalence-kit --version
+docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/work" prevalence-kit --version
 ```
+
+On Linux and macOS the `--user` flag is required when you mount a directory —
+the image runs unprivileged and a bind mount keeps the host's ownership.
+[`docs/SOP.md`](docs/SOP.md) §2 explains it.
 
 Then measure something real. A complete run on 97,320 real comments, offline, in
 about a second:

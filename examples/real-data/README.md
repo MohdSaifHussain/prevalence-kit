@@ -55,9 +55,12 @@ published at the release:
 
 ```
 docker build -t prevalence-kit .          # from the repository root
-docker run --rm -v "$PWD:/work" -w /work prevalence-kit \
-  estimate plan.yaml --run run
+docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/work" -w /work \
+  prevalence-kit estimate plan.yaml --run run
 ```
+
+On Linux and macOS the `--user` flag is required when mounting a directory, so
+the container can write into it. `docs/SOP.md` §2 has the reason.
 
 **You should get exactly the numbers above** — the same plan hash
 `1e3202a0b6309371…`, the same 1,000 items beginning `cc-val-003997`, the same
