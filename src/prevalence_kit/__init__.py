@@ -14,4 +14,4 @@ the intervals: every interval it offers is design-based, and it maps the name
 `clopper-pearson` to Korn-Graubard. Details in docs/STANDARDS.md S-2.
 """
 
-__version__ = "0.1.0.dev0"
+__version__ = "1.0.0rc1"

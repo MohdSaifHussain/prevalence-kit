@@ -16,7 +16,7 @@ authors:
   - family-names: Hussain
     given-names: Mohd Saif
     orcid: ""
-version: 0.1.0.dev0
+version: 1.0.0rc1
 date-released: "2026-08-31"
 license: MIT
 repository-code: "https://github.com/MohdSaifHussain/prevalence-kit"

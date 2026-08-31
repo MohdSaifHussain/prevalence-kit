@@ -1029,6 +1029,36 @@ def test_the_real_data_example_readme_matches_its_artifacts() -> None:
     assert header == "item_id,toxicity", f"labels.csv carries an unexpected column: {header}"
 
 
+def test_every_file_that_states_a_version_states_the_same_one() -> None:
+    """**D-58.** The version is stated in three places and they must agree.
+
+    `pyproject.toml` is what pip installs, `CITATION.cff` is what a citation
+    carries, and the installed package is what an operator's `--version`
+    prints. A release where those disagree is an artifact nobody can trace
+    back. The release workflow separately refuses a tag that does not match
+    `pyproject.toml`; this is the same claim, checked on every commit rather
+    than only at the tag.
+    """
+    from prevalence_kit import __version__
+
+    root = Path(__file__).resolve().parents[1]
+    pyproject = re.search(
+        r'^version = "([^"]+)"', (root / "pyproject.toml").read_text(encoding="utf-8"), re.M
+    )
+    assert pyproject is not None, "pyproject.toml states no version"
+    citation = re.search(
+        r"^version: (\S+)", (root / "CITATION.cff").read_text(encoding="utf-8"), re.M
+    )
+    assert citation is not None, "CITATION.cff states no version"
+
+    assert pyproject.group(1) == citation.group(1), (
+        f"pyproject says {pyproject.group(1)}, CITATION.cff says {citation.group(1)}"
+    )
+    assert __version__ == pyproject.group(1), (
+        f"the package reports {__version__}, pyproject says {pyproject.group(1)}"
+    )
+
+
 def test_the_notice_carries_the_eu_acknowledgement() -> None:
     """O-18's binding condition, where a reuser meets it.
 

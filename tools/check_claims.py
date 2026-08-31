@@ -1706,8 +1706,15 @@ def selftest() -> int:
             # A row naming an obligation the record already marks discharged.
             # O-4 was discharged by D2.9; listing it as open is the drift this
             # check exists for.
+            #
+            # **Anchored on the table HEADER, not on a row.** It used to anchor
+            # on the O-21 row, and the day that row's prose changed the plant
+            # stopped matching and the selftest failed in CI -- correctly, and
+            # loudly, because a plant asserts its anchor (C-49). A header is
+            # structure; a row is content, and content is what churns.
             "CLAUDE.md",
-            "| **O-21** | The rare-event specificity fact must reach the README | Phase 3 |",
+            "| # | What | Owner |\n|---|---|---|",
+            "| # | What | Owner |\n|---|---|---|\n"
             "| **O-4** | **Unmet, carried.** Still awaiting the cross-check | Phase 2 |",
         ),
         "figures": (
