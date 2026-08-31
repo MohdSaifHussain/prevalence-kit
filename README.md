@@ -41,8 +41,11 @@ chain that can say no, and a report an auditor can check.
 the estimator layer.** `svy` covers stratified sampling, Neyman allocation, Wilson and
 Clopper-Pearson intervals, Taylor linearization, post-stratification, and it is good.
 R [`survey`](https://cran.r-project.org/package=survey) has covered this ground since 2003.
-**Our estimators are validated against both**, and we do not claim to fill an estimator gap,
-because there isn't one. We ship our own lean implementations for one recorded reason: `svy`
+**Every estimator here is validated against the external witness that genuinely implements the
+same quantity** — R `survey` for the stratified estimator, base R for Clopper-Pearson, `epiR`
+for the misclassification correction, `svy` for the allocation and the design intervals — and
+the record says which witnesses what, because a witness that implements a different quantity
+witnesses nothing. We do not claim to fill an estimator gap, because there isn't one. We ship our own lean implementations for one recorded reason: `svy`
 depends on an HTTP client, and this tool proves *zero network capability at runtime* with a
 test that would fail the moment one entered the dependency tree.
 
@@ -72,7 +75,9 @@ than reasoned into being.
   apparent prevalence of 0.2%, the Rogan–Gladen correction needs specificity above **99.8%**.
   "99%" sounds excellent — and at that rate produces five times more apparent positives from
   clean content than the whole sample held, driving the corrected estimate negative. The tool
-  refuses and names the figure you need.
+  refuses and names the figure you need. Below Se + Sp = 1 the arithmetic inverts outright:
+  the method's own reference implementation prints a lower bound **above** its upper bound,
+  with no warning. Ours refuses there too, by name.
 - **A rare-event measurement that finds nothing is the product, not a failure.** Zero positives
   with a good test yields a point estimate of 0 and a real, defensible upper bound. The tool
   prints it. (An early design would have refused this as "no information"; it was struck.)
