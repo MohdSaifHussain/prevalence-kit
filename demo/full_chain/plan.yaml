@@ -1,0 +1,11 @@
+estimand:
+  description: Comments scored toxic by at least ninety percent of annotators
+  label_field: toxicity
+  positive_when: at_least
+  threshold: "0.9"
+population: frame.txt
+design: srs
+sample_size: 1000
+labels: labels.csv
+interval: wilson
+seed: coverage-demo-full-chain-2026-08-31

@@ -1,0 +1,103 @@
+{
+  "preregistration_sha256": "42ed961480d49900924b4bbed596a3bff9f72cbfb6cba8885c4f58b5955e0302",
+  "generated": "2026-08-31",
+  "environment": {
+    "python": "3.14.0",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "pyarrow": "25.0.1",
+    "note": "Throwaway environment; pyarrow is not a dependency of this project."
+  },
+  "fetch": [
+    {
+      "file": "train-00000-of-00002.parquet",
+      "bytes": 193527147,
+      "sha256": "c20f01c3aecbdd942886cacb0ee67e995df33bc712a622fde75927ed3d6ccefe",
+      "rows": 902437
+    },
+    {
+      "file": "train-00001-of-00002.parquet",
+      "bytes": 186778090,
+      "sha256": "a76af69d7b24758bc38b196bc422d4767935c1dd7d3c1465554649c546d99ccb",
+      "rows": 902437
+    },
+    {
+      "file": "validation-00000-of-00001.parquet",
+      "bytes": 20955569,
+      "sha256": "2e0eb65474e7e1290df8689fc93eea783160c898c09ae15382c0a9662367bd03",
+      "rows": 97320
+    },
+    {
+      "file": "test-00000-of-00001.parquet",
+      "bytes": 20800265,
+      "sha256": "410f803ff161e7c4ba005db7de5b444cac413f4861bf056b0fd69d670d75aa08",
+      "rows": 97320
+    }
+  ],
+  "total_rows": 1999514,
+  "results": {
+    "0.5": {
+      "census_count": 159782,
+      "census_proportion": 0.07991041823163028,
+      "draws": 10000,
+      "distinct_k": 62,
+      "intervals": {
+        "wilson": {
+          "covered": 9460,
+          "coverage": 0.946
+        },
+        "clopper_pearson": {
+          "covered": 9517,
+          "coverage": 0.9517
+        }
+      }
+    },
+    "0.7": {
+      "census_count": 65021,
+      "census_proportion": 0.03251840197167912,
+      "draws": 10000,
+      "distinct_k": 42,
+      "intervals": {
+        "wilson": {
+          "covered": 9493,
+          "coverage": 0.9493
+        },
+        "clopper_pearson": {
+          "covered": 9585,
+          "coverage": 0.9585
+        }
+      }
+    },
+    "0.9": {
+      "census_count": 10224,
+      "census_proportion": 0.005113242517931858,
+      "draws": 10000,
+      "distinct_k": 17,
+      "intervals": {
+        "wilson": {
+          "covered": 9564,
+          "coverage": 0.9564
+        },
+        "clopper_pearson": {
+          "covered": 9762,
+          "coverage": 0.9762
+        }
+      }
+    },
+    "0.98": {
+      "census_count": 5037,
+      "census_proportion": 0.002519112144251053,
+      "draws": 10000,
+      "distinct_k": 11,
+      "intervals": {
+        "wilson": {
+          "covered": 9576,
+          "coverage": 0.9576
+        },
+        "clopper_pearson": {
+          "covered": 9868,
+          "coverage": 0.9868
+        }
+      }
+    }
+  }
+}
