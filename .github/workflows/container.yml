@@ -94,7 +94,12 @@ jobs:
 
       - name: Non-root, and only what it needs
         run: |
-          test "$(docker run --rm --entrypoint id -u prevalence-kit:ci)" = "10001"
+          # `-u` goes AFTER the image: it is an argument to the entrypoint, not
+          # to `docker run`. Written the other way round, docker reads it as its
+          # own --user flag, swallows the image name as that flag's value, and
+          # then reports "requires at least 1 argument" -- which reads like a
+          # broken image and is a broken command line.
+          test "$(docker run --rm --entrypoint id prevalence-kit:ci -u)" = "10001"
           docker run --rm --entrypoint python prevalence-kit:ci -c \
             "import importlib.metadata as m; ns={d.metadata['Name'].lower() for d in m.distributions()}; \
              assert not ns & {'pytest','ruff','mypy','hypothesis'}, sorted(ns)"
