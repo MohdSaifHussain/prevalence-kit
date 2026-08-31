@@ -77,9 +77,14 @@ jobs:
       - name: Software bill of materials
         run: |
           python -m pip install cyclonedx-bom==7.3.1
+          # `-o` / `--output-file`. NOT `--outfile`, which is not an argument
+          # this tool has -- rehearsal candidate 1 died on exactly that, which
+          # is what a rehearsal is for. Both this command and its output were
+          # then run locally before this line was pushed: CycloneDX 1.6, five
+          # components, the locked runtime set exactly.
           cyclonedx-py requirements constraints.txt \
             --output-format JSON \
-            --outfile dist/prevalence-kit.cdx.json
+            -o dist/prevalence-kit.cdx.json
           echo "--- SBOM components:"
           python -c "import json;d=json.load(open('dist/prevalence-kit.cdx.json'));print(len(d.get('components',[])),'components')"
 
