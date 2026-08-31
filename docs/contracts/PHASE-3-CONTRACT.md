@@ -84,7 +84,7 @@ README before the stop, everything public after it.
 | **D3.5** ▸ **DONE 2026-08-31 — the reading is `docs/contracts/PHASE-3-HISTORY-REVIEW.md`, every finding ruled, and O-28 closed by the director's read of it the same day** | **O-28 — the git-history review.** A one-time look backwards over the full history as a stranger would read it, before anything is public. Findings reported to the director with proposed dispositions; **the director rules each**, including the recorded local-paths finding (**Q19**). The review's reading is written down and dated. **Nothing goes public before the director closes this review** | **O-28** · CLAUDE.md rule 20 · SECURITY.md §3.8 |
 | **D3.6** ▸ **DONE 2026-08-31 — Q21 and Q22 ruled, both built with controls** (D-47, D-48; **C-48**). The figures check then caught its own commit's stale test count | **Instrument work, both halves proved to fail.** (a) **Restore `check_figures`' phase claim**: C-47's rebuild added the canonical two-file sentence check and left the superseded `readme phase` entry beside it — number-only, vacuous since the close, the exact semantics C-47 condemned. Resolve at **Q21**, selftest proving the survivor fails in both directions. (b) The CLAUDE.md open-corrections row: stale at this drafting (says 49 entries, 6 open; the register holds 50, 7 open) while crediting a checker that does not read it — **Q22** rules the correction entry and the machinery | Rule 14 · rule 7 · C-47 · C-34's class |
 | **D3.7** | **The release rehearsal.** A release candidate that executes the **full** publish path — build, SBOM, attestation, signing, upload to the rehearsal target — not a subset. The director hand-verifies its artifacts as an outsider: fresh download, run the published instructions exactly as written. **A negative control that must fail**, built to rule 21's bar: it reproduces the state a real compromise or mix-up would produce, and if the check it exercises were deleted, nothing else would catch it. Run at the final candidate **and again after the real act**. Every failed candidate stays in the record | Doctrine rule 6 · rule 21 · Template 6 |
-| **D3.8** | **The release.** Tag and publish to the ts-sentry supply-chain bar: hash-locked dependencies, SHA-pinned actions, SBOM, signed artifacts with provenance attestation. Channels ruled at **Q17**; ordering of repo-public against the tag at **Q20**. Performed only after a fully clean rehearsal **and** the director's explicit word, and re-verified the same way afterwards. Anything the constraints make unachievable is stated plainly, never implied done | Charter §5.1 · ts-sentry precedent |
+| **D3.8** | **The release.** Tag and publish to the ts-sentry supply-chain bar: hash-locked dependencies, SHA-pinned actions, SBOM, signed artifacts with provenance attestation. **Three channels — GitHub release, PyPI, and the container registry — each rehearsed before it is used: TestPyPI for PyPI, and a release-candidate tag for the registry. ▸ PENDING Q34**, which amends **Q17 / D-43**'s two channels to three; the registry push is wired and **no tag exists until that ruling does**, because a ruling that has not reached this document is not binding. Ordering of repo-public against the tag at **Q20**. Performed only after a fully clean rehearsal **and** the director's explicit word, and re-verified the same way afterwards. Anything the constraints make unachievable is stated plainly, never implied done | Charter §5.1 · ts-sentry precedent |
 | **D3.9** | **The ROOST pull request.** One PR to `awesome-safety-tools`, adding prevalence-kit to the directory that has fourteen categories and no measurement. **The PR text is approved by the director verbatim before submission** — it is a message sent under his name to someone else's project. Submitted last, after the release it points at exists (Q20) | Charter §3 · doctrine: outward acts gated |
 | **D3.10** | **Post-release closure.** T-1 closes C-1 and C-42–C-47 (and anything newer), each naming its discharging commit. O-14 / O-15 get their final disposition (**Q23**). The outcome section written **at** the close, evidence per checklist row; the phase sentence flips to `Phase 3 of 4 complete` in both public files, which the gate enforces in both directions | Rule 11 · T-1 (D2.12) · C-47's check |
 
@@ -632,6 +632,79 @@ verified and rehearsed without touching a green gate before v1.0.
 becomes `1.0.0` at the tag.
 
 **RULED: A.** The bump lands in the release commit. **D-58.**
+
+---
+
+## Questions raised at the launch build — Q33 and Q34
+
+Raised 31 August 2026, after D3.11–D3.16 were built and before any irreversible
+act. **Neither is ruled.** Q34 **blocks the tag**: a ruling that has not reached
+this document is not binding, and the act it governs is already wired to fire.
+
+### Q33 — An environment error is reported as a defect in this tool
+
+Found by CI on `container.yml`'s first run and recorded as **C-52**. A bind
+mount the container user cannot write produced:
+
+```
+INTERNAL ERROR [PermissionError] [Errno 13] Permission denied: '/work/run'
+This is a defect in prevalence-kit, not a problem with your data.
+```
+
+**Both halves of that sentence are false here.** It is not a defect in
+prevalence-kit, and it is not a problem with the data — it is the environment,
+and the operator is sent hunting a bug that does not exist. That is the precise
+harm `TW-4`'s own text warns about: *"whoever debugs it will start hunting a bug
+that is not there."* The guard in `cli.py` treats every non-`Refusal` exception
+as an internal defect, which was right when every reachable exception was one.
+
+**This touches `cli.py`, which Phase 2 closed**, and §3's closing note reserves
+that to the director — hence a question rather than a change.
+
+| | Option | Consequence |
+|---|---|---|
+| **A** | **Distinguish environment errors from internal defects** in the guard: `PermissionError`, `IsADirectoryError`, `NotADirectoryError`, `OSError` on a path the operator supplied get a message naming the path, the likely cause and the fix; everything else keeps the internal-defect message **unchanged, for the case it was written for**. Both controls | The operator is sent to the right place. The internal-defect path is untouched, so the message that is correct for a real defect stays correct. Costs a narrow, testable widening of a closed file |
+| B | Add a reason code and refuse | A refusal is a pre-registered, named condition about *evidence*; a disk permission is not one, and minting a code for it would blur what a reason code means — D-22's vocabulary |
+| C | Leave it and document it in the SOP | The SOP already documents the `--user` flag (C-52). But an operator who hits this is reading a message, not the SOP, and the message tells them to file a bug |
+
+**Recommendation: A**, scoped tightly: the classification is by exception type
+and only for paths the operator named, so no behaviour changes for any case that
+works today. **The negative control must reproduce the state the real defect
+produced** — an unwritable directory — not merely an exception that turns the
+check red, per rule 21.
+
+### Q34 — GHCR is a third publish channel, and no ruling names it
+
+**Found by the reviewer, and it is wired to fire.** `container.yml`'s `publish`
+job runs `if: startsWith(github.ref, 'refs/tags/v')` and pushes to
+`ghcr.io/${{ github.repository }}` with an attestation. **D-43 ruled two
+channels: a GitHub release and PyPI, with TestPyPI rehearsed first.** A
+container registry is a third irreversible publish — an image pushed to GHCR is
+public, immutable by digest, and cannot be unpublished — and it entered the
+repository as a consequence of D3.12 rather than as a ruled channel.
+
+`docs/SOP.md` already tells operators `docker pull ghcr.io/...`, so the
+documentation and the workflow both assume a channel the record never
+authorised. **This is the shape D-43 exists to prevent**, arriving one level
+down.
+
+The director's stated intent is that the container ship on GHCR, so this is a
+question about *recording and rehearsing* it, not about whether to do it.
+
+| | Option | Consequence |
+|---|---|---|
+| **A** | **Amend D-43 to three channels** — GitHub release, PyPI, GHCR — each with its rehearsal target named: TestPyPI for PyPI, and for GHCR **a `-rc` tag pushed to the same registry path**, which exercises the real registry, the real credentials and the real attestation while producing an artifact nobody is asked to depend on. D3.8 names all three; the SOP's `docker pull` line is then authorised | The channel is ruled rather than inherited, and the rehearsal exercises the full path — Template 6's requirement that a rehearsal not skip the risky steps. A published `-rc` image is permanent, which is stated rather than glossed |
+| B | Three channels, GHCR rehearsed to a **separate** registry path (e.g. `…/prevalence-kit-rc`) | Keeps the real path clean of candidates. Costs fidelity: the rehearsal no longer proves the path the real push will take, which is the one thing a rehearsal is for |
+| C | Drop GHCR: remove the publish job and the SOP's pull line | Two channels as ruled, and the container becomes build-it-yourself — against the director's stated intent and against the reason the container exists |
+
+**Recommendation: A.** Note what it costs, so the ruling is made with it in view:
+a release candidate pushed to the real path is **itself irreversible**, and the
+record will carry a published `1.0.0rc1` image forever. That is the honest price
+of rehearsing the actual path, and Template 6 says failed candidates stay in the
+record anyway.
+
+**Until this is ruled, no tag is created** — which is also the only thing
+currently preventing the unruled push, since the job's trigger is the tag.
 
 ---
 
