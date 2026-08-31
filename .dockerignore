@@ -1,0 +1,26 @@
+# Keep the build context to what the image actually needs. Everything the
+# Dockerfile COPYs is listed as an exception at the bottom -- deny by default,
+# then allow, so a new directory does not silently enter the image.
+*
+
+# What the build uses.
+!pyproject.toml
+!constraints.txt
+!README.md
+!LICENSE
+!NOTICE
+!src/
+!examples/
+
+# Never, even if a rule above would have let them through.
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+
+# Run directories: a sealing key, a ledger and sealed content. These are an
+# operator's evidence and have no business inside a published image.
+**/seal.key
+**/sealed/
+**/run/

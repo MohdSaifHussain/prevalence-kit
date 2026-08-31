@@ -1,0 +1,13 @@
+# The input to constraints.txt. Keep this in step with pyproject.toml's
+# [project.dependencies] -- these are the same three pins, and the lock is
+# regenerated from here rather than edited:
+#
+#     pip-compile --generate-hashes --strip-extras \
+#       --output-file=constraints.txt requirements.in
+#
+# Development tools are deliberately absent. They live in pyproject.toml's
+# [dev] extra, they never ship, and an operator installing this tool never
+# pulls them.
+cryptography==50.0.1
+PyYAML==6.0.3
+click==8.5.0
