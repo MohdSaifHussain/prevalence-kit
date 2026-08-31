@@ -1528,16 +1528,19 @@ reader knows what would have to be re-fetched to check it.
 | **Actually** | 0.95 − 0.9460 = **0.0040 < 0.0043**. The 95% band around nominal is [0.9457, 0.9543] and 0.9460 lies inside it. The comparison the sentence asserts was never performed -- **rule 10's shape**: the checked number (the error, correctly computed) sat beside an unchecked claim (the comparison to it), and the checked half is what stopped everyone looking |
 | **Direction** | **Against our own estimator** -- C-50's unusual direction, and the reviewer named that as why nobody re-read it: an unflattering claim gets waved through where a flattering one gets audited |
 | **Source** | **Builder (Claude Code)** |
-| **Caught by** | **The reviewer (H-3), performing the ten-second arithmetic** on the flagship artifact. **And the correction itself then needed re-deriving**: the reviewer's corrective sentence -- *"no Wilson point among the four is outside the band"* -- is false on the **upper** side, where 0.9564 and 0.9576 sit above the band by 0.0064 and 0.0076. The corrected text was written from the eight comparisons performed against the artifact, not from either party's sentence |
+| **Caught by** | **The reviewer (H-3), performing the ten-second arithmetic** on the flagship artifact. **And the correction itself then needed re-deriving**: the reviewer's corrective sentence -- *"no Wilson point among the four is outside the band"* -- is false on the **upper** side, where 0.9564 and 0.9576 sit above the band by 0.0064 and 0.0076. The corrected text was written from the eight comparisons performed against the artifact, not from either party's sentence. **A third half arrived at the re-review**: the reviewer's first negative control for the new svy-credit check did not fire and the instrument was fine -- the plant never took, because the phrase spans a line break -- exposed only by asserting the plant took. That is C-49's own rule, broken one exchange after it was ruled |
 | **Severity** | **Medium in effect, high in kind.** Arithmetic a stranger checks in ten seconds, wrong in the demonstration built to be checked by strangers. What the four points support, now stated: neither interval falls below nominal by more than the error anywhere; both are resolvably **above** nominal at the rare end; Wilson's below-then-above shape is consistent with the charter's tables and is not established by four points |
 | **Replaced by** | Corrected paragraphs in `demo/READING.md` and `README.md`, **edited before any push, at the review stop, on the director's explicit ruling** -- the dated reading's no-edit rule protects records that have closed review, and this one was the thing under review; the correction is marked in place and this entry is its disclosure. The commit message and the stop report cannot be edited and this entry is their record |
 | **Status** | **OPEN** - closes under **T-1** at the Phase 3 close (**D3.10**), naming its discharging commit |
 
-**The lesson already had a number and held anyway.** Rule 10 -- a checked number carries an
-unchecked claim -- was written from C-27 and C-28, and this register's own head priced the
-failure. It recurred in the newest artifact in the repository, in both directions inside one
-exchange: the builder asserted a comparison unperformed, and the reviewer's correction asserted
-another. **The only sentence that survived was the one derived from the eight comparisons.**
+**The lesson already had a number and held anyway, and the entry's real subject is who broke
+it.** Rule 10 -- a checked number carries an unchecked claim -- was written from C-27 and C-28,
+and this register's own head priced the failure. Inside this one finding it was broken three
+times by three hands: the **builder** asserted a comparison never performed; the **reviewer's
+correction** asserted another; and the **reviewer's verification control** planted nothing and
+would have vouched anyway, one exchange after C-49's assert-the-plant rule was ruled against the
+builder. **The only sentence that survived was the one derived from the eight comparisons**, and
+the only control that proved anything was the one that asserted its plant took.
 
 ---
 
