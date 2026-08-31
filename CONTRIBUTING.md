@@ -54,7 +54,7 @@ All seven must pass. A few notes that will save you time:
   form reads the config and covers the tests too. Both are in the gate because
   each passes things the other catches.
 - **`tools/check_claims.py` reconciles the record against the code.** It runs
-  twelve checks — that every cited decision exists, that every named file
+  thirteen checks — that every cited decision exists, that every named file
   exists, that every refusal code in a contract exists in the code and has a
   test proving it fires, that the counts in the documents match the entries, and
   more. `--selftest` plants a violation for each check and requires it to be

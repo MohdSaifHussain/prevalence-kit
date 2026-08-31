@@ -270,8 +270,8 @@ reader could not tell a stratified redraw from a simple random one. `verify.py` 
 design (F-10's third site) and **its output was silent about what it had checked.** It now
 names the draw.
 
-**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **742 tests**, seven gate
-checks green — **`check_claims` now runs twelve**, not seven; the gate block below is still
+**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **745 tests**, seven gate
+checks green — **`check_claims` now runs thirteen**, not seven; the gate block below is still
 seven commands. **CI last ran green at 734** on the 3.12 / 3.13 / 3.14 matrix, run `33345614816`, head `03a0c7b` — the Phase 3 boundary commit, all three legs at 734, matching local. They are stated apart because they are two measurements, not one.
 A second workflow, `witness.yml`, rebuilds the R image and requires every fixture to regenerate
 **byte-identically** — it runs on `r/**` changes and on demand, not on every push.

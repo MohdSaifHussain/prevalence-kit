@@ -1537,8 +1537,74 @@ def _phase_problems(root: Path) -> list[Problem]:
     return problems
 
 
+PUBLIC_DOCUMENTS = ("README.md", "docs/SOP.md", "examples/README.md", "examples/*/README.md")
+"""What a stranger reads before they read anything else.
+
+Patterns, not a list of files, for V-15's reason -- a named list stops covering
+a document the day one is added.
+"""
+
+OVERCLAIMS = {
+    "production-ready": "charter section 8: no claim of production deployment",
+    "production ready": "charter section 8: no claim of production deployment",
+    "battle-tested": "validation is synthetic data and one public dataset",
+    "guarantees nominal coverage": (
+        "the stratified intervals measurably do not -- charter section 8's 96-point table"
+    ),
+    "always covers": "no interval here always covers; that is what the coverage tables are about",
+    "never fails": "this tool refuses by design, 38 ways",
+    "100% accurate": "nothing here claims an accuracy figure at all",
+    "fully audited": "SECURITY.md 3.10: no external security audit",
+    "proven secure": "SECURITY.md 3.10: no external security audit",
+    "no witness exists": (
+        "claimed three times in this project's life and wrong three times, "
+        "always in our favour -- rule 9"
+    ),
+}
+"""Phrases this project has ruled against, each with the reason it is wrong here.
+
+**Charter section 5.6 names an overclaim scanner** as one of the two things that
+make honesty *enforced by machinery, not intention*. This is it, and its scope
+is deliberately narrow for the reason `check_figures` gives about itself: a
+checker that flags hundreds of false positives gets switched off, and a
+switched-off checker defends nothing.
+
+**What it does NOT do, stated rather than implied.** It cannot read a sentence
+and judge whether it is wider than its evidence -- no list of phrases can. It
+catches the specific constructions this project has already been wrong with, or
+has ruled it must never make. A new overclaim in new words passes it, and the
+instruments that would catch that are the badge check, the figures check, and a
+person reading the artifact.
+"""
+
+
+def check_overclaims(root: Path) -> list[Problem]:
+    """Claims a public document must never make. Charter section 5.6."""
+    problems: list[Problem] = []
+    seen: set[Path] = set()
+    for pattern in PUBLIC_DOCUMENTS:
+        for path in sorted(root.glob(pattern)):
+            if path in seen or not path.is_file():
+                continue
+            seen.add(path)
+            text = path.read_text(encoding="utf-8").lower()
+            for phrase, why in OVERCLAIMS.items():
+                if phrase in text:
+                    problems.append(
+                        Problem(
+                            "overclaims",
+                            f"{path.relative_to(root).as_posix()}",
+                            f"says {phrase!r} -- {why}",
+                        )
+                    )
+    if not seen:
+        return [Problem("overclaims", "public documents", "none found to scan")]
+    return problems
+
+
 CHECKS = {
     "citations": check_citations,
+    "overclaims": check_overclaims,
     "paths": check_paths,
     "codes": check_codes,
     "findings": check_findings,
@@ -1574,6 +1640,13 @@ def selftest() -> int:
 
     plants: dict[str, tuple[str, str, str]] = {
         "citations": ("src/prevalence_kit/errors.py", '"""Refusals.', '"""Refusals. See D-999.'),
+        "overclaims": (
+            # The most tempting sentence a launch README could grow, and the
+            # one charter section 8 forbids outright.
+            "README.md",
+            "Audit-grade prevalence measurement for Trust & Safety.",
+            "Audit-grade prevalence measurement for Trust & Safety. Production-ready.",
+        ),
         "paths": (
             # Deliberately CLAUDE.md, not a Python file: the old check read a
             # fixed list of src/ and tests/ globs, so this plant would not have

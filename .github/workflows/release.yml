@@ -1,0 +1,128 @@
+# The release: build, SBOM, provenance attestation, publish.
+#
+# D3.15 and D3.8. Charter 5.1's supply-chain bar is "hash-locked dependencies,
+# SHA-pinned actions, SBOM, signed release artifacts with provenance
+# attestation." The lock is constraints.txt; the pins are below; this file is
+# the other two.
+#
+# **THIS WORKFLOW EXISTS TO BE REHEARSED BEFORE IT IS USED.** R3.1: no
+# irreversible act without a clean rehearsal first, and a rehearsal that skips
+# the risky steps proves only the safe ones. So `workflow_dispatch` runs the
+# FULL path against TestPyPI -- same build, same SBOM, same attestation, same
+# upload -- and only a tag push goes to PyPI proper.
+#
+# Nothing here runs on a normal push. A publish is not a side effect of merging.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Where to publish. Rehearse on testpypi before any real tag."
+        required: true
+        default: testpypi
+        type: choice
+        options: [testpypi, none]
+
+# Least privilege at the top; each job raises only what it needs.
+permissions: {}
+
+jobs:
+  build:
+    name: Build, SBOM, attest
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # OIDC, for the provenance attestation
+      attestations: write # to record it against this repository
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+
+      # The gate is not re-run here: it ran on the commit this tag points at.
+      # What IS re-checked is that the version being released is the version in
+      # the tree, because a tag and a pyproject that disagree is a released
+      # artifact nobody can trace back. D-58 puts the bump in the release
+      # commit, so this is the check that the ruling was followed.
+      - name: The tag and the version must agree
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          python - <<'PY'
+          import os, pathlib, re, sys
+          tag = os.environ["GITHUB_REF_NAME"]
+          text = pathlib.Path("pyproject.toml").read_text(encoding="utf-8")
+          version = re.search(r'^version = "([^"]+)"', text, re.M).group(1)
+          print(f"tag={tag} pyproject={version}")
+          if tag != f"v{version}":
+              sys.exit(f"REFUSED: tag {tag} does not match pyproject version {version}")
+          PY
+
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build==1.6.0
+          python -m build
+
+      # CycloneDX over the LOCKED runtime dependencies, which is what an
+      # operator installs. Building it from constraints.txt rather than from
+      # the environment means the SBOM describes the thing we pinned, not
+      # whatever the runner happened to resolve.
+      - name: Software bill of materials
+        run: |
+          python -m pip install cyclonedx-bom==7.3.1
+          cyclonedx-py requirements constraints.txt \
+            --output-format JSON \
+            --outfile dist/prevalence-kit.cdx.json
+          echo "--- SBOM components:"
+          python -c "import json;d=json.load(open('dist/prevalence-kit.cdx.json'));print(len(d.get('components',[])),'components')"
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: "dist/*.whl,dist/*.tar.gz"
+
+      - name: Keep the artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    name: Publish
+    needs: build
+    runs-on: ubuntu-latest
+    # `none` is the rehearsal-of-the-rehearsal: build, SBOM and attestation run
+    # and nothing is uploaded anywhere.
+    if: github.event_name == 'push' || inputs.target != 'none'
+    environment:
+      name: ${{ github.event_name == 'push' && 'pypi' || 'testpypi' }}
+    permissions:
+      id-token: write # trusted publishing: no API token exists to leak
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: dist
+          path: dist/
+
+      # The SBOM is a release asset, not a PyPI artifact. Removing it here
+      # keeps the upload to exactly the distributions PyPI accepts.
+      - name: Set the SBOM aside
+        run: mkdir -p sbom && mv dist/*.cdx.json sbom/ || true
+
+      - name: Publish to TestPyPI
+        if: github.event_name == 'workflow_dispatch'
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+      - name: Publish to PyPI
+        if: github.event_name == 'push'
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2

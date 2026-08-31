@@ -2,7 +2,7 @@
 
 [![gate](https://github.com/MohdSaifHussain/prevalence-kit/actions/workflows/gate.yml/badge.svg?branch=main)](https://github.com/MohdSaifHussain/prevalence-kit/actions/workflows/gate.yml)
 [![witness](https://github.com/MohdSaifHussain/prevalence-kit/actions/workflows/witness.yml/badge.svg?branch=main)](https://github.com/MohdSaifHussain/prevalence-kit/actions/workflows/witness.yml)
-[![tests: 742 collected](https://img.shields.io/badge/tests-742%20collected-informational)](tests/)
+[![tests: 745 collected](https://img.shields.io/badge/tests-745%20collected-informational)](tests/)
 [![gate checks: 7](https://img.shields.io/badge/gate%20checks-7-informational)](.github/workflows/gate.yml)
 [![reason codes: 38](https://img.shields.io/badge/reason%20codes-38-informational)](src/prevalence_kit/errors.py)
 [![AI in the evidence path: none](https://img.shields.io/badge/AI%20in%20the%20evidence%20path-none-success)](tests/)

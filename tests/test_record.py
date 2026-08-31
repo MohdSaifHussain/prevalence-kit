@@ -861,6 +861,57 @@ def test_the_licence_claim_and_the_licence_file_agree() -> None:
     assert "license: MIT" in citation
 
 
+def test_the_overclaim_scanner_catches_a_forbidden_claim(tmp_path: Path) -> None:
+    """**Charter section 5.6: the overclaim scanner.** Named in Phase 0, built now.
+
+    Section 5.6 says honesty here is *enforced by machinery, not intention*, and
+    names two instruments: an overclaim scanner and badge-truth tests. Neither
+    existed until the launch programme, in a project whose register is mostly
+    made of claims that were wider than their evidence.
+    """
+    module = _check_claims_module()
+    root = _repo_copy(tmp_path)
+    readme = root / "README.md"
+    text = readme.read_text(encoding="utf-8")
+    anchor = "Audit-grade prevalence measurement for Trust & Safety."
+    assert anchor in text, "nothing to perturb"
+    readme.write_text(text.replace(anchor, anchor + " Production-ready."), encoding="utf-8")
+
+    details = [p.detail for p in module.check_overclaims(root)]
+    assert any("production-ready" in d for d in details), details
+    # And it says WHY, so the failure teaches rather than just refusing.
+    assert any("no claim of production deployment" in d for d in details), details
+
+
+def test_the_public_documents_are_clean_of_forbidden_claims() -> None:
+    """The positive control, on the live tree, and it is cheap.
+
+    A scanner that only ever fires on planted violations proves it can fail.
+    This proves the documents it guards are actually clean today.
+    """
+    module = _check_claims_module()
+    assert module.check_overclaims(Path(__file__).resolve().parents[1]) == []
+
+
+def test_the_overclaim_scanner_reads_more_than_the_readme(tmp_path: Path) -> None:
+    """Its scope is a set of patterns, not one file.
+
+    V-15's lesson: a check that names a row stops covering the thing the day a
+    second row appears. The SOP and the example READMEs are read by strangers
+    too, and an overclaim in one of them is no better than one in the README.
+    """
+    module = _check_claims_module()
+    root = _repo_copy(tmp_path)
+    sop = root / "docs" / "SOP.md"
+    assert sop.exists()
+    sop.write_text(
+        sop.read_text(encoding="utf-8") + "\n\nThis tool never fails.\n", encoding="utf-8"
+    )
+
+    problems = module.check_overclaims(root)
+    assert any(p.where == "docs/SOP.md" for p in problems), problems
+
+
 def test_a_stale_badge_number_fails_the_gate(tmp_path: Path) -> None:
     """**Charter section 5.6: badge-truth tests.** Named since Phase 0, built now.
 
