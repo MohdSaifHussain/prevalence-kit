@@ -6,8 +6,8 @@ report. **No AI ever touches the evidence or the estimate.**
 
 This project runs the **governed-orchestration** skill at **STANDARD** tier, manual-approve.
 
-**Phase 3 of 4 in progress.** The contract is APPROVED and amended, **Q1–Q32 ruled** — Q16–Q25
-at the boundary and Q26–Q32 for the launch programme, all on 2026-08-31. Tier: STANDARD by the
+**Phase 3 of 4 in progress.** The contract is APPROVED and amended, **Q1–Q34 ruled** — Q16–Q25 at the
+boundary, Q26–Q32 for the launch programme, and Q33–Q34 at the release authorisation. Tier: STANDARD by the
 re-ask's first live ruling, D-42. D3.1 through D3.5 are done
 — re-pin, tier, demonstration, README draft, history review — the review stop is passed and
 **O-28 is discharged, closed by the director's read**. **The repository going public is a
@@ -270,7 +270,7 @@ reader could not tell a stratified redraw from a simple random one. `verify.py` 
 design (F-10's third site) and **its output was silent about what it had checked.** It now
 names the draw.
 
-**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, **PUBLIC since 2026-08-31** — O-28 discharged and closed by the director's read, R3.2 lifted, first step of D-46's order. **No tag exists, nothing is on PyPI or TestPyPI, no image is pushed.** **746 tests**, seven gate
+**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, **PUBLIC since 2026-08-31** — O-28 discharged and closed by the director's read, R3.2 lifted, first step of D-46's order. **No tag exists, nothing is on PyPI or TestPyPI, no image is pushed.** **749 tests**, seven gate
 checks green — **`check_claims` now runs thirteen**, not seven; the gate block below is still
 seven commands. **CI last ran green at 734** on the 3.12 / 3.13 / 3.14 matrix, run `33345614816`, head `03a0c7b` — the Phase 3 boundary commit, all three legs at 734, matching local. They are stated apart because they are two measurements, not one.
 A second workflow, `witness.yml`, rebuilds the R image and requires every fixture to regenerate
@@ -459,8 +459,8 @@ or a correction whose closing condition is written down.
 |---|---|---|
 | **The Phase 3 contract** | **Written and APPROVED 2026-08-31**, Q16–Q25 ruled. `docs/contracts/PHASE-3-CONTRACT.md` is binding; D3.1 (O-19) is the next build act, the review stop falls before anything public, and the boundary commit's own defects are C-48 and C-49 | **Done — the contract now owns the rows below** |
 | **O-19** | **Discharged 2026-08-31 by D3.1.** The re-read came first and found the premise half false — **C-50**: checkout v5.0.0 declared node24 at its own SHA, so only `setup-python` ever targeted Node 20, and the "drop" had partly happened (force-run on Node 24 since 2025-09-19). Re-pinned to checkout **v7.0.1** and setup-python **v7.0.0** in both workflows, runtimes derived from `action.yml` at the pinned SHAs, TW-4 clear | **Done** |
-| **Q34 blocks the tag** | **GHCR is a third publish channel and no ruling names it.** `container.yml` pushes to `ghcr.io` on any `v*` tag, and `docs/SOP.md` documents `docker pull` from it — while **D-43 ruled two channels**, GitHub release and PyPI. Found by the reviewer. **No tag is created until Q34 is ruled into the contract**, and the tag trigger is the only thing currently preventing the unruled push | **Director** |
-| **Q33** | An environment error (a bind mount the container cannot write) prints *"a defect in prevalence-kit"* — **C-52**. Touches `cli.py`, which Phase 2 closed, so it is the director's to rule | **Director** |
+| **Q34** | **RULED — D-60.** GHCR authorised as a **third** publish channel, D-43 amended to name all three, each with its own rehearsal target: TestPyPI for PyPI, a separate registry repository for GHCR. Found by the reviewer as an unruled channel already wired to fire | **Done** |
+| **Q33** | **RULED — D-59.** An `OSError` carrying a filename is now `CANNOT USE`, naming the path and the fix; the internal-defect message is unchanged for the case it was written for. **C-52** is the incident | **Done** |
 | **O-21** | The rare-event specificity fact must reach the README — **done at D3.4**, grouped as one fact | Phase 3 |
 | **O-28** | **Discharged 2026-08-31 by D3.5.** `docs/contracts/PHASE-3-HISTORY-REVIEW.md` — every finding ruled, closed by the director's read the same day. **The repository going public is a separate explicit word and it has not been given**: no visibility change, no tag, no candidate, no PyPI or TestPyPI until it is | **Done** |
 | **O-14, O-15** | Carried, low, no action. O-15 is deliberately unmet — a ledger schema version, added only if it is ever needed | Phase 3 |

@@ -81,6 +81,26 @@ from documentation:
 The same registration is needed on PyPI proper, with environment `pypi`, before
 the real publish.
 
+**Both were completed by the director on 1 September 2026** and verified against
+`release.yml`. **And a pending publisher does not reserve the name.** PyPI's own
+documentation is explicit that a pending publisher creates the project only when
+it is first used to publish — so registering it holds nothing. Phase 0's
+name-collision check was never a reservation either; it was a check that the
+name was free on the day it was run. **`prevalence-kit` is unheld on PyPI until
+v1.0 actually ships**, and anyone could take it before then. Recorded because
+this project has been wrong before about what a check establishes, and "we
+checked the name" is exactly the kind of sentence that quietly becomes "we have
+the name".
+
+**A second environment gap, found before it could burn a candidate.**
+`release.yml` declares `environment: pypi` on a tag push and `testpypi`
+otherwise, and **a job naming an environment that does not exist fails before it
+reaches the index** — which would have looked like a publish failure and been
+neither. Checked in repository settings on 1 September: **`testpypi` existed,
+`pypi` did not.** `pypi` was created. Neither carries a protection rule, so
+neither gates the run; they exist so the OIDC subject claim matches what the
+publishers were registered against.
+
 ## The controls — and the first attempt at them proved nothing
 
 Everything up to the upload succeeded on candidate 2, so the artifacts and their

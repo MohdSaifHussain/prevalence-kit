@@ -1844,6 +1844,72 @@ is the mechanism behind C-9 and half this register.
 
 ---
 
+## D-59 — An environment error is not a defect in this tool
+
+**Date:** 2026-09-01 · **Made in:** Phase 3 contract Q33 · **Ruled by:** director
+
+`cli.py`'s guard had two outcomes: a `Refusal`, or a defect in this tool. It now has three.
+An `OSError` carrying a filename — a path the operator supplied that the filesystem refused —
+is reported as **`CANNOT USE`**, naming the path, the likely cause and the fix, and saying
+plainly that it is the environment rather than a defect or a data problem. **The
+internal-defect message is unchanged for the case it was written for.**
+
+**Reason, as ruled.** C-52: a bind mount the container user could not write printed *"This is
+a defect in prevalence-kit, not a problem with your data"*, and both halves were false. The
+operator is then sent hunting a bug that does not exist — the harm TW-4's own text names.
+
+**One widening at implementation, following the ruling over the recommendation.** The draft
+listed four exception subclasses; the ruling said *OSError on an operator-named path*. The list
+was wrong by construction: a directory requested under a regular file raises
+`NotADirectoryError` on Linux and `FileExistsError` on Windows for the same operator mistake,
+so any list is wrong on some platform. Classification is **any `OSError` with a filename**; a
+table supplies a better sentence where one is known; an `OSError` with no filename falls
+through to the internal-defect path, because there is nothing an operator could act on.
+
+**Both controls, and the negative reproduces the state the incident produced** — a run
+directory that cannot be created — rather than any exception that turns the check red. It skips
+where the filesystem ignores the mode bits, and **a second control that fires on every
+platform** was added for exactly that reason: a control that only runs elsewhere is not a
+control here.
+
+**Alternatives not taken.** A reason code and a refusal — a refusal is a pre-registered, named
+condition about *evidence*, and a disk permission is not one; minting a code would blur what a
+reason code means (D-22). Documentation only — an operator who hits this is reading a message,
+not the SOP, and the message told them to file a bug.
+
+---
+
+## D-60 — Three publish channels, each with its own rehearsal target
+
+**Date:** 2026-09-01 · **Made in:** Phase 3 contract Q34 · **Ruled by:** director
+
+**D-43 is amended.** The channels are **a GitHub release, PyPI, and the GHCR container
+registry** — three, not two. Each has a rehearsal target: **TestPyPI** for PyPI, and a
+**separate registry repository** (`…/prevalence-kit-rc`) for GHCR. A manual dispatch of
+`container.yml` publishes to the rehearsal path; only a tag reaches the real one.
+
+**Reason, as ruled.** The registry entered the repository as a consequence of building the
+container at D3.12, and `docs/SOP.md` already told operators to pull from it — a third
+irreversible publish that no ruling named, which is the shape D-43 exists to prevent arriving
+one level down. Found by the reviewer, and wired to fire on the first tag.
+
+**Why option B and not A**, since the two differ in exactly the property the ruling's phrase is
+about. The director ruled *"each with its own rehearsal target the way TestPyPI serves PyPI"*.
+**TestPyPI is a separate index**, not the real index carrying a candidate label — so its
+analogue is a separate registry repository, not the real repository carrying an `-rc` tag.
+Mapped explicitly rather than assumed.
+
+**The cost, stated rather than glossed.** A rehearsal on a separate path exercises the
+credentials, the build, the push and the attestation, and **does not exercise the real name**.
+That is the one thing it cannot prove, and it is the same thing TestPyPI cannot prove about
+PyPI. Accepted on the same grounds: it is the only way to rehearse without spending the name.
+
+**Alternatives not taken.** A candidate tag on the real path (option A) — higher fidelity, and
+it publishes a permanent artifact to the name the release needs. Dropping GHCR — against the
+director's stated intent, and it would make the container build-it-yourself.
+
+---
+
 ## Carried obligations opened by these decisions
 
 | # | Obligation | Owner | Opened by |

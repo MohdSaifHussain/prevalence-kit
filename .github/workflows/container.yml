@@ -106,7 +106,13 @@ jobs:
 
   publish:
     name: Publish to ghcr.io
-    if: startsWith(github.ref, 'refs/tags/v')
+    # A tag publishes to the real path. A manual dispatch publishes to the
+    # REHEARSAL path -- D-60, ruled option B: the rehearsal target is a separate
+    # repository, the way TestPyPI is a separate index from PyPI, rather than
+    # the real path carrying a candidate label. What that buys is that a
+    # rehearsal can never occupy a name the real release needs; what it costs is
+    # that the name itself is the one thing the rehearsal does not exercise.
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     needs: build
     runs-on: ubuntu-latest
     permissions:
@@ -125,19 +131,43 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Which registry path, and which tags, decided once here so the two steps
+      # below cannot disagree about it.
+      - name: Choose the target
+        id: target
+        run: |
+          set -euo pipefail
+          # Lowercased, because a container registry requires it and this
+          # owner's name is not: `ghcr.io/MohdSaifHussain/...` is rejected by
+          # the registry, not by us. Caught before the first push rather than
+          # by burning a candidate on it.
+          base="$(echo "$IMAGE" | tr '[:upper:]' '[:lower:]')"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            image="${base}-rc"
+            tags="$image:rehearsal"
+          else
+            image="${base}"
+            tags="$image:${{ github.ref_name }}"$'\n'"$image:latest"
+          fi
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+          {
+            echo "tags<<EOF"
+            echo "$tags"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          echo "publishing to $image"
+
       - name: Build and push
         id: push
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
           push: true
-          tags: |
-            ${{ env.IMAGE }}:${{ github.ref_name }}
-            ${{ env.IMAGE }}:latest
+          tags: ${{ steps.target.outputs.tags }}
 
       - name: Attest the image
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
-          subject-name: ${{ env.IMAGE }}
+          subject-name: ${{ steps.target.outputs.image }}
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true

@@ -538,3 +538,107 @@ def test_every_input_path_argument_still_declares_exists() -> None:
         "the number of existence-checked input arguments changed; "
         "see the Phase 2 contract on PLAN_FILE_MISSING being defensive"
     )
+
+
+# --------------------------------------------------------------- Q33 / D-59
+
+
+def test_an_unwritable_run_directory_is_not_called_a_defect(tmp_path: Path) -> None:
+    """**Q33 / D-59, and C-52 is the incident.**
+
+    The negative control reproduces **the state the real defect produced** --
+    a run directory this process cannot write -- rather than any exception that
+    happens to turn the check red. That is rule 21's bar: ask what the control
+    would catch if the branch it exercises were deleted, and the answer here is
+    "the exact message an operator met in CI".
+
+    In the incident the directory was a container bind mount owned by another
+    uid. Reproduced here by making the parent read-only, which is the same
+    condition -- `os.mkdir` raising `PermissionError` with the path in
+    `.filename` -- reached by a route a test can take on any platform.
+    """
+    plan_path, _frame = build_inputs(tmp_path)
+    locked = tmp_path / "locked"
+    locked.mkdir()
+    locked.chmod(0o500)  # r-x: the run directory underneath cannot be created
+    try:
+        result = cli("plan", str(plan_path), "--run", str(locked / "run"))
+    finally:
+        locked.chmod(0o700)
+
+    combined = result.stdout + result.stderr
+    if "CANNOT USE" not in combined:
+        # Some filesystems (and Windows without the right privileges) ignore the
+        # mode bits, so the write succeeds and there is nothing to classify.
+        # Skipping is honest; asserting on a run that did not fail is not.
+        pytest.skip(f"this filesystem allowed the write, so nothing was refused: {combined!r}")
+
+    assert result.returncode == 1
+    assert "CANNOT USE [PermissionError]" in combined
+    assert "cannot read or write that path" in combined
+    assert "not a defect in prevalence-kit" in combined
+    # The message that was wrong here must not be the one printed.
+    assert "INTERNAL ERROR" not in combined
+    assert "This is a defect in prevalence-kit, not a problem with your data." not in combined
+    # It names the path, which is the whole point of classifying by exception.
+    assert str(locked) in combined
+
+
+def test_a_real_internal_defect_still_says_so(capsys: pytest.CaptureFixture[str]) -> None:
+    """The positive control for the message that was NOT changed.
+
+    Q33 adds a branch in front of the internal-defect path; it does not soften
+    it. An exception that is not an environment error, and an environment error
+    with no filename to name, must both still be reported as defects in this
+    tool -- because for those cases that sentence is true.
+    """
+    from prevalence_kit.cli import EXIT_BUG, guard
+
+    @guard
+    def boom() -> None:
+        raise ValueError("something genuinely broken")
+
+    @guard
+    def nameless() -> None:
+        raise PermissionError("no filename on this one")
+
+    for fn in (boom, nameless):
+        with pytest.raises(SystemExit) as exit_:
+            fn()
+        assert exit_.value.code == EXIT_BUG
+        err = capsys.readouterr().err
+        assert "INTERNAL ERROR" in err
+        assert "This is a defect in prevalence-kit, not a problem with your data." in err
+        assert "CANNOT USE" not in err
+
+
+def test_a_run_path_under_a_file_is_an_environment_error(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The environment control that fires on every platform.
+
+    The permission control above is the real incident and it is the one that
+    matters -- but Windows ignores the mode bits it relies on, so it skips
+    there and only proves itself on Linux. **A control that only runs
+    somewhere else is not a control here.** This one asks the filesystem for
+    something impossible on any platform: a directory underneath a regular
+    file. The exception differs by platform; the classification must not.
+    """
+    from prevalence_kit.cli import EXIT_BUG, guard
+
+    blocker = tmp_path / "a-file"
+    blocker.write_text("not a directory", encoding="utf-8")
+
+    @guard
+    def under_a_file() -> None:
+        (blocker / "run").mkdir(parents=True)
+
+    with pytest.raises(SystemExit) as exit_:
+        under_a_file()
+    assert exit_.value.code == EXIT_BUG
+
+    err = capsys.readouterr().err
+    assert "CANNOT USE" in err, err
+    assert "not a defect in prevalence-kit" in err
+    assert "INTERNAL ERROR" not in err
+    assert str(blocker) in err

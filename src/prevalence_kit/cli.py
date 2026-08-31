@@ -22,6 +22,7 @@ import functools
 import sys
 from collections.abc import Callable
 from pathlib import Path
+from typing import NoReturn
 
 import click
 
@@ -48,12 +49,55 @@ run_option = click.option(
 plan_argument = click.argument("plan_path", type=click.Path(exists=True, path_type=Path))
 
 
+_ENVIRONMENT_CAUSE: dict[type[OSError], str] = {
+    PermissionError: "This user cannot read or write that path.",
+    IsADirectoryError: "That path is a directory and a file was expected.",
+    NotADirectoryError: "Part of that path is a file, so it cannot contain anything.",
+    FileNotFoundError: "That path is not there, or a directory above it is not.",
+    FileExistsError: "That path already exists and is not what was expected there.",
+}
+"""Named causes, in the operator's terms rather than the exception's.
+
+**The classification is by `OSError` with a filename, not by this table.** The
+table only supplies a better sentence where one is known; anything else gets a
+generic line and is still classified. Keying the *classification* off this dict
+would make it a list to remember to extend, which is the shape V-15 and D-23
+are both about -- and the platforms disagree about which subclass they raise
+for the same condition, so a list would be wrong somewhere by construction.
+Asking for a directory under a regular file raises `NotADirectoryError` on
+Linux and `FileExistsError` on Windows; both are the same operator mistake.
+"""
+
+_UNKNOWN_CAUSE = "The filesystem refused that path."
+
+
+def _environment_cause(exc: OSError) -> str:
+    for kind, line in _ENVIRONMENT_CAUSE.items():
+        if isinstance(exc, kind):
+            return line
+    return _UNKNOWN_CAUSE
+
+
 def guard[**P](fn: Callable[P, None]) -> Callable[P, None]:
     """Turn a Refusal into a named exit, and anything else into an honest one.
 
-    A Refusal means the evidence failed a check and the operator needs to act.
-    Anything else is a defect in this tool, and saying so is more useful than a
-    traceback that looks like the data's fault.
+    Three outcomes, not two:
+
+    * a **Refusal** -- the evidence failed a check and the operator must act;
+    * an **environment error** -- the filesystem said no about a path the
+      operator supplied. Neither a defect here nor a problem with their data;
+    * anything else -- a defect in this tool, and saying so is more useful than
+      a traceback that looks like the data's fault.
+
+    **The middle case was missing, and C-52 is what that cost.** A bind mount
+    the container user could not write printed *"This is a defect in
+    prevalence-kit, not a problem with your data"*, and **both halves of that
+    were false**: it was the environment. The operator is then sent hunting a
+    bug that does not exist -- the exact harm `docs/TRIPWIRES.md` warns about in
+    TW-4's own text.
+
+    **The internal-defect message is unchanged** for the case it was written
+    for. This adds a branch in front of it; it does not soften it.
     """
 
     @functools.wraps(fn)
@@ -63,14 +107,37 @@ def guard[**P](fn: Callable[P, None]) -> Callable[P, None]:
         except Refusal as refusal:
             click.echo(refusal.report(), err=True)
             sys.exit(EXIT_REFUSED)
-        except Exception as exc:
-            click.echo(f"INTERNAL ERROR [{type(exc).__name__}] {exc}", err=True)
+        except OSError as exc:
+            if exc.filename is None:
+                # Nothing to name, so nothing an operator can act on. Falls
+                # through to the internal-defect path deliberately.
+                _internal_error(exc)
+            click.echo(f"CANNOT USE [{type(exc).__name__}] {exc.filename}", err=True)
+            click.echo(f"  {_environment_cause(exc)}", err=True)
             click.echo(
-                "This is a defect in prevalence-kit, not a problem with your data.", err=True
+                "  What to do: check that the path exists, that it is the right "
+                "kind of thing, and that this user can write to it. Running in a "
+                "container? A mounted directory keeps its owner on the host -- "
+                'pass --user "$(id -u):$(id -g)". See docs/SOP.md section 2.',
+                err=True,
+            )
+            click.echo(
+                "  This is your environment, not a defect in prevalence-kit and "
+                "not a problem with your data.",
+                err=True,
             )
             sys.exit(EXIT_BUG)
+        except Exception as exc:
+            _internal_error(exc)
 
     return wrapper
+
+
+def _internal_error(exc: BaseException) -> NoReturn:
+    """The message this tool has always given for a real defect, unchanged."""
+    click.echo(f"INTERNAL ERROR [{type(exc).__name__}] {exc}", err=True)
+    click.echo("This is a defect in prevalence-kit, not a problem with your data.", err=True)
+    sys.exit(EXIT_BUG)
 
 
 @click.group(context_settings={"help_option_names": ["-h", "--help"]})

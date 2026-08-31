@@ -84,7 +84,7 @@ README before the stop, everything public after it.
 | **D3.5** ▸ **DONE 2026-08-31 — the reading is `docs/contracts/PHASE-3-HISTORY-REVIEW.md`, every finding ruled, and O-28 closed by the director's read of it the same day** | **O-28 — the git-history review.** A one-time look backwards over the full history as a stranger would read it, before anything is public. Findings reported to the director with proposed dispositions; **the director rules each**, including the recorded local-paths finding (**Q19**). The review's reading is written down and dated. **Nothing goes public before the director closes this review** | **O-28** · CLAUDE.md rule 20 · SECURITY.md §3.8 |
 | **D3.6** ▸ **DONE 2026-08-31 — Q21 and Q22 ruled, both built with controls** (D-47, D-48; **C-48**). The figures check then caught its own commit's stale test count | **Instrument work, both halves proved to fail.** (a) **Restore `check_figures`' phase claim**: C-47's rebuild added the canonical two-file sentence check and left the superseded `readme phase` entry beside it — number-only, vacuous since the close, the exact semantics C-47 condemned. Resolve at **Q21**, selftest proving the survivor fails in both directions. (b) The CLAUDE.md open-corrections row: stale at this drafting (says 49 entries, 6 open; the register holds 50, 7 open) while crediting a checker that does not read it — **Q22** rules the correction entry and the machinery | Rule 14 · rule 7 · C-47 · C-34's class |
 | **D3.7** | **The release rehearsal.** A release candidate that executes the **full** publish path — build, SBOM, attestation, signing, upload to the rehearsal target — not a subset. The director hand-verifies its artifacts as an outsider: fresh download, run the published instructions exactly as written. **A negative control that must fail**, built to rule 21's bar: it reproduces the state a real compromise or mix-up would produce, and if the check it exercises were deleted, nothing else would catch it. Run at the final candidate **and again after the real act**. Every failed candidate stays in the record | Doctrine rule 6 · rule 21 · Template 6 |
-| **D3.8** | **The release.** Tag and publish to the ts-sentry supply-chain bar: hash-locked dependencies, SHA-pinned actions, SBOM, signed artifacts with provenance attestation. **Three channels — GitHub release, PyPI, and the container registry — each rehearsed before it is used: TestPyPI for PyPI, and a release-candidate tag for the registry. ▸ PENDING Q34**, which amends **Q17 / D-43**'s two channels to three; the registry push is wired and **no tag exists until that ruling does**, because a ruling that has not reached this document is not binding. Ordering of repo-public against the tag at **Q20**. Performed only after a fully clean rehearsal **and** the director's explicit word, and re-verified the same way afterwards. Anything the constraints make unachievable is stated plainly, never implied done | Charter §5.1 · ts-sentry precedent |
+| **D3.8** | **The release.** Tag and publish to the ts-sentry supply-chain bar: hash-locked dependencies, SHA-pinned actions, SBOM, signed artifacts with provenance attestation. **Three channels — GitHub release, PyPI, and the GHCR container registry — each rehearsed before it is used: TestPyPI for PyPI, and a separate registry repository (`…/prevalence-kit-rc`) for GHCR. RULED at Q34 / D-60**, amending **Q17 / D-43**'s two channels to three. Ordering of repo-public against the tag at **Q20**. Performed only after a fully clean rehearsal **and** the director's explicit word, and re-verified the same way afterwards. Anything the constraints make unachievable is stated plainly, never implied done | Charter §5.1 · ts-sentry precedent |
 | **D3.9** | **The ROOST pull request.** One PR to `awesome-safety-tools`, adding prevalence-kit to the directory that has fourteen categories and no measurement. **The PR text is approved by the director verbatim before submission** — it is a message sent under his name to someone else's project. Submitted last, after the release it points at exists (Q20) | Charter §3 · doctrine: outward acts gated |
 | **D3.10** | **Post-release closure.** T-1 closes C-1 and C-42–C-47 (and anything newer), each naming its discharging commit. O-14 / O-15 get their final disposition (**Q23**). The outcome section written **at** the close, evidence per checklist row; the phase sentence flips to `Phase 3 of 4 complete` in both public files, which the gate enforces in both directions | Rule 11 · T-1 (D2.12) · C-47's check |
 
@@ -667,7 +667,19 @@ that to the director — hence a question rather than a change.
 | B | Add a reason code and refuse | A refusal is a pre-registered, named condition about *evidence*; a disk permission is not one, and minting a code for it would blur what a reason code means — D-22's vocabulary |
 | C | Leave it and document it in the SOP | The SOP already documents the `--user` flag (C-52). But an operator who hits this is reading a message, not the SOP, and the message tells them to file a bug |
 
-**Recommendation: A**, scoped tightly: the classification is by exception type
+**RULED 1 September 2026: option A. D-59.** Classified by exception type on an
+operator-supplied path, with the internal-defect message unchanged for the case
+it was written for. **One widening at implementation, and it follows the ruling
+rather than the recommendation**: the ruling said *OSError on an operator-named
+path*, and the draft had listed four subclasses. The list was wrong by
+construction -- asking for a directory under a regular file raises
+`NotADirectoryError` on Linux and `FileExistsError` on Windows for the same
+operator mistake. Classification is therefore **any `OSError` carrying a
+filename**; a lookup table supplies a better sentence where one is known, and
+an `OSError` with no filename falls through to the internal-defect path because
+there is nothing an operator could act on.
+
+**Recommendation was A**, scoped tightly: the classification is by exception type
 and only for paths the operator named, so no behaviour changes for any case that
 works today. **The negative control must reproduce the state the real defect
 produced** — an unwritable directory — not merely an exception that turns the
@@ -705,6 +717,18 @@ record anyway.
 
 **Until this is ruled, no tag is created** — which is also the only thing
 currently preventing the unruled push, since the job's trigger is the tag.
+
+**RULED 1 September 2026: option B. D-60.** GHCR is authorised as a third
+publish channel and **D-43 is amended to name all three**, each with its own
+rehearsal target. The director ruled the substance — *"each with its own
+rehearsal target the way TestPyPI serves PyPI"* — and **that phrase selects B
+rather than A**: TestPyPI is a *separate index*, not the real index with a
+candidate label, so its analogue is a **separate registry path**
+(`…/prevalence-kit-rc`) and not the real path carrying an `-rc` tag. Mapped and
+named here rather than assumed, because A and B differ in exactly the property
+the analogy is about. The cost B carries, stated: the rehearsal no longer
+exercises the *real* path's name, only its mechanism — credentials, build,
+push and attestation are identical, the repository name is not.
 
 ---
 
