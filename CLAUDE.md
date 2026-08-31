@@ -8,9 +8,10 @@ This project runs the **governed-orchestration** skill at **STANDARD** tier, man
 
 **Phase 3 of 4 in progress.** The contract is APPROVED, **Q1–Q25 ruled** (Q16–Q25 on
 2026-08-31). Tier: STANDARD by the re-ask's first live ruling, D-42. D3.1 through D3.5 are done
-— re-pin, tier, demonstration, README draft, history review — and the review stop is passed.
-O-28's reading is written and ruled; **nothing goes public before the director reads it and
-gives the separate explicit word** (R3.2, D-46). Then: rehearsal, release, ROOST PR.
+— re-pin, tier, demonstration, README draft, history review — the review stop is passed and
+**O-28 is discharged, closed by the director's read**. **The repository going public is a
+separate explicit word and it has not been given**: no visibility change, no tag, no candidate,
+no PyPI or TestPyPI until it is (R3.2, D-46). Then: rehearsal, release, ROOST PR.
 
 > **First action of every session: invoke the `governed-orchestration` skill.** Do not wait to be
 > asked. The director had to remember it last session, and a handoff that depends on him remembering
@@ -446,6 +447,6 @@ or a correction whose closing condition is written down.
 | **The Phase 3 contract** | **Written and APPROVED 2026-08-31**, Q16–Q25 ruled. `docs/contracts/PHASE-3-CONTRACT.md` is binding; D3.1 (O-19) is the next build act, the review stop falls before anything public, and the boundary commit's own defects are C-48 and C-49 | **Done — the contract now owns the rows below** |
 | **O-19** | **Discharged 2026-08-31 by D3.1.** The re-read came first and found the premise half false — **C-50**: checkout v5.0.0 declared node24 at its own SHA, so only `setup-python` ever targeted Node 20, and the "drop" had partly happened (force-run on Node 24 since 2025-09-19). Re-pinned to checkout **v7.0.1** and setup-python **v7.0.0** in both workflows, runtimes derived from `action.yml` at the pinned SHAs, TW-4 clear | **Done** |
 | **O-21** | The rare-event specificity fact must reach the README | Phase 3 |
-| **O-28** | **Reading written and every finding ruled, 2026-08-31** — `docs/contracts/PHASE-3-HISTORY-REVIEW.md`, a dated reading with the command list so it is re-runnable. **The close is the director's read of that document, and nothing goes public before it** (R3.2) | **D3.5 built; close pending the read** |
+| **O-28** | **Discharged 2026-08-31 by D3.5.** `docs/contracts/PHASE-3-HISTORY-REVIEW.md` — every finding ruled, closed by the director's read the same day. **The repository going public is a separate explicit word and it has not been given**: no visibility change, no tag, no candidate, no PyPI or TestPyPI until it is | **Done** |
 | **O-14, O-15** | Carried, low, no action. O-15 is deliberately unmet — a ledger schema version, added only if it is ever needed | Phase 3 |
 | **11 corrections open** | **C-1**, **C-42**, **C-43**, **C-44**, **C-45**, **C-46**, **C-47**, **C-48**, **C-49**, **C-50**, **C-51**. 54 entries, 41 closed, 2 `noted`; every open entry closes under **T-1** at D3.10, naming its discharging commit. This row is read by `check_counts` against the register — count, identifier list in both directions, figures, and absence is a failure (C-48 is what happens otherwise) | — |
