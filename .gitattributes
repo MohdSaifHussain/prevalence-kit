@@ -1,0 +1,51 @@
+# Line endings, fixed rather than inherited.
+#
+# This project's product is digests. Fixtures are asserted byte-identical, the
+# sampler is required to draw identically on three Python versions and two
+# operating systems, and `witness.yml` regenerates every R fixture and demands
+# the same bytes back. All of that is checked on Linux.
+#
+# A contributor on Windows with core.autocrlf=true would check this repository
+# out with CRLF, and a text fixture read back through a digest would then differ
+# for a reason that has nothing to do with the code. Nothing has broken -- the
+# repository is stored LF today -- but "nothing has broken" is not a control.
+#
+# So: text is LF in the object database AND in the working tree, on every
+# platform. Recorded as finding F-C in the Phase 3 contract, section 3a.
+* text=auto eol=lf
+
+# Binary. Never converted, never diffed as text.
+*.pdf     binary
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.gif     binary
+*.ico     binary
+*.parquet binary
+*.gz      binary
+*.zip     binary
+
+# Explicitly text, so content sniffing never has to guess about the artifacts
+# whose bytes are the evidence.
+*.py    text eol=lf
+*.md    text eol=lf
+*.txt   text eol=lf
+*.json  text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.toml  text eol=lf
+*.cff   text eol=lf
+*.csv   text eol=lf
+*.svg   text eol=lf
+*.R     text eol=lf
+*.sh    text eol=lf
+Dockerfile text eol=lf
+
+# GitHub's language statistics describe what a reader would have to review.
+# Fixtures are numbers other people's software produced, committed so our
+# arithmetic can be checked without installing any of it; counting them as
+# authored source would misdescribe the repository.
+r/fixtures/**    linguist-generated=true
+svy/fixtures/**  linguist-generated=true
+demo/coverage_results.json linguist-generated=true
+docs/**          linguist-documentation=true

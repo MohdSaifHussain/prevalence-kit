@@ -1,0 +1,35 @@
+# Dependabot watches the two supply chains this project pins by hand.
+#
+# It opens pull requests; it does not merge them. Every bump still goes through
+# the seven-command gate, and a dependency change is a decision like any other:
+# `cryptography` is the sealing cipher and its version is recorded in
+# docs/STANDARDS.md S-5.1, so a bump that lands has to move the register too.
+#
+# Actions are SHA-pinned deliberately (charter 5.1: a tag is a mutable pointer).
+# Dependabot understands SHA pins and rewrites both the SHA and the version
+# comment, which is exactly the behaviour we want -- and TW-4 exists because a
+# pin has an expiry that somebody has to watch. This is the automation of that
+# watch, not a replacement for it: the tripwire reads the workflow itself.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci"
+    labels:
+      - dependencies
+      - github-actions
+
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps"
+    labels:
+      - dependencies
+      - python

@@ -1706,6 +1706,144 @@ boundary event, then the same failure again: the count treadmill, in the suite.
 
 ---
 
+## D-52 — The launch structure is additive; nothing in the record moves
+
+**Date:** 2026-08-31 · **Made in:** Phase 3 contract Q26 · **Ruled by:** director
+
+New files fill the structural gaps. **No existing tracked file is moved, renamed, or has its
+prose rewritten.** The sibling project puts its charter under `docs/`; this one keeps
+`PROJECT_CHARTER.md` at the root, and the difference stays.
+
+**Reason, as ruled.** The director's instruction was *no paraphrasing, no rephrasing, no content
+changes*, and the record independently forbids the move: dozens of documents cite
+`PROJECT_CHARTER.md` and the record's files by path, `check_paths` validates every one of them,
+and **three dated readings cite paths and can never be edited**. The cost of matching the sibling
+layout is not the moves — it is that the only way to complete them is to rewrite evidence.
+
+**Alternative not taken.** Restructure to match `finding-bridge`. Rejected on the above; the gain
+is cosmetic and the loss is the citation graph.
+
+---
+
+## D-53 — MIT as already claimed, plus a NOTICE
+
+**Date:** 2026-08-31 · **Made in:** Phase 3 contract Q27 · **Ruled by:** director
+
+A `LICENSE` file carrying the MIT licence, copyright 2026 Mohd Saif Hussain — matching what
+`README.md` and `pyproject.toml` have claimed all along — and a `NOTICE` carrying the EU
+acknowledgement Decision 2011/833/EU requires, plus the provenance of the fixtures and the
+corpus. A test pins the README, `pyproject.toml`, `CITATION.cff` and `LICENSE` to one answer.
+
+**Reason, as ruled.** The claim already existed in two committed artifacts and nothing backed it
+— **F-A**, and an overclaim in the charter's own section 5.6 sense. Choosing any other licence
+would have meant changing two standing claims; choosing MIT means the file catches up with them.
+`NOTICE` is the sibling project's pattern and puts O-18's binding condition where someone
+redistributing this repository meets it, rather than only in the standards register.
+
+**Alternatives not taken.** A `LICENSE` alone — leaves the EU acknowledgement discoverable only
+through S-4.3. A different licence — would require rewriting claims that were never wrong about
+the intent, only unsupported.
+
+---
+
+## D-54 — The worked example commits no content, and says so
+
+**Date:** 2026-08-31 · **Made in:** Phase 3 contract Q28 · **Ruled by:** director
+
+The real-data example commits the plan, the frame, the labels, the report and the `verify`
+output. **The labels carry item identifiers and label values and no comment text.**
+
+**Reason, as ruled, and it is the tool's own argument applied to itself.** This tool exists to
+keep harmful content sealed; publishing the text it seals, in a repository a Trust & Safety
+audience reads, would contradict the product. **Measured before it was ruled:** `content` is
+optional in a labels file — `run.py` reads `r.get("content", "")` — so the whole chain runs
+without it, and this is a choice rather than a limitation.
+
+**The disclosure travels with it.** The example's reading states that content is absent by
+choice and why, so a reader does not conclude the tool cannot handle it. Sealing is still
+exercised: the chain seals whatever content is present, and the synthetic example carries the
+deliberately multi-chunk item that the sealing checks depend on.
+
+**Alternatives not taken.** Committing the content — exercises sealing on real text at the cost
+of publishing what the tool exists to protect. Content for a handful of *benign* rows — half a
+demonstration, and *benign* is a judgment nobody asked this project to make.
+
+---
+
+## D-55 — The worked example reuses the pinned corpus
+
+**Date:** 2026-08-31 · **Made in:** Phase 3 contract Q29 · **Ruled by:** director
+
+Civil Comments again — S-7.1, CC0, already fetched, digests recorded, row count verified at
+1,999,514. The example is a **different run** on the same corpus: a plain measurement rather than
+a coverage study.
+
+**Reason, as ruled.** Rule 3 and S-8's retrieval bar make a second corpus real work — a fresh
+licence review, a fresh register entry, a fresh recorded procedure — and the gain is variety,
+which is not what a worked example is for. Reusing the pinned corpus also means a reader checks
+its provenance once and it serves both artifacts.
+
+**Alternative not taken.** A second dataset from Hugging Face or Kaggle. If breadth is wanted it
+belongs in the NEXT queue, where it can carry its own prior-art and licence review; Kaggle's
+terms in particular are per-dataset and frequently not open.
+
+---
+
+## D-56 — The container ships the tool alone
+
+**Date:** 2026-08-31 · **Made in:** Phase 3 contract Q30 · **Ruled by:** director
+
+One image: the CLI, its three runtime dependencies, and the shipped examples, on a
+**digest-pinned** base, running as a non-root user. The R witness stays outside it.
+
+**Reason, as ruled.** What an operator wants is to run the tool without installing Python. The
+witness is a different job with a different audience — `witness.yml` already rebuilds it on
+demand, and coupling a large R image to every operator who wants to measure something would make
+the common case pay for the rare one. **Pinned by digest for S-2.1a's stated reason: a tag moves,
+a digest does not** — the same rule the witness image already follows.
+
+**Alternatives not taken.** One image containing both — couples the two audiences. Two images —
+complete, and doubles the release surface in the phase already carrying the release.
+
+---
+
+## D-57 — Dependencies are hash-locked in a constraints file
+
+**Date:** 2026-08-31 · **Made in:** Phase 3 contract Q31 · **Ruled by:** director
+
+`constraints.txt` with `--hash` pins, installed with `--require-hashes` in CI and in the
+container. This discharges the first clause of charter section 5.1, which has been unmet since
+Phase 0 — **F-B**.
+
+**Reason, as ruled.** It matches the sibling project, works with the existing pip-based CI
+unchanged, and puts the hashes in a reviewable text file. The deciding factor was timing: the
+supply chain has to **exist and be exercised before the rehearsal rehearses it**, and R3.1
+forbids building it for the first time during the irreversible act.
+
+**Alternative not taken, and named rather than dismissed.** A `uv` lock file is what
+`sigstore-python` and `ruff` use and is probably where this ecosystem is going. It would rewrite
+how every CI job installs, in the phase carrying the release. **The reason is scheduling, not
+merit**, and that is worth recording so a later reader does not mistake this for a judgment about
+the tool.
+
+---
+
+## D-58 — The version becomes 1.0.0 in the release commit
+
+**Date:** 2026-08-31 · **Made in:** Phase 3 contract Q32 · **Ruled by:** director
+
+`pyproject.toml` stays at `0.1.0.dev0` until the release commit, which sets `1.0.0` in the same
+change that tags it. The rehearsal runs against an explicit release-candidate version. The
+changelog's `Unreleased` section becomes the `1.0.0` entry at the tag, and `CITATION.cff`'s
+version moves with them.
+
+**Reason, as ruled.** The version in the tree is then true at every commit: a development version
+while it is a development tree, `1.0.0` when it is released. Bumping early would make every
+commit between now and the tag claim to be the released version — a live figure in prose, which
+is the mechanism behind C-9 and half this register.
+
+---
+
 ## Carried obligations opened by these decisions
 
 | # | Obligation | Owner | Opened by |

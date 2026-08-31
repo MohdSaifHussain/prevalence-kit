@@ -1,0 +1,68 @@
+name: Bug report
+description: The tool did something other than what it says it does.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing: this tool **refuses on purpose**, often. A refusal with a
+        named reason code and exit 2 is usually the tool working, not failing —
+        `SOP.md` lists every code and what to do about it, and the message
+        itself names the artifact to open.
+
+        If the tool refused and you think the refusal is wrong, that is still a
+        bug and this is still the right form. Please include the code.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: Include the exact command and its complete output, plus the exit code.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+    validations:
+      required: true
+
+  - type: input
+    id: code
+    attributes:
+      label: Reason code, if it refused
+      placeholder: e.g. EVIDENCE_NOT_PREREGISTERED
+    validations:
+      required: false
+
+  - type: textarea
+    id: plan
+    attributes:
+      label: The plan file
+      description: >-
+        Redact anything sensitive — paths, dataset names. Please do NOT paste
+        sealed content or anything you would not publish; this tool exists to
+        keep that material sealed.
+      render: yaml
+    validations:
+      required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `prevalence-kit --version`.
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, Python version, or the container image tag.
+      placeholder: "Windows 11 / CPython 3.14.0, or the container"
+    validations:
+      required: true

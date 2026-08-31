@@ -806,6 +806,61 @@ def test_a_named_demo_path_is_walked(tmp_path: Path) -> None:
     assert any(bogus in d for d in details), details
 
 
+def test_the_licence_claim_and_the_licence_file_agree() -> None:
+    """**F-A**, Q27. Two artifacts claimed MIT and no LICENSE file existed.
+
+    A public repository whose README and `pyproject.toml` both say MIT, with no
+    licence text anywhere, shows **no licence** in GitHub's own interface and
+    grants a reader nothing. That is an overclaim in the charter section 5.6
+    sense, in the two files a stranger reads first, and it stood until the
+    Phase 3 structural comparison went looking for it.
+
+    Three places, one answer, asserted together -- because the defect was not
+    that any one of them was wrong, it was that nothing compared them.
+    """
+    root = Path(__file__).resolve().parents[1]
+    licence = root / "LICENSE"
+    assert licence.exists(), "no LICENSE file: the README and pyproject both claim one"
+    text = licence.read_text(encoding="utf-8")
+    assert text.startswith("MIT License"), "LICENSE does not open as the MIT licence"
+    assert "Copyright (c) 2026 Mohd Saif Hussain" in text
+    # The grant and the disclaimer, so a truncated or placeholder file fails.
+    assert "without restriction" in text
+    assert 'PROVIDED "AS IS"' in text
+
+    pyproject = (root / "pyproject.toml").read_text(encoding="utf-8")
+    assert 'license = "MIT"' in pyproject
+
+    readme = (root / "README.md").read_text(encoding="utf-8")
+    assert re.search(r"^MIT\.?$", readme, flags=re.M), "README states no licence"
+
+    citation = (root / "CITATION.cff").read_text(encoding="utf-8")
+    assert "license: MIT" in citation
+
+
+def test_the_notice_carries_the_eu_acknowledgement() -> None:
+    """O-18's binding condition, where a reuser meets it.
+
+    Decision 2011/833/EU authorises reuse of Commission documents **provided the
+    source is acknowledged**. That acknowledgement lived only in the standards
+    register, which is not where anyone redistributing this repository would
+    look. The boundary travels with it: the clearance covers Commission
+    documents and NOT Regulation (EU) 2022/2065, which is an act of the
+    Parliament and Council.
+    """
+    root = Path(__file__).resolve().parents[1]
+    notice = root / "NOTICE"
+    assert notice.exists(), "no NOTICE file to carry O-18's acknowledgement"
+    text = notice.read_text(encoding="utf-8")
+    assert "European Union" in text
+    assert "2011/833/EU" in text
+    assert "2022/2065" in text, "the boundary of the clearance is not stated"
+    # The PDF it covers is the one actually tracked here.
+    pdf = "OJ_L_202402835_EN_TXT.pdf"
+    assert pdf in text
+    assert (root / pdf).exists(), "NOTICE names a redistributed file that is absent"
+
+
 def test_the_svy_credit_cannot_be_silently_dropped(tmp_path: Path) -> None:
     """O-10 / C-1: the estimator-layer credit is held by machinery, not memory.
 

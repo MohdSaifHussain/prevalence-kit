@@ -1,0 +1,18 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/MohdSaifHussain/prevalence-kit/security/advisories/new
+    about: >-
+      Please report privately rather than in a public issue. SECURITY.md also
+      states what this tool deliberately does not protect against, which is
+      worth reading first.
+  - name: How do I run this?
+    url: https://github.com/MohdSaifHussain/prevalence-kit/blob/main/docs/SOP.md
+    about: >-
+      The SOP walks through a whole measurement end to end, including what every
+      refusal means and what to do about it.
+  - name: Why does it refuse / what does this number mean?
+    url: https://github.com/MohdSaifHussain/prevalence-kit/blob/main/PROJECT_CHARTER.md
+    about: >-
+      The charter's honest-limits section states the measured behaviour at
+      rare-event rates, where several ordinary intuitions fail.

@@ -1,0 +1,67 @@
+name: A claim here is wrong
+description: A number, a statement, or a documented behaviour does not hold up. This is the most useful issue you can open.
+title: "[claim] "
+labels: ["correction"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This project keeps a register of every claim it got wrong, in
+        `docs/CORRECTIONS.md`, including who got it wrong. Several of its most
+        serious defects were found by a person reading an output file and
+        checking the arithmetic, with every test passing.
+
+        If you have found one, this is the right form and there is no need to
+        soften it.
+
+  - type: textarea
+    id: claim
+    attributes:
+      label: The claim
+      description: Quote it, and say where it is — file and line, or the command that printed it.
+      placeholder: |
+        docs/… line …, or the output of `prevalence-kit estimate …`:
+        "…"
+    validations:
+      required: true
+
+  - type: textarea
+    id: actually
+    attributes:
+      label: What is actually true
+      description: The value, behaviour or fact you found instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: how
+    attributes:
+      label: How you found it
+      description: >-
+        The command, the arithmetic, or the reading. Something someone else can
+        re-run is ideal, but "I added up the column" is a completely valid
+        answer and has caught real defects here.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: direction
+    attributes:
+      label: Which direction is the error?
+      description: >-
+        This project tracks the direction its errors go, because for a long time
+        every one of them flattered the project.
+      options:
+        - It makes the project look better than it is
+        - It makes the project look worse than it is
+        - Neither / not applicable
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: Output of `prevalence-kit --version`, or the commit SHA you read.
+    validations:
+      required: false

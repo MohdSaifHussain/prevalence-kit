@@ -6,8 +6,9 @@ report. **No AI ever touches the evidence or the estimate.**
 
 This project runs the **governed-orchestration** skill at **STANDARD** tier, manual-approve.
 
-**Phase 3 of 4 in progress.** The contract is APPROVED, **Q1–Q25 ruled** (Q16–Q25 on
-2026-08-31). Tier: STANDARD by the re-ask's first live ruling, D-42. D3.1 through D3.5 are done
+**Phase 3 of 4 in progress.** The contract is APPROVED and amended, **Q1–Q32 ruled** — Q16–Q25
+at the boundary and Q26–Q32 for the launch programme, all on 2026-08-31. Tier: STANDARD by the
+re-ask's first live ruling, D-42. D3.1 through D3.5 are done
 — re-pin, tier, demonstration, README draft, history review — the review stop is passed and
 **O-28 is discharged, closed by the director's read**. **The repository going public is a
 separate explicit word and it has not been given**: no visibility change, no tag, no candidate,
@@ -35,7 +36,7 @@ no PyPI or TestPyPI until it is (R3.2, D-46). Then: rehearsal, release, ROOST PR
 | `PROJECT_CHARTER.md` | **Binding.** Scope, six verbs, hard rules, honest limits. **A-0 … A-6 all applied.** §8's honest limits are a deliverable, not a footer |
 | `docs/contracts/PHASE-2-CONTRACT.md` | **CLOSED 2026-08-31.** Q1–Q15 ruled, D2.1–D2.17 done. **§11 is the outcome; §8a is the checklist the director ran and §8b amends it.** Read §11's carried table before planning Phase 3 |
 | `docs/contracts/PHASE-2-HAND-RUN.md` | **The exit evidence, and a dated reading — never edited.** 34 rows run by the director. Two were wrong and both were the builder's |
-| `docs/DECISIONS.md` | **D-1 … D-51.** Why each choice, and what was rejected. **T-2's admission rule is at the head** |
+| `docs/DECISIONS.md` | **D-1 … D-58.** Why each choice, and what was rejected. **T-2's admission rule is at the head** |
 | `docs/CORRECTIONS.md` | Every claim that was wrong. **Counts claims that reached a commit *or changed a ruling*** |
 | `docs/FINDINGS.md` | Findings register. `check_claims` reconciles it against the code |
 | `docs/STANDARDS.md` | Every source pinned by version, date, digest or DOI. **S-8 pins the retrieval *procedures* too** |
@@ -257,7 +258,7 @@ reader could not tell a stratified redraw from a simple random one. `verify.py` 
 design (F-10's third site) and **its output was silent about what it had checked.** It now
 names the draw.
 
-**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **736 tests**, seven gate
+**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **738 tests**, seven gate
 checks green — **`check_claims` now runs twelve**, not seven; the gate block below is still
 seven commands. **CI last ran green at 734** on the 3.12 / 3.13 / 3.14 matrix, run `33345614816`, head `03a0c7b` — the Phase 3 boundary commit, all three legs at 734, matching local. They are stated apart because they are two measurements, not one.
 A second workflow, `witness.yml`, rebuilds the R image and requires every fixture to regenerate

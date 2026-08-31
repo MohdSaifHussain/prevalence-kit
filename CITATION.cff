@@ -1,0 +1,71 @@
+cff-version: 1.2.0
+message: "If you use prevalence-kit in published work, please cite it."
+title: "prevalence-kit: audit-grade prevalence measurement for Trust & Safety"
+abstract: >-
+  A command-line tool that turns a sampling plan and human labels into a
+  prevalence estimate with an honest confidence interval, sealed content, a
+  tamper-evident record of every step, and a stamped report. It pre-registers
+  the plan by hash before any data is touched, refuses by name rather than
+  printing a number it cannot defend, and lets an outsider verify a published
+  figure from the sealed record alone. No AI touches the evidence or the
+  estimate. The estimators are validated against R survey, R epiR, base R and
+  Python svy; the interval coverage is demonstrated against a census truth on a
+  public corpus.
+type: software
+authors:
+  - family-names: Hussain
+    given-names: Mohd Saif
+    orcid: ""
+version: 0.1.0.dev0
+date-released: "2026-08-31"
+license: MIT
+repository-code: "https://github.com/MohdSaifHussain/prevalence-kit"
+url: "https://github.com/MohdSaifHussain/prevalence-kit"
+keywords:
+  - trust-and-safety
+  - prevalence
+  - stratified-sampling
+  - confidence-intervals
+  - audit
+  - measurement
+  - content-moderation
+  - reproducibility
+references:
+  - type: report
+    title: "YouTube's Violative View Rate Methodology: A Statistical Assessment"
+    authors:
+      - family-names: Barnett
+        given-names: Arnold
+    year: 2021
+    notes: >-
+      Table 2B is the published anchor the stratified estimator reproduces
+      before it witnesses anything else. docs/STANDARDS.md S-2.3.
+  - type: article
+    title: "Interval Estimation for a Binomial Proportion"
+    authors:
+      - family-names: Brown
+        given-names: Lawrence D.
+      - family-names: Cai
+        given-names: T. Tony
+      - family-names: DasGupta
+        given-names: Anirban
+    journal: "Statistical Science"
+    year: 2001
+    doi: "10.1214/ss/1009213286"
+    notes: "The interval anchor. docs/STANDARDS.md S-1.1."
+  - type: article
+    title: >-
+      Exact confidence limits for prevalence of a disease with an imperfect
+      diagnostic test
+    authors:
+      - family-names: Reiczigel
+        given-names: Jenő
+      - family-names: Földi
+        given-names: József
+      - family-names: Ózsvári
+        given-names: László
+    journal: "Epidemiology and Infection"
+    year: 2010
+    notes: >-
+      The corrected-interval anchor, assuming sensitivity and specificity are
+      known, which is what this version does. docs/STANDARDS.md S-1.6.

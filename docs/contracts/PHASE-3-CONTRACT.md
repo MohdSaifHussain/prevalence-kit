@@ -4,16 +4,17 @@
 rulings are written into each question below, marked RULED. D3.1–D3.6 are DONE and the review
 stop is passed.**
 
-**AMENDED 31 August 2026, after the stop — see §3a and §3b.** The director directed a
-launch-readiness programme before the release: professional repository structure to the
+Drafting this contract was the first build act of the phase, per the Phase 2 close. The commit
+that landed it also updated the phase sentence in `README.md` and `CLAUDE.md`, because creating
+this file moved the phase the sentence must state, and the gate reads both.
+
+**AMENDED 31 August 2026, after the stop — see §3a. Q26–Q32 ruled the same day, all option A
+(D-52 … D-58); the rulings are written into each question, marked RULED.** The director directed
+a launch-readiness programme before the release: professional repository structure to the
 sibling-project bar, containerisation, an SOP, and a real-data worked example, with **v1.0
-releasing after all of it**. Six deliverables **D3.11–D3.16**, three requirements, and
-**Q26–Q32 awaiting rulings**; no work in that section begins before they are ruled. The
+releasing after all of it**. Six deliverables **D3.11–D3.16** and three requirements. The
 comparison that produced it found three things wrong with this repository as it stands, and one
-is a licence claim with no licence behind it. Drafting this contract was the
-first build act of the phase, per the Phase 2 close. The commit that lands it also updates the
-phase sentence in `README.md` and `CLAUDE.md`, because creating this file moves the phase the
-sentence must state, and the gate reads both.
+is a licence claim with no licence behind it.
 
 **The boundary commit was red until Q24 and Q25 were ruled, and the redness was evidence.**
 Creating this file made Phase 3 the live phase, and two instruments did not survive the event
@@ -546,6 +547,8 @@ Opened by **§3a**, 31 August 2026. **None is ruled.** Recommendations are the b
 
 **Recommendation: A**, and the director's own instruction already says it — *no content changes*.
 
+**RULED: A.** Additive only; nothing in the record moves. **D-52.**
+
 ### Q27 — The licence: MIT as claimed, and what else the repository owes
 
 `README.md` and `pyproject.toml` both say MIT and no `LICENSE` exists (**F-A**). Separately, the
@@ -559,6 +562,8 @@ carried today in `docs/STANDARDS.md` S-4.3 and nowhere a stranger looks first.
 | C | A different licence | Would require changing two committed claims, and the charter's positioning gives no reason to |
 
 **Recommendation: A.** The copyright line names the director as author, matching `pyproject`.
+
+**RULED: A.** MIT `LICENSE` as claimed, plus `NOTICE`. **D-53.**
 
 ### Q28 — What does the real-data example commit, given that sealing is the product?
 
@@ -575,6 +580,8 @@ premise. Measured, not assumed: **`content` is optional in a labels file** — `
 **Recommendation: A**, with the example's reading stating plainly that content is absent **by
 choice**, and why, so a reader does not conclude the tool cannot handle it.
 
+**RULED: A.** Identifiers and label values only, and the reading says so. **D-54.**
+
 ### Q29 — Which dataset for the worked example?
 
 | | Option | Consequence |
@@ -585,6 +592,8 @@ choice**, and why, so a reader does not conclude the tool cannot handle it.
 **Recommendation: A.** Rule 3 and S-8's bar make a second corpus real work; the gain is variety,
 which is not what this example is for. If the director wants breadth, it belongs in NEXT.
 
+**RULED: A.** Civil Comments again, a different run on the pinned corpus. **D-55.**
+
 ### Q30 — What does the container ship?
 
 | | Option | Consequence |
@@ -594,6 +603,8 @@ which is not what this example is for. If the director wants breadth, it belongs
 | C | Both, as two images | Complete, and doubles the release surface in the phase already carrying the release |
 
 **Recommendation: A**, pinned by digest for S-2.1a's stated reason: a tag moves, a digest does not.
+
+**RULED: A.** The tool alone, digest-pinned base, non-root. **D-56.**
 
 ### Q31 — How are dependencies hash-locked?
 
@@ -606,6 +617,8 @@ which is not what this example is for. If the director wants breadth, it belongs
 **Recommendation: A.** B is probably where this ecosystem is going; A is what can be built,
 verified and rehearsed without touching a green gate before v1.0.
 
+**RULED: A.** `constraints.txt` with hashes; the `uv` alternative deferred on scheduling, not merit. **D-57.**
+
 ### Q32 — When does the version become 1.0.0?
 
 `pyproject.toml` says `0.1.0.dev0`. The release is v1.0.0.
@@ -617,6 +630,8 @@ verified and rehearsed without touching a green gate before v1.0.
 
 **Recommendation: A**, with a changelog opened at D3.11 carrying an `Unreleased` section that
 becomes `1.0.0` at the tag.
+
+**RULED: A.** The bump lands in the release commit. **D-58.**
 
 ---
 
