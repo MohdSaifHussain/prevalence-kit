@@ -425,6 +425,13 @@ Each of these cost time or produced a defect. None is obvious from the code.
   the grid minimum**, which is stated in the test rather than implied.
 - **`svy` is never installed in this environment.** Its fixtures were generated in a throwaway
   environment and committed; `svy/` holds the generators and the JSON, and that is all.
+- **Windows PowerShell 5.1 splits a native command's argument at embedded double quotes.** A
+  commit message passed as a single-quoted here-string to `git commit -m` broke apart at a
+  quoted phrase inside it, and git read the fragments as pathspecs. The message goes through a
+  file: `git commit -F <file>`. This is the heredoc lesson's class arriving through a different
+  shell -- the shell's parse and the writer's mental model of the same bytes differ -- and the
+  failure was clean only because git refused; a command that accepted the fragments would have
+  acted on them. First hit 2026-08-31, on C-50's own commit message.
 
 ### Open, by name
 
