@@ -1,0 +1,8 @@
+{
+  "population": "validation-00000-of-00001.parquet",
+  "sha256": "2e0eb65474e7e1290df8689fc93eea783160c898c09ae15382c0a9662367bd03",
+  "units": 97320,
+  "threshold": 0.5,
+  "census_positives": 7671,
+  "census_prevalence": 0.07882244143033293
+}

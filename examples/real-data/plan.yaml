@@ -1,0 +1,31 @@
+# A real measurement on a real population.
+#
+# The estimand is a definition, not a discovery: "toxic" here means at least
+# half of the human annotators applied the label. Someone else measuring the
+# same corpus with a different threshold is measuring a different thing, which
+# is why the threshold is in the plan and the plan is hashed before any data is
+# touched.
+estimand:
+  description: Civil Comments validation split, comments at least half of annotators called toxic
+  label_field: toxicity
+  positive_when: at_least
+  threshold: "0.5"
+
+# Every unit of the population, identified and unlabelled. `cc-val-NNNNNN` is
+# the row index within the split, so anyone with the corpus can reconstruct it.
+population: frame.txt
+
+design: srs
+sample_size: 1000
+
+# Identifiers and label values. NO COMMENT TEXT -- see README.md.
+labels: labels.csv
+
+# Clopper-Pearson, chosen deliberately and named because the plan must name it.
+# It holds its nominal level; Wilson is narrower and can fall below. At the
+# rates this tool is built for that trade is the whole decision, and a default
+# would be this project making it for an operator who did not know there was a
+# choice.
+interval: clopper_pearson
+
+seed: real-data-example-2026-08-31

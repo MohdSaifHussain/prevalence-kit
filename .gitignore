@@ -16,6 +16,15 @@ build/
 .prevalence-kit/
 sealed/
 
+# An example's run directory: the two reports are committed because they are
+# what an auditor reads, and the README quotes their numbers. The rest --
+# ledger, frame record, sample record, label record -- is regenerated in about
+# a second by the six commands in that README, and the frame record alone is
+# larger than every other file in the example put together.
+examples/*/run/*
+!examples/*/run/report.md
+!examples/*/run/report.json
+
 # Primary sources kept on disk, deliberately not committed.
 # docs/STANDARDS.md S-4.3 records the CELEX URL and the sha256, so a stranger can
 # fetch and check it. Keeping it out is possible only because it was never

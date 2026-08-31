@@ -12,6 +12,7 @@ claim to be rewritten rather than quietly outliving its own truth.
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 from types import ModuleType
@@ -593,7 +594,28 @@ def _repo_copy(tmp_path: Path) -> Path:
     shutil.copytree(
         root,
         target,
-        ignore=shutil.ignore_patterns(".venv", ".git", "__pycache__", "*.pyc"),
+        # `sealed` and the key are the expensive half and the wrong half: a run
+        # directory's sealed store is a thousand small files, `copytree` does
+        # not read .gitignore, and every test using this helper was paying for
+        # all of them. They are also not part of the repository -- .gitignore
+        # has excluded keys and sealed content since Phase 1 -- so copying the
+        # working tree without them is closer to what these tests mean by "the
+        # repository", not further from it. Adding the real-data example took
+        # the suite from about 70s to 265s until this line existed.
+        ignore=shutil.ignore_patterns(
+            ".venv",
+            ".git",
+            "__pycache__",
+            "*.pyc",
+            # Tool caches. Gitignored, thousands of small files, and not the
+            # repository by any definition these tests use.
+            ".mypy_cache",
+            ".ruff_cache",
+            ".pytest_cache",
+            "sealed",
+            "*.sealed",
+            "*.key",
+        ),
     )
     return target
 
@@ -832,10 +854,128 @@ def test_the_licence_claim_and_the_licence_file_agree() -> None:
     assert 'license = "MIT"' in pyproject
 
     readme = (root / "README.md").read_text(encoding="utf-8")
-    assert re.search(r"^MIT\.?$", readme, flags=re.M), "README states no licence"
+    assert re.search(r"^MIT\b", readme, flags=re.M), "README states no licence"
+    assert "license-MIT-blue" in readme, "README carries no licence badge"
 
     citation = (root / "CITATION.cff").read_text(encoding="utf-8")
     assert "license: MIT" in citation
+
+
+def test_a_stale_badge_number_fails_the_gate(tmp_path: Path) -> None:
+    """**Charter section 5.6: badge-truth tests.** Named since Phase 0, built now.
+
+    A badge is the most-read claim in a repository and the least-checked. It is
+    a picture of a number, and nothing about a picture goes stale visibly.
+    """
+    module = _check_claims_module()
+    root = _repo_copy(tmp_path)
+    readme = root / "README.md"
+    text = readme.read_text(encoding="utf-8")
+    match = re.search(r"tests-(\d+)%20collected", text)
+    assert match is not None, "nothing to perturb: README carries no tests badge"
+    stated = int(match.group(1))
+    planted = text.replace(match.group(0), f"tests-{stated + 1}%20collected")
+    readme.write_text(planted, encoding="utf-8")
+
+    # Figures injected rather than derived: deriving the test count collects the
+    # suite in a subprocess, and doing that from inside the suite works and
+    # costs minutes. The live tree's real figures are checked by the gate's own
+    # `check_claims` run, which is where that cost belongs.
+    figures = {"tests": stated, "gate checks": 7, "reason codes": 38}
+    details = [p.detail for p in module._badge_problems(root, figures)]
+    assert any("badge 'tests'" in d for d in details), details
+
+    # The positive control, same call, unplanted README.
+    readme.write_text(text, encoding="utf-8")
+    assert module._badge_problems(root, figures) == []
+
+
+def test_deleting_a_badge_does_not_silence_the_check(tmp_path: Path) -> None:
+    """Absence is a failure, as it is for the phase sentence.
+
+    C-47's lesson, fourth application: a claim whose sentence is deleted must
+    not stop being checked. Removing a badge is the easiest way to make a
+    stale number stop failing, so it fails on its own.
+    """
+    module = _check_claims_module()
+    root = _repo_copy(tmp_path)
+    readme = root / "README.md"
+    text = readme.read_text(encoding="utf-8")
+    line = next(ln for ln in text.splitlines() if "reason%20codes" in ln)
+    assert line in text, "nothing to delete"
+    readme.write_text(text.replace(line + "\n", ""), encoding="utf-8")
+
+    figures = {"tests": 1, "gate checks": 7, "reason codes": 38}
+    details = [p.detail for p in module._badge_problems(root, figures)]
+    assert any("carries no 'reason codes' badge" in d for d in details), details
+
+
+def test_the_badge_figures_are_derived_from_the_artifacts() -> None:
+    """The derivation itself, without the subprocess half.
+
+    `badge_figures` reads three artifacts. Two are cheap and are checked here
+    against the same sources the rest of the suite uses; the third collects the
+    suite and is left to the gate, which is stated rather than quietly omitted.
+    """
+    module = _check_claims_module()
+    root = Path(__file__).resolve().parents[1]
+    import sys as _sys
+
+    _sys.path.insert(0, str(root / "src"))
+    from prevalence_kit.errors import Reason
+
+    gate_block = module.GATE_BLOCK.search((root / "CLAUDE.md").read_text(encoding="utf-8"))
+    assert gate_block is not None, "CLAUDE.md has no machine-readable gate block"
+    commands = [ln for ln in gate_block.group(1).splitlines() if ln.strip()]
+
+    readme = (root / "README.md").read_text(encoding="utf-8")
+    assert f"gate%20checks-{len(commands)}-" in readme
+    assert f"reason%20codes-{len(list(Reason))}-" in readme
+
+
+def test_the_real_data_example_readme_matches_its_artifacts() -> None:
+    """**D3.14.** The worked example states numbers; the artifacts must carry them.
+
+    The README quotes an estimate, an interval, a positive count and a census
+    truth, and says the interval covered the truth. Every one of those is
+    checkable against a committed file, so none of them is allowed to be a
+    sentence somebody typed. This is the shape C-51 came from: a number stated
+    beside a bound, with nothing comparing the two.
+    """
+    example = Path(__file__).resolve().parents[1] / "examples" / "real-data"
+    report = json.loads((example / "run" / "report.json").read_text(encoding="utf-8"))
+    truth = json.loads((example / "census_truth.json").read_text(encoding="utf-8"))
+    readme = (example / "README.md").read_text(encoding="utf-8")
+
+    estimate = report["estimate"]
+    point, low, high = (
+        float(estimate["point"]),
+        float(estimate["low"]),
+        float(estimate["high"]),
+    )
+
+    # The claim the example is built on: the interval covered the census truth.
+    census = float(truth["census_prevalence"])
+    assert low <= census <= high, (
+        f"the README claims the interval covered the truth; {census} is not in [{low}, {high}]"
+    )
+
+    # Every figure the README prints, as printed.
+    assert f"{point * 100:.3f}%" in readme
+    assert f"{low * 100:.3f}%" in readme
+    assert f"{high * 100:.3f}%" in readme
+    assert f"{census * 100:.4f}%" in readme
+    assert f"{truth['census_positives']:,} of {truth['units']:,}" in readme
+    assert f"{estimate['positives']} positives" in readme
+
+    # The population the plan names is the one the truth was computed over.
+    frame_lines = (example / "frame.txt").read_text(encoding="utf-8").split()
+    assert len(frame_lines) == int(truth["units"])
+
+    # And no comment text reached the labels file -- D-54, asserted rather than
+    # trusted, because this is the one promise the example makes about itself.
+    header = (example / "labels.csv").read_text(encoding="utf-8").splitlines()[0]
+    assert header == "item_id,toxicity", f"labels.csv carries an unexpected column: {header}"
 
 
 def test_the_notice_carries_the_eu_acknowledgement() -> None:

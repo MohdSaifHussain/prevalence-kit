@@ -1,5 +1,18 @@
 # prevalence-kit
 
+[![gate](https://github.com/MohdSaifHussain/prevalence-kit/actions/workflows/gate.yml/badge.svg?branch=main)](https://github.com/MohdSaifHussain/prevalence-kit/actions/workflows/gate.yml)
+[![witness](https://github.com/MohdSaifHussain/prevalence-kit/actions/workflows/witness.yml/badge.svg?branch=main)](https://github.com/MohdSaifHussain/prevalence-kit/actions/workflows/witness.yml)
+[![tests: 742 collected](https://img.shields.io/badge/tests-742%20collected-informational)](tests/)
+[![gate checks: 7](https://img.shields.io/badge/gate%20checks-7-informational)](.github/workflows/gate.yml)
+[![reason codes: 38](https://img.shields.io/badge/reason%20codes-38-informational)](src/prevalence_kit/errors.py)
+[![AI in the evidence path: none](https://img.shields.io/badge/AI%20in%20the%20evidence%20path-none-success)](tests/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue)](pyproject.toml)
+
+**Every number in those badges is asserted by a test.** Change the test count,
+the gate, or the reason codes without changing the badge and the build fails —
+`tests/test_record.py`. A badge nobody checks is a decoration.
+
 **Pre-release. Phase 3 of 4 in progress. Nothing here is ready to rely on yet.**
 
 Audit-grade prevalence measurement for Trust & Safety.
@@ -68,6 +81,44 @@ number it cannot defend. That is the gap.
 The shipped example under [`examples/synthetic/`](examples/synthetic) runs the whole chain in
 seconds.
 
+## Getting started
+
+```
+git clone https://github.com/MohdSaifHussain/prevalence-kit
+cd prevalence-kit
+pip install -e .
+prevalence-kit --version
+```
+
+Or run it with no Python installation at all:
+
+```
+docker build -t prevalence-kit .
+docker run --rm -v "$PWD:/work" prevalence-kit --version
+```
+
+Then measure something real. A complete run on 97,320 real comments, offline, in
+about a second:
+
+```
+cd examples/real-data
+prevalence-kit plan          plan.yaml            --run run
+prevalence-kit sample        plan.yaml frame.txt  --run run
+prevalence-kit ingest-labels plan.yaml labels.csv --run run
+prevalence-kit estimate      plan.yaml            --run run
+prevalence-kit verify        --run run --plan plan.yaml
+prevalence-kit emit-report   plan.yaml            --run run
+```
+
+That answers **6.800%, 95% interval 5.319% to 8.541%** — and because that
+population is fully labelled, the census truth is knowable: **7.8822%**, inside
+the interval. [`examples/real-data/`](examples/real-data) has the whole account,
+and [`examples/`](examples) explains why there are two examples and what each is
+for.
+
+**[`docs/SOP.md`](docs/SOP.md) is the full procedure**: every step, how to read
+the report, how to verify someone else's number, and what each refusal means.
+
 ## At the rates this tool is for, several ordinary intuitions fail
 
 These are one fact family, not scattered caveats, and every one was met in the artifacts rather
@@ -130,6 +181,27 @@ Not a classifier, detector, or moderation system — it measures and never judge
 survey-statistics library. No dashboards, no daemon, no cloud: a CLI that reads files and
 writes files. No importance sampling or ML-assisted weights. No DSA-shaped report emitter.
 
+## Where to get help
+
+- **[`docs/SOP.md`](docs/SOP.md)** — the full procedure. §8 lists what every
+  refusal means and what to do about it.
+- **[Issues](https://github.com/MohdSaifHussain/prevalence-kit/issues)** — there
+  is a template for reporting that **a claim here is wrong**, which is the most
+  useful issue this project can receive.
+- **[`SECURITY.md`](SECURITY.md)** — how to report a vulnerability privately, and
+  §3 states what this tool deliberately does **not** protect against. Some of
+  what looks like a vulnerability is a documented limit.
+- **[`PROJECT_CHARTER.md`](PROJECT_CHARTER.md)** — what is in scope, what is not,
+  and every measured figure with the conditions it was measured under.
+
+## Who maintains it
+
+Built and maintained by [Mohd Saif Hussain](https://github.com/MohdSaifHussain).
+
+[`CONTRIBUTING.md`](CONTRIBUTING.md) explains what is most useful to contribute
+and the rules that shaped this codebase, and
+[`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) applies to everyone taking part.
+
 ## The record
 
 Every claim above is checked against a primary source and pinned by version, date or DOI.
@@ -141,8 +213,12 @@ Every claim above is checked against a primary source and pinned by version, dat
 | [`docs/STANDARDS.md`](docs/STANDARDS.md) | Every source, pinned |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Why each choice was made, and what was rejected |
 | [`docs/CORRECTIONS.md`](docs/CORRECTIONS.md) | What we got wrong, and where it came from |
+| [`docs/FINDINGS.md`](docs/FINDINGS.md) | Every accepted finding and the test that closes it |
+| [`docs/SOP.md`](docs/SOP.md) | How to run a measurement, end to end |
 | [`SECURITY.md`](SECURITY.md) | What it protects, from whom, and what it does not |
+| [`CHANGELOG.md`](CHANGELOG.md) | What changed, release by release |
 
 ## Licence
 
-MIT.
+MIT. See [`LICENSE`](LICENSE), and [`NOTICE`](NOTICE) for the third-party
+material this repository redistributes and the conditions attached to it.

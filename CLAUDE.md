@@ -81,7 +81,19 @@ Run **all seven** after any scripted edit, not the half that looks affected. Use
 ritual, not a CI job — a tripwire firing is a decision for the director, not a red X. **Five
 tripwires now; TW-4 is FIRED and stays fired until O-19 is acted on.**
 
-**The suite takes ~53s locally and ~10s in CI. That is not a defect** — profiled 2026-08-29: the time
+**Re-measured 2026-08-31, at the launch programme: ~155s locally at 742 tests, up from ~70s.**
+Profiled rather than assumed, per the paragraph below. **Two pre-existing tests are 66s of it** —
+the design-coverage enumeration at 37s and the Clopper-Pearson coverage test at 29s, both
+documented and both deliberate. The rest is the record tests, which copy the working tree, and
+the tree grew a real-data example. Two causes were found and fixed while measuring: `_repo_copy`
+was copying `.mypy_cache` and `.ruff_cache` (thousands of files, gitignored, not the repository)
+and the example's 1,000-file sealed store; and `check_figures` derived the test count **twice**
+per call once the badge check was added, each derivation collecting the suite in a subprocess.
+**Neither fix weakened an assertion.** If it climbs again, profile first — every time this has
+happened the cause was a fixture or a helper, not the code under test.
+
+*Superseded, kept because it is the earlier measurement and the reasoning still holds:*
+**the suite takes ~53s locally and ~10s in CI. That is not a defect** — profiled 2026-08-29: the time
 is Fernet sealing plus real filesystem writes in the Phase 1 tests, and Windows pays for both. The
 Phase 2 arithmetic tests are nearly free.
 
@@ -258,7 +270,7 @@ reader could not tell a stratified redraw from a simple random one. `verify.py` 
 design (F-10's third site) and **its output was silent about what it had checked.** It now
 names the draw.
 
-**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **738 tests**, seven gate
+**Repository:** `github.com/MohdSaifHussain/prevalence-kit`, private. **742 tests**, seven gate
 checks green — **`check_claims` now runs twelve**, not seven; the gate block below is still
 seven commands. **CI last ran green at 734** on the 3.12 / 3.13 / 3.14 matrix, run `33345614816`, head `03a0c7b` — the Phase 3 boundary commit, all three legs at 734, matching local. They are stated apart because they are two measurements, not one.
 A second workflow, `witness.yml`, rebuilds the R image and requires every fixture to regenerate

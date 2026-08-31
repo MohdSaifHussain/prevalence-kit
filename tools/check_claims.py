@@ -71,6 +71,7 @@ import sys
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
+from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -1216,6 +1217,10 @@ def current_phase(root: Path) -> int:
     return max(numbers) if numbers else 0
 
 
+ANSI = re.compile(r"\x1b\[[0-9;]*m")
+"""SGR colour escapes, so a coloured line can still be read as a number."""
+
+
 def collected_tests(root: Path) -> int:
     """How many tests the suite actually has, by collecting them.
 
@@ -1249,7 +1254,13 @@ def collected_tests(root: Path) -> int:
         check=False,
     )
     for line in reversed(result.stdout.splitlines()):
-        if m := re.match(r"^(\d+) tests? collected", line.strip()):
+        # Strip ANSI colour before matching. pytest normally emits none when
+        # its output is captured, but `FORCE_COLOR` in the environment makes it
+        # colour anyway -- and then this returned **-1**, silently, which is the
+        # worst possible answer: it is not a count, and every claim compared
+        # against it fails for a reason that has nothing to do with the claim.
+        # Found on a shell that sets FORCE_COLOR=3; CI and PowerShell do not.
+        if m := re.match(r"^(\d+) tests? collected", ANSI.sub("", line).strip()):
             return int(m.group(1))
     return -1
 
@@ -1283,6 +1294,11 @@ def check_figures(root: Path) -> list[Problem]:
     from prevalence_kit.errors import Reason
     from prevalence_kit.run import _CSV_FIELD_LIMIT
 
+    # Collected once. It shells out to pytest, and it is wanted twice: by the
+    # CLAUDE.md claim below and by the tests badge. Deriving it twice per call
+    # tripled the suite the first time these were written independently.
+    tests_collected = collected_tests(root)
+
     claims = {
         "reason codes": (
             len(list(Reason)),
@@ -1312,7 +1328,7 @@ def check_figures(root: Path) -> list[Problem]:
         #
         # The test count is the figure that moves most and is easiest to derive.
         "claude.md tests": (
-            collected_tests(root),
+            tests_collected,
             re.compile(r"\*\*(\d[\d,]*) tests\*\*"),
             root / "CLAUDE.md",
         ),
@@ -1336,6 +1352,92 @@ def check_figures(root: Path) -> list[Problem]:
                 )
     problems.extend(_phase_problems(root))
     problems.extend(_svy_credit_problems(root))
+    problems.extend(_badge_problems(root, badge_figures(root, tests_collected)))
+    return problems
+
+
+BADGE = re.compile(r"!\[[^\]]*\]\(https://img\.shields\.io/badge/([^)\s]+)\)")
+"""A shields.io badge in the README. The label and value live in the URL path,
+percent-encoded, as `label-value-colour`."""
+
+
+def badge_figures(root: Path, tests_collected: int | None = None) -> dict[str, int]:
+    """The badge numbers, derived from the artifacts that own them.
+
+    Split out from the check so a test can inject cheap values. Deriving the
+    test count means collecting the suite in a subprocess, and a test that
+    calls it collects the suite from inside the suite -- which works and cost
+    three minutes of wall clock the first time it was written this way.
+    """
+    sys.path.insert(0, str(root / "src"))
+    from prevalence_kit.errors import Reason
+
+    gate_block = GATE_BLOCK.search((root / "CLAUDE.md").read_text(encoding="utf-8"))
+    return {
+        "tests": collected_tests(root) if tests_collected is None else tests_collected,
+        "gate checks": len([ln for ln in gate_block.group(1).splitlines() if ln.strip()])
+        if gate_block
+        else -1,
+        "reason codes": len(list(Reason)),
+    }
+
+
+def _badge_problems(root: Path, derived: dict[str, int] | None = None) -> list[Problem]:
+    """**Charter section 5.6: badge-truth.** A badge states a figure; derive it.
+
+    The charter names "badge-truth tests" as one of the two things that make
+    honesty *enforced by machinery, not intention*, and neither existed until
+    the launch programme. A badge is the most-read claim in a repository and
+    the least-checked: it is a picture of a number, and nothing about a picture
+    goes stale visibly.
+
+    **The scope is the badges this function can derive, and no others** --
+    stated here because C-34 was a checker that claimed a scope it did not
+    have. Licence and Python-version badges are not derived; they are asserted
+    by `test_the_licence_claim_and_the_licence_file_agree` and by the
+    `requires-python` pin respectively. An unknown badge label is IGNORED
+    rather than failed, so adding a badge is never blocked by this check --
+    which is itself a gap, and the honest name for it is: this catches a badge
+    that has gone stale, not a badge that was never true.
+    """
+    readme = root / "README.md"
+    if not readme.exists():
+        return [Problem("figures", "README.md", "is missing")]
+
+    if derived is None:
+        derived = badge_figures(root)
+
+    problems: list[Problem] = []
+    seen: set[str] = set()
+    for path in BADGE.findall(readme.read_text(encoding="utf-8")):
+        # `label-value-colour`, percent-encoded. Hyphens inside a label are
+        # doubled by the shields.io syntax, which is why this splits on the
+        # encoded spaces rather than on hyphens.
+        parts = unquote(path).split("-")
+        if len(parts) < 3:
+            continue
+        label, value = parts[0].strip(), parts[1].strip()
+        if label not in derived:
+            continue
+        seen.add(label)
+        stated = re.search(r"\d[\d,]*", value)
+        if stated is None:
+            problems.append(Problem("figures", "README.md", f"badge {label!r} states no number"))
+            continue
+        if int(stated.group().replace(",", "")) != derived[label]:
+            problems.append(
+                Problem(
+                    "figures",
+                    "README.md",
+                    f"badge {label!r}: states {stated.group()}, artifact says {derived[label]}",
+                )
+            )
+
+    # Absence is a failure, as it is for the phase sentence: deleting a badge
+    # must not be a way to stop it being checked.
+    for label in derived:
+        if label not in seen:
+            problems.append(Problem("figures", "README.md", f"carries no {label!r} badge"))
     return problems
 
 
