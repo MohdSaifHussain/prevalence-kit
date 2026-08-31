@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "prevalence-kit"
-version = "1.0.0rc1"
+version = "1.0.0"
 description = "Audit-grade prevalence measurement for Trust & Safety. Sealed evidence, tamper-evident record, refusals with named reasons."
 readme = "README.md"
 requires-python = ">=3.12"

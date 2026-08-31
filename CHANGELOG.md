@@ -14,9 +14,21 @@ them.
 
 ## [Unreleased]
 
-The first release. Everything below was built across Phases 0 to 3; the version
-becomes `1.0.0` in the release commit, and this section becomes that release's
-entry at the tag.
+Nothing yet.
+
+## [1.0.0] — 2026-09-01
+
+The first release. Everything below was built across Phases 0 to 3, under a
+governed process in which the director wrote none of the code and all of the
+decisions.
+
+**Rehearsed before it was released.** Three release candidates were cut against
+TestPyPI and a separate container registry path before anything reached PyPI or
+the real image name. Two failed and are kept in the record —
+`docs/contracts/PHASE-3-REHEARSAL.md` says what broke and why. The release
+artifacts carry SLSA provenance attestations, verified as an outsider would
+verify them, with negative controls that had to fail: a wrong repository and a
+tampered artifact both refuse.
 
 ### Added
 
@@ -54,4 +66,5 @@ every report the tool emits. The two that most often surprise people:
   the interval frequently does not exist at all. The measured figures are in the
   charter, and `sample` states the odds before the label budget is spent.
 
-[Unreleased]: https://github.com/MohdSaifHussain/prevalence-kit/commits/main
+[Unreleased]: https://github.com/MohdSaifHussain/prevalence-kit/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/MohdSaifHussain/prevalence-kit/releases/tag/v1.0.0

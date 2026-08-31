@@ -147,7 +147,12 @@ jobs:
             tags="$image:rehearsal"
           else
             image="${base}"
-            tags="$image:${{ github.ref_name }}"$'\n'"$image:latest"
+            # The git tag is `v1.0.0`; the IMAGE tag is `1.0.0`. Image tags
+            # conventionally carry no `v`, and this way the version is the same
+            # string on PyPI, in the image, and in `--version` -- one version,
+            # three channels, rather than two spellings of it.
+            version="${{ github.ref_name }}"
+            tags="$image:${version#v}"$'\n'"$image:latest"
           fi
           echo "image=$image" >> "$GITHUB_OUTPUT"
           {

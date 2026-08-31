@@ -8,12 +8,16 @@
 [![AI in the evidence path: none](https://img.shields.io/badge/AI%20in%20the%20evidence%20path-none-success)](tests/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue)](pyproject.toml)
+[![PyPI](https://img.shields.io/badge/PyPI-prevalence--kit-blue)](https://pypi.org/project/prevalence-kit/)
 
 **Every number in those badges is asserted by a test.** Change the test count,
 the gate, or the reason codes without changing the badge and the build fails —
 `tests/test_record.py`. A badge nobody checks is a decoration.
 
-**Pre-release. Phase 3 of 4 in progress. Nothing here is ready to rely on yet.**
+**v1.0.0 — released 1 September 2026.** Phase 3 of 4 in progress; the phase
+closes once the release is recorded. Read the honest limits below before
+relying on any number this produces — they are part of the product, not a
+disclaimer.
 
 Audit-grade prevalence measurement for Trust & Safety.
 
