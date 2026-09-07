@@ -33,7 +33,7 @@ dependencies = [
 dev = [
     "pytest==9.1.1",
     "hypothesis==6.165.10",
-    "ruff==0.16.5",
+    "ruff==0.16.6",
     "mypy==2.3.1",
     "types-PyYAML",
     # Dev only, never [project.dependencies]. tools/check_tripwires.py parses a
