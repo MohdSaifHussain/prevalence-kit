@@ -929,7 +929,7 @@ auditability anchors on reviewed, aged primitives. Full reasoning in `docs/DECIS
 authentication"*, and IVs from `os.urandom()`. Stated limitation: *"Fernet is ideal for encrypting
 data that easily fits in memory."*
 
-## S-6 — Toolchain (all current as of 2026-08-28)
+## S-6 — Toolchain (all current as of 2026-08-28; `ruff` and `hypothesis` re-pinned 2026-09-07)
 
 Per the director's standing direction: everything aligned to the latest.
 
@@ -938,10 +938,10 @@ Per the director's standing direction: everything aligned to the latest.
 | Python (development line) | **3.14.7** | 3.14 line from 2025-10-07 | EOL 2030-10-31; this machine runs 3.14.0 |
 | Python (floor) | **3.12** | 2023-10-02 | EOL 2028-10-31. Also the hard floor: `numpy` and `scipy` both require ≥ 3.12. Ruling **R-6**. |
 | `cryptography` | **50.0.1** | 2026-08-25 | |
-| `ruff` | **0.16.5** | 2026-08-27 | run **both** `ruff check` and `ruff format --check` — one green says nothing about the other |
+| `ruff` | **0.16.6** *(re-pinned 2026-09-07)* | 2026-09-03 | run **both** `ruff check` and `ruff format --check` — one green says nothing about the other. **0.16.5 until 2026-09-07**, when Dependabot PR #1 bumped it; merged at `a3555e7`. Release date read from PyPI's artifact upload time, 2026-09-07 |
 | `mypy` | **2.3.1** | 2026-08-15 | strict mode |
 | `pytest` | **9.1.1** | 2026-06-19 | |
-| `hypothesis` | **6.165.10** | 2026-08-16 | |
+| `hypothesis` | **6.167.1** *(re-pinned 2026-09-07)* | 2026-08-30 | **6.165.10 until 2026-09-07**, when Dependabot PR #2 bumped it; merged at `d99a532`. Pinned but unused: no module under `src/`, `tests/` or `tools/` imports it, searched 2026-09-07. Release date read from PyPI's artifact upload time, 2026-09-07 |
 | `numpy` | **2.5.2** | 2026-08-09 | requires Python ≥ 3.12 |
 | `scipy` | **1.18.1** | 2026-08-21 | requires Python ≥ 3.12 |
 | `click` | **8.5.0** | 2026-08-26 | CLI candidate |

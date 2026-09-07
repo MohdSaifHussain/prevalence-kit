@@ -422,7 +422,9 @@ Each of these cost time or produced a defect. None is obvious from the code.
 - **`ruff format` reads Markdown; `ruff check` does not.** Confirmed on ruff 0.16.5 from its own
   resolver output: the format half formats Python fences inside `.md`, so it walks every document
   here, **including the dated readings that are never edited**. Nothing fails today. The day
-  someone writes a mis-formatted Python fence into one, two rules collide.
+  someone writes a mis-formatted Python fence into one, two rules collide. **Re-derived at 0.16.6
+  on 2026-09-07**, when Dependabot bumped the pin: both versions report the same **77 files already
+  formatted**, so the bump changed nothing about what the format half walks.
 - **The findings register cannot hold an accepted-but-unfixed finding.** `check_findings` fails
   the gate for any row whose status is `open`, while the register's own vocabulary defines `open`
   as *accepted, not yet fixed*. So an F-number attaches when its **fix** lands, not when the
