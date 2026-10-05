@@ -24,7 +24,7 @@ classifiers = [
 # Hard Rule 1: zero network calls at runtime, proven by tests/test_zero_network.py.
 # This is why `svy` is not here -- it requires httpx. See docs/DECISIONS.md D-2.
 dependencies = [
-    "cryptography==50.0.1", # sealing (Fernet). docs/STANDARDS.md S-5.1, D-9
+    "cryptography==50.0.2", # sealing (Fernet). docs/STANDARDS.md S-5.1, D-9
     "PyYAML==6.0.3",        # plan files
     "click==8.5.0",         # CLI. D-16
 ]
