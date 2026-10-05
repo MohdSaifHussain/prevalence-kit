@@ -8,6 +8,6 @@
 # Development tools are deliberately absent. They live in pyproject.toml's
 # [dev] extra, they never ship, and an operator installing this tool never
 # pulls them.
-cryptography==50.0.1
+cryptography==50.0.2
 PyYAML==6.0.3
 click==8.5.0
