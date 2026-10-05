@@ -34,7 +34,7 @@ dev = [
     "pytest==9.1.1",
     "hypothesis==6.167.1",
     "ruff==0.16.6",
-    "mypy==2.3.1",
+    "mypy==2.4.0",
     "types-PyYAML",
     # Dev only, never [project.dependencies]. tools/check_tripwires.py parses a
     # remote Atom feed; a parser that cannot be bombed is a property of this
